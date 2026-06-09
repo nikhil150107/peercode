@@ -1,0 +1,27 @@
+import { useState } from "react"
+import { Outlet } from "react-router-dom"
+import DashboardNavbar from "../components/DashboardNavbar"
+import DashboardSidebar from "../components/DashboardSidebar"
+
+export default function DashboardLayout() {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+
+  return (
+    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+      <DashboardNavbar
+        mobileNavOpen={mobileNavOpen}
+        onMobileNavToggle={() => setMobileNavOpen((open) => !open)}
+        onMobileNavClose={() => setMobileNavOpen(false)}
+      />
+      <div className="flex min-h-[calc(100vh-4rem)] flex-col lg:flex-row">
+        <DashboardSidebar
+          mobileOpen={mobileNavOpen}
+          onMobileClose={() => setMobileNavOpen(false)}
+        />
+        <main className="flex-1 overflow-y-auto">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  )
+}
