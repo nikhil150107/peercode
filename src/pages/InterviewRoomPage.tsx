@@ -41,7 +41,7 @@ import { getQuestionHints } from "../utils/questionHints"
 import { SERVER_URL } from "../lib/serverUrl"
 import { getDisplayNameFromEmail } from "../utils/userDisplay"
 
-const SESSION_SECONDS = 45 * 60
+const SESSION_SECONDS = 120 * 60
 const SWAP_ALERT_AT = 22 * 60 + 30
 const SWAP_AT = 22 * 60
 

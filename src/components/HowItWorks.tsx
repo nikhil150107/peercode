@@ -3,7 +3,7 @@ const steps = [
     number: "01",
     title: "Book a slot",
     description:
-      "Pick a time that works for you — today or tomorrow. Sessions run 45 minutes with scheduled IST slots.",
+      "Pick a time that works for you — today or tomorrow. Sessions run 2 hours with scheduled IST slots.",
     icon: (
       <svg
         className="h-6 w-6"

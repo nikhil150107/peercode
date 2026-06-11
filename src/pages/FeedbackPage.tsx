@@ -159,7 +159,7 @@ export default function FeedbackPage() {
             </div>
             <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
               <p className="text-xs text-zinc-500">Duration</p>
-              <p className="mt-1 font-mono font-semibold text-white">45:00</p>
+              <p className="mt-1 font-mono font-semibold text-white">2:00:00</p>
             </div>
             <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
               <p className="text-xs text-zinc-500">Your role</p>

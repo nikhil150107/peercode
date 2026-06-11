@@ -36,7 +36,7 @@ CREATE TABLE sessions (
   rating_given integer,
   rating_received integer,
   feedback_tags text[],
-  duration_seconds integer DEFAULT 2700,
+  duration_seconds integer DEFAULT 7200,
   submission_passed boolean DEFAULT false,
   passed_tests integer,
   total_tests integer,

@@ -96,7 +96,7 @@ function buildSessionRow(input: CreateSessionInput) {
     question_difficulty: input.questionDifficulty ?? null,
     question_topic: input.questionTopic ?? null,
     user_role: input.userRole,
-    duration_seconds: input.durationSeconds ?? 2700,
+    duration_seconds: input.durationSeconds ?? 7200,
     submission_passed: input.submissionPassed ?? false,
     passed_tests: input.passedTests ?? null,
     total_tests: input.totalTests ?? null,
