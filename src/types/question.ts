@@ -6,6 +6,13 @@ export type QuestionExample = {
   explanation?: string
 }
 
+export type QuestionStarterCode = {
+  python?: string
+  javascript?: string
+  java?: string
+  cpp?: string
+}
+
 export type Question = {
   id: string
   title: string
@@ -15,4 +22,6 @@ export type Question = {
   examples: QuestionExample[]
   hidden_tests: QuestionExample[] | null
   constraints: string | null
+  function_name?: string | null
+  starter_code?: QuestionStarterCode | null
 }

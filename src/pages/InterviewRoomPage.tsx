@@ -38,6 +38,10 @@ import {
 } from "../utils/topicPreference"
 import { EMPTY_CODE } from "../utils/editorTemplates"
 import { getQuestionHints } from "../utils/questionHints"
+import {
+  buildStarterCodeForQuestion,
+  resolveFunctionName,
+} from "../utils/questionExecution"
 import { SERVER_URL } from "../lib/serverUrl"
 import { getDisplayNameFromEmail } from "../utils/userDisplay"
 
@@ -278,7 +282,7 @@ export default function InterviewRoomPage() {
       questionLockedRef.current = true
       isFetchingQuestionRef.current = false
       setQuestion(q)
-      setCodes({ ...EMPTY_CODE })
+      setCodes(buildStarterCodeForQuestion(q))
       setQuestionLoading(false)
       setQuestionLoadingMessage("Loading question...")
       setQuestionError(null)
@@ -744,10 +748,14 @@ export default function InterviewRoomPage() {
     broadcastCodeOutput("Running test cases...", true)
 
     try {
+      const executionOptions = {
+        functionName: question ? resolveFunctionName(question) : undefined,
+      }
       const results = await runAgainstExamples(
         codes[language],
         language,
         question.examples,
+        executionOptions,
       )
       broadcastCodeOutput(formatTestResults(results), false)
     } catch (err) {
@@ -773,11 +781,15 @@ export default function InterviewRoomPage() {
     broadcastCodeOutput("Submitting...", true)
 
     try {
+      const executionOptions = {
+        functionName: question ? resolveFunctionName(question) : undefined,
+      }
       const results = await runSubmitTests(
         codes[language],
         language,
         question?.hidden_tests,
         question?.examples ?? [],
+        executionOptions,
       )
       broadcastCodeOutput(formatSubmitResults(results), false)
 

@@ -25,6 +25,12 @@ function pickRandom<T>(items: T[]): T | null {
 }
 
 function mapRowToQuestion(row: Record<string, unknown>): Question {
+  const starterRaw = row.starter_code
+  const starter_code =
+    starterRaw && typeof starterRaw === "object" && !Array.isArray(starterRaw)
+      ? (starterRaw as Question["starter_code"])
+      : null
+
   return {
     id: row.id as string,
     title: row.title as string,
@@ -35,6 +41,8 @@ function mapRowToQuestion(row: Record<string, unknown>): Question {
     hidden_tests:
       row.hidden_tests == null ? null : parseExamples(row.hidden_tests),
     constraints: (row.constraints as string) ?? null,
+    function_name: (row.function_name as string) ?? null,
+    starter_code,
   }
 }
 

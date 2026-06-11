@@ -1,17 +1,27 @@
 import type { Language } from "../data/mockProblem"
 import type { QuestionExample } from "../types/question"
+import { SERVER_URL } from "./serverUrl"
 
-const JUDGE0_HOST =
-  import.meta.env.VITE_JUDGE0_URL?.replace(/\/$/, "") ?? "https://ce.judge0.com"
-/** Must match request body: source_code and stdin are btoa-encoded when base64_encoded=true */
-const JUDGE0_URL = `${JUDGE0_HOST}/submissions?base64_encoded=true&wait=true`
-const JUDGE0_AUTH_TOKEN = import.meta.env.VITE_JUDGE0_AUTH_TOKEN
+function camelToSnake(name: string): string {
+  return name.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "")
+}
 
 export const JUDGE0_LANGUAGE_IDS: Record<Language, number> = {
   python: 71,
   javascript: 63,
   java: 62,
-  cpp: 54, // C++ (GCC 9.2.0)
+  cpp: 54,
+}
+
+type ExecuteResponse = {
+  ok?: boolean
+  stdout?: string | null
+  stderr?: string | null
+  compile_output?: string | null
+  message?: string | null
+  status?: string
+  status_id?: number | null
+  error?: string
 }
 
 type Judge0Submission = {
@@ -20,6 +30,10 @@ type Judge0Submission = {
   compile_output: string | null
   message: string | null
   status?: { id: number; description: string }
+}
+
+export type ExecutionOptions = {
+  functionName?: string
 }
 
 export type TestCaseResult = {
@@ -31,24 +45,14 @@ export type TestCaseResult = {
   error?: string
 }
 
-function decodeBase64Field(value: string | null): string | null {
-  if (!value) return value
-
-  try {
-    return atob(value)
-  } catch {
-    return value
+function languageFromId(languageId: number): Language {
+  const entry = Object.entries(JUDGE0_LANGUAGE_IDS).find(
+    ([, id]) => id === languageId,
+  )
+  if (!entry) {
+    throw new Error(`Unknown language id: ${languageId}`)
   }
-}
-
-function decodeJudge0Submission(submission: Judge0Submission): Judge0Submission {
-  return {
-    ...submission,
-    stdout: decodeBase64Field(submission.stdout),
-    stderr: decodeBase64Field(submission.stderr),
-    compile_output: decodeBase64Field(submission.compile_output),
-    message: decodeBase64Field(submission.message),
-  }
+  return entry[0] as Language
 }
 
 export async function submitToJudge0(
@@ -56,48 +60,43 @@ export async function submitToJudge0(
   languageId: number,
   stdin = "",
 ): Promise<Judge0Submission> {
-  console.log("=== CODE SENT TO JUDGE0 ===", sourceCode)
+  const language = languageFromId(languageId)
+
+  console.log("=== CODE SENT TO EXECUTE ===", sourceCode)
   console.log("=== STDIN ===", stdin)
+  console.log("=== LANGUAGE ===", language)
 
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  }
-  if (JUDGE0_AUTH_TOKEN) {
-    headers["X-Auth-Token"] = JUDGE0_AUTH_TOKEN
-  }
-
-  const encodedSource = btoa(sourceCode)
-  const encodedStdin = btoa(stdin)
-
-  const requestBody = {
-    source_code: encodedSource,
-    language_id: languageId,
-    stdin: encodedStdin,
-  }
-
-  console.log("=== JUDGE0 URL ===", JUDGE0_URL)
-  console.log("=== JUDGE0 LANGUAGE ID ===", languageId)
-  console.log("=== JUDGE0 AUTH ===", JUDGE0_AUTH_TOKEN ? "token set" : "no token")
-  console.log("=== JUDGE0 ENCODED source_code (btoa) ===", encodedSource.slice(0, 80))
-  console.log("=== JUDGE0 ENCODED stdin (btoa) ===", encodedStdin)
-
-  const response = await fetch(JUDGE0_URL, {
+  const response = await fetch(`${SERVER_URL}/api/execute`, {
     method: "POST",
-    headers,
-    body: JSON.stringify(requestBody),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code: sourceCode, language, stdin }),
   })
 
   const responseText = await response.text()
 
   if (!response.ok) {
-    console.error("=== JUDGE0 ERROR ===", response.status, responseText)
+    console.error("=== EXECUTE ERROR ===", response.status, responseText)
     throw new Error(
-      `Judge0 request failed (${response.status}): ${responseText || response.statusText}`,
+      `Execution request failed (${response.status}): ${responseText || response.statusText}`,
     )
   }
 
-  const submission = JSON.parse(responseText) as Judge0Submission
-  return decodeJudge0Submission(submission)
+  const data = JSON.parse(responseText) as ExecuteResponse
+
+  if (data.ok === false) {
+    throw new Error(data.error ?? "Execution failed")
+  }
+
+  return {
+    stdout: data.stdout ?? null,
+    stderr: data.stderr ?? null,
+    compile_output: data.compile_output ?? null,
+    message: data.message ?? null,
+    status:
+      data.status_id != null
+        ? { id: data.status_id, description: data.status ?? "Unknown" }
+        : undefined,
+  }
 }
 
 function splitTopLevelCommas(input: string): string[] {
@@ -232,6 +231,32 @@ function prepareUserCode(code: string, language: Language): string {
   }
 
   return cleaned
+}
+
+function resolveFunctionNames(
+  cleanedCode: string,
+  language: Language,
+  preferredFunctionName?: string,
+): string[] {
+  const extracted = extractFunctionNames(cleanedCode, language)
+  const candidates: string[] = []
+
+  if (preferredFunctionName) {
+    candidates.push(preferredFunctionName)
+    if (language === "python") {
+      candidates.push(camelToSnake(preferredFunctionName))
+    }
+  }
+
+  candidates.push(...extracted)
+
+  const preferred = ["solution", "solve"]
+  const ordered = [
+    ...candidates.filter((name) => preferred.includes(name)),
+    ...candidates.filter((name) => !preferred.includes(name)),
+  ]
+
+  return [...new Set(ordered.filter(Boolean))]
 }
 
 function extractFunctionNames(code: string, language: Language): string[] {
@@ -371,12 +396,17 @@ function buildRunnableCode(
   userCode: string,
   language: Language,
   exampleInput: string,
+  preferredFunctionName?: string,
 ): string {
   const cleanedCode = prepareUserCode(userCode, language)
   const assignments = parseExampleInput(exampleInput)
   const assignmentBlock = buildAssignments(assignments, language)
   const argList = buildArgList(assignments, language)
-  const functionNames = extractFunctionNames(cleanedCode, language)
+  const functionNames = resolveFunctionNames(
+    cleanedCode,
+    language,
+    preferredFunctionName,
+  )
 
   if (language === "python") {
     const callChain = functionNames
@@ -525,9 +555,15 @@ export async function runTestCase(
   language: Language,
   example: QuestionExample,
   index: number,
+  options: ExecutionOptions = {},
 ): Promise<TestCaseResult> {
   const languageId = JUDGE0_LANGUAGE_IDS[language]
-  const runnableCode = buildRunnableCode(userCode, language, example.input)
+  const runnableCode = buildRunnableCode(
+    userCode,
+    language,
+    example.input,
+    options.functionName,
+  )
 
   try {
     const submission = await submitToJudge0(runnableCode, languageId)
@@ -583,11 +619,14 @@ export async function runAgainstExamples(
   userCode: string,
   language: Language,
   examples: QuestionExample[],
+  options: ExecutionOptions = {},
 ): Promise<TestCaseResult[]> {
   const results: TestCaseResult[] = []
 
   for (let i = 0; i < examples.length; i++) {
-    results.push(await runTestCase(userCode, language, examples[i], i + 1))
+    results.push(
+      await runTestCase(userCode, language, examples[i], i + 1, options),
+    )
   }
 
   return results
@@ -598,12 +637,13 @@ export async function runSubmitTests(
   language: Language,
   hiddenTests: QuestionExample[] | null | undefined,
   examples: QuestionExample[],
+  options: ExecutionOptions = {},
 ): Promise<TestCaseResult[]> {
   const testCases = resolveSubmitTestCases(hiddenTests, examples)
   if (testCases.length === 0) {
     return []
   }
-  return runAgainstExamples(userCode, language, testCases)
+  return runAgainstExamples(userCode, language, testCases, options)
 }
 
 export function allSubmitTestsPassed(results: TestCaseResult[]): boolean {

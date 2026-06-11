@@ -106,6 +106,8 @@ CREATE TABLE questions (
   examples jsonb,
   hidden_tests jsonb,
   constraints text,
+  function_name text,
+  starter_code jsonb,
   created_at timestamp DEFAULT now()
 );
 
