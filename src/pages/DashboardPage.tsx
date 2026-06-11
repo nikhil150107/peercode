@@ -448,6 +448,11 @@ export default function DashboardPage() {
             </span>
           </div>
 
+          <p className="mb-4 text-xs leading-relaxed text-zinc-500">
+            📌 Book at least 5 minutes before a slot. Peer matching happens 3
+            minutes before start time.
+          </p>
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {slotsLoading
               ? visibleSlots.map((slot) => (
