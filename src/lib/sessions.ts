@@ -286,11 +286,22 @@ export function computeTopicsPracticed(sessions: SessionRecord[]): string[] {
   return [...topics].sort()
 }
 
+function hasValidRatingReceived(session: SessionRecord): boolean {
+  return (
+    session.user_role === "interviewee" &&
+    session.rating_received != null &&
+    session.rating_received > 0
+  )
+}
+
 export function computeProfileStats(sessions: SessionRecord[]): ProfileStats {
-  const rated = sessions.filter((s) => s.rating_received != null)
+  const ratedIntervieweeSessions = sessions.filter(hasValidRatingReceived)
   const averageRatingReceived =
-    rated.length > 0
-      ? rated.reduce((sum, s) => sum + (s.rating_received ?? 0), 0) / rated.length
+    ratedIntervieweeSessions.length > 0
+      ? ratedIntervieweeSessions.reduce(
+          (sum, session) => sum + (session.rating_received ?? 0),
+          0,
+        ) / ratedIntervieweeSessions.length
       : null
 
   const intervieweeSessions = sessions.filter(
