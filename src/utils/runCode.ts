@@ -1,34 +1,19 @@
 import type { Language } from "../data/mockProblem"
-import { mockProblem } from "../data/mockProblem"
+import {
+  formatTestResults,
+  runAgainstExamples,
+} from "../lib/codeExecution"
+import type { QuestionExample } from "../types/question"
 
 export async function runCode(
   code: string,
   language: Language,
+  examples: QuestionExample[],
 ): Promise<string> {
-  await new Promise((r) => setTimeout(r, 400))
-
-  if (language === "javascript") {
-    try {
-      const logs: string[] = []
-      const mockConsole = {
-        log: (...args: unknown[]) => logs.push(args.map(String).join(" ")),
-      }
-      const fn = new Function("console", code)
-      fn(mockConsole)
-      return logs.length > 0 ? logs.join("\n") : "No output"
-    } catch (err) {
-      return `Error: ${err instanceof Error ? err.message : String(err)}`
-    }
+  if (examples.length === 0) {
+    return "No example test cases available for this question."
   }
 
-  return [
-    `> Running ${language}...`,
-    `Input:  ${mockProblem.examples[0].input}`,
-    `Output: ${mockProblem.examples[0].output}`,
-    mockProblem.examples[0].explanation
-      ? `// ${mockProblem.examples[0].explanation}`
-      : "",
-  ]
-    .filter(Boolean)
-    .join("\n")
+  const results = await runAgainstExamples(code, language, examples)
+  return formatTestResults(results)
 }

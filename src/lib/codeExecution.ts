@@ -107,6 +107,84 @@ export function parseExampleInput(
     .filter((part): part is { name: string; value: string } => part !== null)
 }
 
+function stripBalancedBlock(code: string, startPattern: RegExp): string {
+  const match = startPattern.exec(code)
+  if (!match || match.index === undefined) return code
+
+  const startIdx = match.index
+  const braceStart = code.indexOf("{", startIdx)
+  if (braceStart === -1) return code
+
+  let depth = 0
+  for (let i = braceStart; i < code.length; i++) {
+    if (code[i] === "{") depth++
+    else if (code[i] === "}") {
+      depth--
+      if (depth === 0) {
+        return (code.slice(0, startIdx) + code.slice(i + 1)).trim()
+      }
+    }
+  }
+
+  return code
+}
+
+function stripTrailingJsConsoleLogs(code: string): string {
+  return code.replace(/(?:^|\n)\s*console\.log\([\s\S]*?\);?\s*$/g, "").trim()
+}
+
+function stripTrailingPythonPrints(code: string): string {
+  let cleaned = stripBalancedBlock(
+    code,
+    /if\s+__name__\s*==\s*['"]__main__['"]\s*/,
+  )
+  cleaned = cleaned.replace(/(?:^|\n)\s*print\([\s\S]*?\)\s*$/g, "").trim()
+  return cleaned
+}
+
+function wrapJavaSolutionIfNeeded(code: string): string {
+  if (/class\s+\w+/i.test(code)) return code
+
+  const importLines: string[] = []
+  const bodyLines: string[] = []
+
+  for (const line of code.split("\n")) {
+    if (/^\s*import\s+/.test(line)) importLines.push(line)
+    else bodyLines.push(line)
+  }
+
+  const body = bodyLines
+    .join("\n")
+    .trim()
+    .split("\n")
+    .map((line) => (line.trim() ? `  ${line}` : line))
+    .join("\n")
+
+  return `${importLines.join("\n")}${importLines.length ? "\n" : ""}class Solution {
+${body}
+}`
+}
+
+function prepareUserCode(code: string, language: Language): string {
+  let cleaned = code.trim()
+
+  if (language === "cpp") {
+    cleaned = stripBalancedBlock(cleaned, /\bint\s+main\s*\(\s*[^)]*\)/)
+  } else if (language === "java") {
+    cleaned = stripBalancedBlock(
+      cleaned,
+      /public\s+static\s+void\s+main\s*\(\s*String\s*\[\]\s*\w*\s*\)/,
+    )
+    cleaned = wrapJavaSolutionIfNeeded(cleaned)
+  } else if (language === "javascript") {
+    cleaned = stripTrailingJsConsoleLogs(cleaned)
+  } else if (language === "python") {
+    cleaned = stripTrailingPythonPrints(cleaned)
+  }
+
+  return cleaned
+}
+
 function extractFunctionNames(code: string, language: Language): string[] {
   const names: string[] = []
 
@@ -120,14 +198,16 @@ function extractFunctionNames(code: string, language: Language): string[] {
     for (const match of code.matchAll(/function\s+(\w+)\s*\(/g)) {
       names.push(match[1])
     }
-    for (const match of code.matchAll(/(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?\(/g)) {
+    for (const match of code.matchAll(
+      /(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?\(/g,
+    )) {
       names.push(match[1])
     }
   }
 
   if (language === "java") {
     for (const match of code.matchAll(
-      /public\s+[\w\[\]<>,\s]+\s+(\w+)\s*\([^)]*\)\s*\{/g,
+      /(?:public|private|protected)?\s*(?:static\s+)?[\w\[\]<>,\s]+\s+(\w+)\s*\([^)]*\)\s*\{/g,
     )) {
       if (match[1] !== "main") names.push(match[1])
     }
@@ -135,7 +215,7 @@ function extractFunctionNames(code: string, language: Language): string[] {
 
   if (language === "cpp") {
     for (const match of code.matchAll(
-      /(?:vector|int|bool|string|double|float|long|char|auto)[\w<>,\s*&]*\s+(\w+)\s*\([^)]*\)\s*\{/g,
+      /(?:^|\n)\s*(?:vector|int|bool|string|double|float|long|char|auto|void)[\w<>,\s*&]*\s+(\w+)\s*\([^;{]*\)\s*(?:const)?\s*\{/g,
     )) {
       if (match[1] !== "main") names.push(match[1])
     }
@@ -201,17 +281,28 @@ function toJavaAssignment(name: string, value: string): string {
   return `var ${name} = ${value};`
 }
 
+function jsonArrayToCppInit(value: string): string {
+  const inner = value.slice(1, -1).trim()
+  if (!inner) return "{}"
+  return `{${inner}}`
+}
+
 function toCppAssignment(name: string, value: string): string {
   if (value.startsWith("[")) {
-    const inner = value.slice(1, -1).trim()
-    if (!inner) return `vector<int> ${name} = {};`
-    return `vector<int> ${name} = ${value};`
+    if (!value.slice(1, -1).trim()) return `vector<int> ${name} = {};`
+    return `vector<int> ${name} = ${jsonArrayToCppInit(value)};`
   }
   if (value.startsWith('"')) {
     return `string ${name} = ${value};`
   }
   if (value === "true" || value === "false") {
     return `bool ${name} = ${value};`
+  }
+  if (/^-?\d+$/.test(value)) {
+    return `int ${name} = ${value};`
+  }
+  if (/^-?\d+\.\d+$/.test(value)) {
+    return `double ${name} = ${value};`
   }
   return `auto ${name} = ${value};`
 }
@@ -232,10 +323,11 @@ function buildRunnableCode(
   language: Language,
   exampleInput: string,
 ): string {
+  const cleanedCode = prepareUserCode(userCode, language)
   const assignments = parseExampleInput(exampleInput)
   const assignmentBlock = buildAssignments(assignments, language)
   const argList = buildArgList(assignments, language)
-  const functionNames = extractFunctionNames(userCode, language)
+  const functionNames = extractFunctionNames(cleanedCode, language)
 
   if (language === "python") {
     const callChain = functionNames
@@ -245,7 +337,7 @@ function buildRunnableCode(
       )
       .join("\n")
 
-    return `${userCode}
+    return `${cleanedCode}
 
 # --- PeerCode harness ---
 ${assignmentBlock}
@@ -272,8 +364,9 @@ else:
       )
       .join("\n")
 
-    return `${userCode}
+    return `${cleanedCode}
 
+// --- PeerCode harness ---
 ${assignmentBlock}
 ${attempts}
 throw new Error("Could not find a matching solution function");
@@ -282,23 +375,24 @@ throw new Error("Could not find a matching solution function");
 
   if (language === "java") {
     const methodName = functionNames[0] ?? "solution"
-    const returnPrinter = `System.out.println(java.util.Arrays.toString(__result__));`
 
-    return `${userCode}
+    return `${cleanedCode}
 
 public class Main {
   public static void main(String[] args) {
     ${assignmentBlock.replace(/^/gm, "    ")}
     Solution sol = new Solution();
-    var __result__ = sol.${methodName}(${argList});
-    if (__result__ instanceof boolean) {
+    Object __result__ = sol.${methodName}(${argList});
+    if (__result__ instanceof Boolean) {
       System.out.println(__result__);
-    } else if (__result__ instanceof Integer || __result__ instanceof Double) {
+    } else if (__result__ instanceof Integer || __result__ instanceof Long || __result__ instanceof Double) {
       System.out.println(__result__);
     } else if (__result__ instanceof String) {
       System.out.println(__result__);
+    } else if (__result__ instanceof int[]) {
+      System.out.println(java.util.Arrays.toString((int[]) __result__));
     } else {
-      ${returnPrinter}
+      System.out.println(__result__);
     }
   }
 }
@@ -309,13 +403,48 @@ public class Main {
   return `#include <bits/stdc++.h>
 using namespace std;
 
-${userCode}
+${cleanedCode}
+
+// --- PeerCode harness ---
+void __peer_print__(bool value) {
+  cout << (value ? "true" : "false");
+}
+
+void __peer_print__(int value) {
+  cout << value;
+}
+
+void __peer_print__(long long value) {
+  cout << value;
+}
+
+void __peer_print__(double value) {
+  cout << value;
+}
+
+void __peer_print__(const string& value) {
+  cout << value;
+}
+
+void __peer_print__(const vector<int>& value) {
+  cout << "[";
+  for (int i = 0; i < (int)value.size(); ++i) {
+    if (i > 0) cout << ",";
+    cout << value[i];
+  }
+  cout << "]";
+}
+
+template <typename T>
+void __peer_print__(const T& value) {
+  cout << value;
+}
 
 int main() {
   ${assignmentBlock.replace(/^/gm, "  ")}
   auto __result__ = ${methodName}(${argList});
-  if constexpr (false) {}
-  cout << __result__ << endl;
+  __peer_print__(__result__);
+  cout << endl;
   return 0;
 }
 `

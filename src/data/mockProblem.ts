@@ -35,10 +35,7 @@ export const starterCode: Record<Language, string> = {
         if complement in seen:
             return [seen[complement], i]
         seen[num] = i
-    return []
-
-# Test
-print(two_sum([2, 7, 11, 15], 9))`,
+    return []`,
 
   java: `import java.util.*;
 
@@ -54,21 +51,11 @@ class Solution {
         }
         return new int[]{};
     }
-
-    public static void main(String[] args) {
-        Solution sol = new Solution();
-        System.out.println(Arrays.toString(sol.twoSum(new int[]{2,7,11,15}, 9)));
-    }
 }`,
 
-  cpp: `#include <iostream>
-#include <vector>
-#include <unordered_map>
-using namespace std;
-
-vector<int> twoSum(vector<int>& nums, int target) {
+  cpp: `vector<int> twoSum(vector<int>& nums, int target) {
     unordered_map<int, int> seen;
-    for (int i = 0; i < nums.size(); i++) {
+    for (int i = 0; i < (int)nums.size(); i++) {
         int complement = target - nums[i];
         if (seen.count(complement)) {
             return {seen[complement], i};
@@ -76,13 +63,6 @@ vector<int> twoSum(vector<int>& nums, int target) {
         seen[nums[i]] = i;
     }
     return {};
-}
-
-int main() {
-    vector<int> nums = {2, 7, 11, 15};
-    auto result = twoSum(nums, 9);
-    cout << "[" << result[0] << ", " << result[1] << "]" << endl;
-    return 0;
 }`,
 
   javascript: `function twoSum(nums, target) {
@@ -95,9 +75,7 @@ int main() {
     seen.set(nums[i], i);
   }
   return [];
-}
-
-console.log(twoSum([2, 7, 11, 15], 9));`,
+}`,
 }
 
 export const monacoLanguage: Record<Language, string> = {
