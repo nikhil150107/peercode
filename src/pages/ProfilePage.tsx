@@ -100,7 +100,9 @@ export default function ProfilePage() {
                 <p className="mt-1 text-3xl font-bold text-white">
                   {stats?.problemsSolved ?? 0}
                 </p>
-                <p className="mt-1 text-xs text-zinc-500">as interviewee</p>
+                <p className="mt-1 text-xs text-zinc-500">
+                  as interviewee with all tests passed
+                </p>
               </div>
               <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
                 <p className="text-sm text-zinc-500">Favorite topic</p>

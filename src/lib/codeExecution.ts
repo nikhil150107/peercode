@@ -428,6 +428,20 @@ export async function runSubmitTests(
   return runAgainstExamples(userCode, language, testCases)
 }
 
+export function allSubmitTestsPassed(results: TestCaseResult[]): boolean {
+  return results.length > 0 && results.every((result) => result.passed)
+}
+
+export function countSubmitTestResults(results: TestCaseResult[]): {
+  passed: number
+  total: number
+} {
+  return {
+    passed: results.filter((result) => result.passed).length,
+    total: results.length,
+  }
+}
+
 export function formatSubmitResults(results: TestCaseResult[]): string {
   const passed = results.filter((r) => r.passed).length
   const total = results.length

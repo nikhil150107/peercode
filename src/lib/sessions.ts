@@ -16,6 +16,9 @@ export type SessionRecord = {
   rating_received: number | null
   feedback_tags: string[] | null
   duration_seconds: number | null
+  submission_passed: boolean | null
+  passed_tests: number | null
+  total_tests: number | null
   completed_at: string
 }
 
@@ -29,6 +32,23 @@ export type CreateSessionInput = {
   questionTopic?: string | null
   userRole: UserRole
   durationSeconds?: number
+  submissionPassed?: boolean
+  passedTests?: number | null
+  totalTests?: number | null
+}
+
+export type SubmissionResultInput = {
+  userId: string
+  roomId: string
+  peerId?: string | null
+  peerEmail?: string | null
+  questionTitle?: string | null
+  questionDifficulty?: string | null
+  questionTopic?: string | null
+  userRole: UserRole
+  passedTests: number
+  totalTests: number
+  submissionPassed: boolean
 }
 
 export type ProfileStats = {
@@ -51,27 +71,119 @@ export async function lookupPeerIdByEmail(
   return data?.user_id ?? null
 }
 
+async function findSessionByRoom(
+  userId: string,
+  roomId: string,
+): Promise<SessionRecord | null> {
+  const { data, error } = await supabase
+    .from("sessions")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("room_id", roomId)
+    .maybeSingle()
+
+  if (error) throw error
+  return (data as SessionRecord | null) ?? null
+}
+
+function buildSessionRow(input: CreateSessionInput) {
+  return {
+    peer_id: input.peerId ?? null,
+    peer_email: input.peerEmail ?? null,
+    room_id: input.roomId,
+    question_title: input.questionTitle ?? null,
+    question_difficulty: input.questionDifficulty ?? null,
+    question_topic: input.questionTopic ?? null,
+    user_role: input.userRole,
+    duration_seconds: input.durationSeconds ?? 2700,
+    submission_passed: input.submissionPassed ?? false,
+    passed_tests: input.passedTests ?? null,
+    total_tests: input.totalTests ?? null,
+  }
+}
+
 export async function createSession(
   input: CreateSessionInput,
 ): Promise<SessionRecord> {
+  const existing = await findSessionByRoom(input.userId, input.roomId)
+  const row = buildSessionRow(input)
+
+  if (existing) {
+    const { data, error } = await supabase
+      .from("sessions")
+      .update(row)
+      .eq("id", existing.id)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data as SessionRecord
+  }
+
   const { data, error } = await supabase
     .from("sessions")
     .insert({
       user_id: input.userId,
-      peer_id: input.peerId ?? null,
-      peer_email: input.peerEmail ?? null,
-      room_id: input.roomId,
-      question_title: input.questionTitle ?? null,
-      question_difficulty: input.questionDifficulty ?? null,
-      question_topic: input.questionTopic ?? null,
-      user_role: input.userRole,
-      duration_seconds: input.durationSeconds ?? 2700,
+      ...row,
     })
     .select()
     .single()
 
   if (error) throw error
   return data as SessionRecord
+}
+
+export async function recordSubmissionResult(
+  input: SubmissionResultInput,
+): Promise<SessionRecord> {
+  const existing = await findSessionByRoom(input.userId, input.roomId)
+  const submissionRow = {
+    peer_id: input.peerId ?? null,
+    peer_email: input.peerEmail ?? null,
+    question_title: input.questionTitle ?? null,
+    question_difficulty: input.questionDifficulty ?? null,
+    question_topic: input.questionTopic ?? null,
+    user_role: input.userRole,
+    submission_passed: input.submissionPassed,
+    passed_tests: input.passedTests,
+    total_tests: input.totalTests,
+  }
+
+  if (existing) {
+    const { data, error } = await supabase
+      .from("sessions")
+      .update(submissionRow)
+      .eq("id", existing.id)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data as SessionRecord
+  }
+
+  const { data, error } = await supabase
+    .from("sessions")
+    .insert({
+      user_id: input.userId,
+      room_id: input.roomId,
+      duration_seconds: 0,
+      ...submissionRow,
+    })
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as SessionRecord
+}
+
+export function isProblemSolved(session: SessionRecord): boolean {
+  return (
+    session.user_role === "interviewee" &&
+    session.submission_passed === true &&
+    session.total_tests != null &&
+    session.total_tests > 0 &&
+    session.passed_tests === session.total_tests
+  )
 }
 
 export async function updateRatingGiven(
@@ -184,6 +296,7 @@ export function computeProfileStats(sessions: SessionRecord[]): ProfileStats {
   const intervieweeSessions = sessions.filter(
     (s) => s.user_role === "interviewee",
   )
+  const problemsSolved = sessions.filter(isProblemSolved).length
 
   const topicCounts = new Map<string, number>()
   for (const session of intervieweeSessions) {
@@ -209,7 +322,7 @@ export function computeProfileStats(sessions: SessionRecord[]): ProfileStats {
       averageRatingReceived != null
         ? Math.round(averageRatingReceived * 10) / 10
         : null,
-    problemsSolved: intervieweeSessions.length,
+    problemsSolved,
     favoriteTopic,
   }
 }

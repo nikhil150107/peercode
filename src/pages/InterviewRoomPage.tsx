@@ -9,6 +9,8 @@ import { useAuth } from "../context/AuthContext"
 import { useToast } from "../context/ToastContext"
 import type { Language } from "../data/mockProblem"
 import {
+  allSubmitTestsPassed,
+  countSubmitTestResults,
   formatSubmitResults,
   formatTestResults,
   runAgainstExamples,
@@ -22,6 +24,7 @@ import { completeBookingByRoom } from "../lib/bookings"
 import {
   createSession,
   lookupPeerIdByEmail,
+  recordSubmissionResult,
   type UserRole,
 } from "../lib/sessions"
 import type { Question } from "../types/question"
@@ -106,6 +109,9 @@ export default function InterviewRoomPage() {
   const roleRef = useRef<Role>(role)
   const secondsLeftRef = useRef(secondsLeft)
   const myIntervieweeQuestionRef = useRef(myIntervieweeQuestion)
+  const submissionPassedRef = useRef(false)
+  const passedTestsRef = useRef(0)
+  const totalTestsRef = useRef(0)
 
   useEffect(() => {
     roleRef.current = role
@@ -186,6 +192,9 @@ export default function InterviewRoomPage() {
           localStorage.getItem("peercode_my_question_topic"),
         userRole: sessionRole,
         durationSeconds: SESSION_SECONDS - secondsLeftRef.current,
+        submissionPassed: submissionPassedRef.current,
+        passedTests: passedTestsRef.current || null,
+        totalTests: totalTestsRef.current || null,
       })
 
       localStorage.setItem("peercode_session_id", record.id)
@@ -771,6 +780,43 @@ export default function InterviewRoomPage() {
         question?.examples ?? [],
       )
       broadcastCodeOutput(formatSubmitResults(results), false)
+
+      if (role === "interviewee" && user?.id && roomId && results.length > 0) {
+        const { passed, total } = countSubmitTestResults(results)
+        const submissionPassed = allSubmitTestsPassed(results)
+
+        if (submissionPassed) {
+          submissionPassedRef.current = true
+          passedTestsRef.current = passed
+          totalTestsRef.current = total
+
+          const peerEmail = localStorage.getItem("peercode_peerEmail")
+          let peerId = localStorage.getItem("peercode_peer_id")
+          if (!peerId && peerEmail) {
+            try {
+              peerId = await lookupPeerIdByEmail(peerEmail)
+            } catch (err) {
+              console.error("[session] Peer lookup failed:", err)
+            }
+          }
+
+          const record = await recordSubmissionResult({
+            userId: user.id,
+            roomId,
+            peerId,
+            peerEmail,
+            questionTitle: question?.title ?? null,
+            questionDifficulty: question?.difficulty ?? null,
+            questionTopic: question?.topic ?? null,
+            userRole: "interviewee",
+            passedTests: passed,
+            totalTests: total,
+            submissionPassed: true,
+          })
+
+          localStorage.setItem("peercode_session_id", record.id)
+        }
+      }
     } catch (err) {
       broadcastCodeOutput(
         `Failed to submit: ${
