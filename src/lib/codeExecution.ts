@@ -1,9 +1,10 @@
 import type { Language } from "../data/mockProblem"
 import type { QuestionExample } from "../types/question"
 
-const JUDGE0_BASE_URL =
+const JUDGE0_HOST =
   import.meta.env.VITE_JUDGE0_URL?.replace(/\/$/, "") ?? "https://ce.judge0.com"
-const JUDGE0_URL = `${JUDGE0_BASE_URL}/submissions?base64_encoded=true&wait=true`
+/** Must match request body: source_code and stdin are btoa-encoded when base64_encoded=true */
+const JUDGE0_URL = `${JUDGE0_HOST}/submissions?base64_encoded=true&wait=true`
 const JUDGE0_AUTH_TOKEN = import.meta.env.VITE_JUDGE0_AUTH_TOKEN
 
 export const JUDGE0_LANGUAGE_IDS: Record<Language, number> = {
@@ -30,22 +31,11 @@ export type TestCaseResult = {
   error?: string
 }
 
-function encodeBase64(text: string): string {
-  const bytes = new TextEncoder().encode(text)
-  let binary = ""
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i])
-  }
-  return btoa(binary)
-}
-
 function decodeBase64Field(value: string | null): string | null {
   if (!value) return value
 
   try {
-    const binary = atob(value)
-    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0))
-    return new TextDecoder().decode(bytes)
+    return atob(value)
   } catch {
     return value
   }
@@ -76,15 +66,20 @@ export async function submitToJudge0(
     headers["X-Auth-Token"] = JUDGE0_AUTH_TOKEN
   }
 
+  const encodedSource = btoa(sourceCode)
+  const encodedStdin = btoa(stdin)
+
   const requestBody = {
-    source_code: encodeBase64(sourceCode),
+    source_code: encodedSource,
     language_id: languageId,
-    stdin: encodeBase64(stdin),
+    stdin: encodedStdin,
   }
 
   console.log("=== JUDGE0 URL ===", JUDGE0_URL)
   console.log("=== JUDGE0 LANGUAGE ID ===", languageId)
   console.log("=== JUDGE0 AUTH ===", JUDGE0_AUTH_TOKEN ? "token set" : "no token")
+  console.log("=== JUDGE0 ENCODED source_code (btoa) ===", encodedSource.slice(0, 80))
+  console.log("=== JUDGE0 ENCODED stdin (btoa) ===", encodedStdin)
 
   const response = await fetch(JUDGE0_URL, {
     method: "POST",
