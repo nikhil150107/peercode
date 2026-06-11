@@ -304,17 +304,12 @@ export function getIntervieweeReceivedRating(
 ): number | null {
   if (session.user_role !== "interviewee") return null
 
-  if (session.rating != null && session.rating > 0) {
-    return session.rating
-  }
-
   if (session.rating_received != null && session.rating_received > 0) {
     return session.rating_received
   }
 
-  // Legacy rows: interviewee rating stored as rating_given
-  if (session.rating_given != null && session.rating_given > 0) {
-    return session.rating_given
+  if (session.rating != null && session.rating > 0) {
+    return session.rating
   }
 
   return null
