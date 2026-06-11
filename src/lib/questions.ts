@@ -8,15 +8,41 @@ import {
   markQuestionSeen,
 } from "../utils/seenQuestions"
 
+export function parseQuestionExamples(raw: unknown): QuestionExample[] {
+  if (Array.isArray(raw)) {
+    return raw.filter(
+      (ex): ex is QuestionExample =>
+        typeof ex === "object" &&
+        ex !== null &&
+        "input" in ex &&
+        "output" in ex,
+    )
+  }
+
+  if (typeof raw === "string") {
+    try {
+      return parseQuestionExamples(JSON.parse(raw))
+    } catch {
+      return []
+    }
+  }
+
+  return []
+}
+
 function parseExamples(raw: unknown): QuestionExample[] {
-  if (!Array.isArray(raw)) return []
-  return raw.filter(
-    (ex): ex is QuestionExample =>
-      typeof ex === "object" &&
-      ex !== null &&
-      "input" in ex &&
-      "output" in ex,
-  )
+  return parseQuestionExamples(raw)
+}
+
+export function normalizeQuestion(question: Question): Question {
+  return {
+    ...question,
+    examples: parseQuestionExamples(question.examples),
+    hidden_tests:
+      question.hidden_tests == null
+        ? null
+        : parseQuestionExamples(question.hidden_tests),
+  }
 }
 
 function pickRandom<T>(items: T[]): T | null {

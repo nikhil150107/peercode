@@ -1,6 +1,7 @@
 import type { Language } from "../data/mockProblem"
 import type { QuestionExample } from "../types/question"
 import { SERVER_URL } from "./serverUrl"
+import { getVoidExecutionMeta } from "../utils/questionExecution"
 
 function camelToSnake(name: string): string {
   return name.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "")
@@ -392,6 +393,16 @@ function buildArgList(
   return names.join(", ")
 }
 
+function resolveVoidExecution(functionNames: string[]) {
+  for (const name of functionNames) {
+    const meta = getVoidExecutionMeta(name)
+    if (meta) {
+      return { functionName: name, ...meta }
+    }
+  }
+  return null
+}
+
 function buildRunnableCode(
   userCode: string,
   language: Language,
@@ -407,8 +418,31 @@ function buildRunnableCode(
     language,
     preferredFunctionName,
   )
+  const voidExecution = resolveVoidExecution(functionNames)
 
   if (language === "python") {
+    if (voidExecution) {
+      const pyName =
+        functionNames.find((name) => getVoidExecutionMeta(name)) ??
+        voidExecution.functionName
+      return `${cleanedCode}
+
+# --- PeerCode harness ---
+${assignmentBlock}
+__called__ = False
+try:
+    ${pyName}(${argList})
+    __called__ = True
+except TypeError:
+    pass
+if not __called__:
+    raise Exception("Could not find a matching solution function")
+import json
+__out__ = ${voidExecution.outputVar}[:${voidExecution.lengthExpr}]
+print(json.dumps(__out__, separators=(',', ':')))
+`
+    }
+
     const callChain = functionNames
       .map(
         (name) =>
@@ -436,6 +470,24 @@ else:
   }
 
   if (language === "javascript") {
+    if (voidExecution) {
+      const jsName =
+        functionNames.find((name) => getVoidExecutionMeta(name)) ??
+        voidExecution.functionName
+      return `${cleanedCode}
+
+// --- PeerCode harness ---
+${assignmentBlock}
+if (typeof ${jsName} === "function") {
+  ${jsName}(${argList});
+  const __out__ = ${voidExecution.outputVar}.slice(0, ${voidExecution.lengthExpr});
+  console.log(JSON.stringify(__out__));
+  process.exit(0);
+}
+throw new Error("Could not find a matching solution function");
+`
+    }
+
     const attempts = functionNames
       .map(
         (name) =>
@@ -454,6 +506,21 @@ throw new Error("Could not find a matching solution function");
 
   if (language === "java") {
     const methodName = functionNames[0] ?? "solution"
+
+    if (voidExecution) {
+      return `${cleanedCode}
+
+public class Main {
+  public static void main(String[] args) {
+    ${assignmentBlock.replace(/^/gm, "    ")}
+    Solution sol = new Solution();
+    sol.${methodName}(${argList});
+    int[] __out__ = java.util.Arrays.copyOfRange(${voidExecution.outputVar}, 0, ${voidExecution.lengthExpr});
+    System.out.println(java.util.Arrays.toString(__out__));
+  }
+}
+`
+    }
 
     return `${cleanedCode}
 
@@ -479,6 +546,34 @@ public class Main {
   }
 
   const methodName = functionNames[0] ?? "solution"
+
+  if (voidExecution) {
+    return `#include <bits/stdc++.h>
+using namespace std;
+
+${cleanedCode}
+
+// --- PeerCode harness ---
+void __peer_print__(const vector<int>& value) {
+  cout << "[";
+  for (int i = 0; i < (int)value.size(); ++i) {
+    if (i > 0) cout << ",";
+    cout << value[i];
+  }
+  cout << "]";
+}
+
+int main() {
+  ${assignmentBlock.replace(/^/gm, "  ")}
+  ${methodName}(${argList});
+  vector<int> __out__(${voidExecution.outputVar}.begin(), ${voidExecution.outputVar}.begin() + (${voidExecution.lengthExpr}));
+  __peer_print__(__out__);
+  cout << endl;
+  return 0;
+}
+`
+  }
+
   return `#include <bits/stdc++.h>
 using namespace std;
 

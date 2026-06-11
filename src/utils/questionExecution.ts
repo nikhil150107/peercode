@@ -10,6 +10,7 @@ const FUNCTION_NAME_OVERRIDES: Record<string, string> = {
   "Valid Palindrome": "isPalindrome",
   "Maximum Subarray": "maxSubArray",
   "Merge Intervals": "merge",
+  "Merge Sorted Array": "merge",
   "Binary Tree Level Order Traversal": "levelOrder",
   "Reverse Linked List": "reverseList",
   "Linked List Cycle": "hasCycle",
@@ -95,6 +96,55 @@ export function camelToSnake(name: string): string {
 }
 
 type ParamType = "int[]" | "int" | "string" | "bool" | "double" | "unknown"
+type ReturnType = ParamType | "int[][]" | "void"
+
+type SignatureOverride = {
+  functionName: string
+  returnType: ReturnType
+  params: { name: string; type: ParamType }[]
+  /** For void functions: param to print after call (e.g. nums1) */
+  inPlaceOutputParam?: string
+  /** Expression for how many elements to print from inPlaceOutputParam */
+  inPlaceOutputLengthExpr?: string
+}
+
+const SIGNATURE_OVERRIDES: Record<string, SignatureOverride> = {
+  "Merge Sorted Array": {
+    functionName: "merge",
+    returnType: "void",
+    params: [
+      { name: "nums1", type: "int[]" },
+      { name: "m", type: "int" },
+      { name: "nums2", type: "int[]" },
+      { name: "n", type: "int" },
+    ],
+    inPlaceOutputParam: "nums1",
+    inPlaceOutputLengthExpr: "m + n",
+  },
+}
+
+export function getSignatureOverride(
+  question: Question,
+): SignatureOverride | null {
+  if (SIGNATURE_OVERRIDES[question.title]) {
+    return SIGNATURE_OVERRIDES[question.title]
+  }
+  return null
+}
+
+export function getVoidExecutionMeta(functionName: string): {
+  outputVar: string
+  lengthExpr: string
+} | null {
+  const override = Object.values(SIGNATURE_OVERRIDES).find(
+    (entry) => entry.functionName === functionName && entry.returnType === "void",
+  )
+  if (!override?.inPlaceOutputParam) return null
+  return {
+    outputVar: override.inPlaceOutputParam,
+    lengthExpr: override.inPlaceOutputLengthExpr ?? "0",
+  }
+}
 
 function inferParamType(value: string): ParamType {
   const trimmed = value.trim()
@@ -106,7 +156,7 @@ function inferParamType(value: string): ParamType {
   return "unknown"
 }
 
-function inferReturnHint(output: string): ParamType | "int[][]" {
+function inferReturnHint(output: string): ReturnType {
   const trimmed = output.trim()
   if (trimmed === "true" || trimmed === "false") return "bool"
   if (trimmed.startsWith("[[")) return "int[][]"
@@ -116,8 +166,10 @@ function inferReturnHint(output: string): ParamType | "int[][]" {
   return "unknown"
 }
 
-function javaType(type: ParamType | "int[][]"): string {
+function javaType(type: ReturnType | ParamType): string {
   switch (type) {
+    case "void":
+      return "void"
     case "int[]":
       return "int[]"
     case "int[][]":
@@ -176,11 +228,21 @@ function javaDefaultReturn(type: ParamType | "int[][]"): string {
 function buildJavaStarter(
   functionName: string,
   params: { name: string; type: ParamType }[],
-  returnType: ParamType | "int[][]",
+  returnType: ReturnType,
 ): string {
   const paramList = params
     .map((param) => `${javaType(param.type)} ${param.name}`)
     .join(", ")
+
+  if (returnType === "void") {
+    return `import java.util.*;
+
+class Solution {
+    public void ${functionName}(${paramList}) {
+        // Write your solution here
+    }
+}`
+  }
 
   return `import java.util.*;
 
@@ -194,7 +256,7 @@ class Solution {
 function buildCppStarter(
   functionName: string,
   params: { name: string; type: ParamType }[],
-  returnType: ParamType | "int[][]",
+  returnType: ReturnType,
 ): string {
   const paramList = params
     .map((param) => {
@@ -203,6 +265,12 @@ function buildCppStarter(
       return `${type} ${param.name}`
     })
     .join(", ")
+
+  if (returnType === "void") {
+    return `void ${functionName}(${paramList}) {
+    // Write your solution here
+}`
+  }
 
   const returnCpp =
     returnType === "int[]"
@@ -240,8 +308,14 @@ function buildCppStarter(
 function buildPythonStarter(
   functionName: string,
   params: { name: string }[],
+  returnType: ReturnType,
 ): string {
   const paramList = params.map((param) => param.name).join(", ")
+  if (returnType === "void") {
+    return `def ${camelToSnake(functionName)}(${paramList}):
+    # Write your solution here
+    pass`
+  }
   return `def ${camelToSnake(functionName)}(${paramList}):
     pass`
 }
@@ -249,8 +323,14 @@ function buildPythonStarter(
 function buildJavaScriptStarter(
   functionName: string,
   params: { name: string }[],
+  returnType: ReturnType,
 ): string {
   const paramList = params.map((param) => param.name).join(", ")
+  if (returnType === "void") {
+    return `function ${functionName}(${paramList}) {
+  // Write your solution here
+}`
+  }
   return `function ${functionName}(${paramList}) {
 
 }`
@@ -264,7 +344,8 @@ export function buildStarterCodeForLanguage(
     return question.starter_code[language]
   }
 
-  const functionName = resolveFunctionName(question)
+  const signatureOverride = getSignatureOverride(question)
+  const functionName = signatureOverride?.functionName ?? resolveFunctionName(question)
   const firstExample = question.examples[0]
   if (!firstExample) {
     return language === "python"
@@ -273,17 +354,20 @@ export function buildStarterCodeForLanguage(
   }
 
   const assignments = parseExampleInput(firstExample.input)
-  const params = assignments.map(({ name, value }) => ({
-    name,
-    type: inferParamType(value),
-  }))
-  const returnType = inferReturnHint(firstExample.output)
+  const params = signatureOverride
+    ? signatureOverride.params
+    : assignments.map(({ name, value }) => ({
+        name,
+        type: inferParamType(value),
+      }))
+  const returnType =
+    signatureOverride?.returnType ?? inferReturnHint(firstExample.output)
 
   switch (language) {
     case "python":
-      return buildPythonStarter(functionName, params)
+      return buildPythonStarter(functionName, params, returnType)
     case "javascript":
-      return buildJavaScriptStarter(functionName, params)
+      return buildJavaScriptStarter(functionName, params, returnType)
     case "java":
       return buildJavaStarter(functionName, params, returnType)
     case "cpp":

@@ -19,6 +19,7 @@ import {
 import {
   applyQuestionSeen,
   fetchRandomUnseenQuestion,
+  normalizeQuestion,
 } from "../lib/questions"
 import { completeBookingByRoom } from "../lib/bookings"
 import {
@@ -36,10 +37,10 @@ import {
   getTopicPreference,
   type TopicPreference,
 } from "../utils/topicPreference"
-import { EMPTY_CODE } from "../utils/editorTemplates"
+import { EMPTY_CODE, isPlaceholderCode } from "../utils/editorTemplates"
 import { getQuestionHints } from "../utils/questionHints"
 import {
-  buildStarterCodeForQuestion,
+  buildStarterCodeForLanguage,
   resolveFunctionName,
 } from "../utils/questionExecution"
 import { SERVER_URL } from "../lib/serverUrl"
@@ -48,6 +49,7 @@ import { getDisplayNameFromEmail } from "../utils/userDisplay"
 const SESSION_SECONDS = 120 * 60
 const SWAP_ALERT_AT = 22 * 60 + 30
 const SWAP_AT = 22 * 60
+const ALL_LANGUAGES: Language[] = ["python", "javascript", "java", "cpp"]
 
 const ICE_SERVERS: RTCConfiguration = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
@@ -109,6 +111,8 @@ export default function InterviewRoomPage() {
   const makingOfferRef = useRef(false)
   const isRemoteCodeUpdateRef = useRef(false)
   const questionLockedRef = useRef(false)
+  const questionIdRef = useRef<string | null>(null)
+  const languageRef = useRef<Language>(language)
   const isFetchingQuestionRef = useRef(false)
   const roleRef = useRef<Role>(role)
   const secondsLeftRef = useRef(secondsLeft)
@@ -128,6 +132,33 @@ export default function InterviewRoomPage() {
   useEffect(() => {
     myIntervieweeQuestionRef.current = myIntervieweeQuestion
   }, [myIntervieweeQuestion])
+
+  useEffect(() => {
+    languageRef.current = language
+  }, [language])
+
+  function mergeStarterCodes(
+    q: Question,
+    previous: Record<Language, string>,
+    replaceAll = false,
+  ): Record<Language, string> {
+    const next = { ...previous }
+    for (const lang of ALL_LANGUAGES) {
+      if (replaceAll || isPlaceholderCode(previous[lang], lang)) {
+        next[lang] = buildStarterCodeForLanguage(q, lang)
+      }
+    }
+    return next
+  }
+
+  function emitStarterForLanguage(
+    q: Question,
+    lang: Language,
+    code?: string,
+  ) {
+    const starter = code ?? buildStarterCodeForLanguage(q, lang)
+    emitCodeChange(starter, lang)
+  }
 
   useEffect(() => {
     if (!roomId) return
@@ -267,6 +298,7 @@ export default function InterviewRoomPage() {
 
     function resetQuestionState(loadingMessage: string) {
       questionLockedRef.current = false
+      questionIdRef.current = null
       isFetchingQuestionRef.current = false
       setQuestion(null)
       setCodes({ ...EMPTY_CODE })
@@ -276,13 +308,25 @@ export default function InterviewRoomPage() {
       setTestOutput("Run your code against example test cases.")
     }
 
-    function applyQuestion(q: Question) {
-      if (questionLockedRef.current) return
+    function applyQuestion(rawQuestion: Question) {
+      const q = normalizeQuestion(rawQuestion)
+
+      if (questionLockedRef.current && questionIdRef.current === q.id) {
+        return
+      }
 
       questionLockedRef.current = true
+      questionIdRef.current = q.id
       isFetchingQuestionRef.current = false
       setQuestion(q)
-      setCodes(buildStarterCodeForQuestion(q))
+
+      const lang = languageRef.current
+      setCodes((prev) => {
+        const next = mergeStarterCodes(q, prev, true)
+        queueMicrotask(() => emitStarterForLanguage(q, lang, next[lang]))
+        return next
+      })
+
       setQuestionLoading(false)
       setQuestionLoadingMessage("Loading question...")
       setQuestionError(null)
@@ -333,7 +377,11 @@ export default function InterviewRoomPage() {
           roomId,
           title: q.title,
         })
-        socket.emit("question_selected", { roomId, question: q, userId })
+        socket.emit("question_selected", {
+          roomId,
+          question: normalizeQuestion(q),
+          userId,
+        })
       } catch (err) {
         if (!cancelled) {
           setQuestionError(
@@ -624,6 +672,7 @@ export default function InterviewRoomPage() {
     return () => {
       cancelled = true
       questionLockedRef.current = false
+      questionIdRef.current = null
       isFetchingQuestionRef.current = false
       localStreamRef.current?.getTracks().forEach((t) => t.stop())
       localStreamRef.current = null
@@ -709,9 +758,23 @@ export default function InterviewRoomPage() {
 
   function handleLanguageChange(lang: Language) {
     setLanguage(lang)
+
+    if (!question) {
+      setCodes((prev) => {
+        emitCodeChange(prev[lang], lang)
+        return prev
+      })
+      return
+    }
+
     setCodes((prev) => {
-      emitCodeChange(prev[lang], lang)
-      return prev
+      const shouldReplace = isPlaceholderCode(prev[lang], lang)
+      const nextCode = shouldReplace
+        ? buildStarterCodeForLanguage(question, lang)
+        : prev[lang]
+      const next = shouldReplace ? { ...prev, [lang]: nextCode } : prev
+      emitCodeChange(nextCode, lang)
+      return next
     })
   }
 

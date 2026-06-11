@@ -1,7 +1,6 @@
 import Editor from "@monaco-editor/react"
 import type { Language } from "../../data/mockProblem"
 import { languageOptions, monacoLanguage } from "../../data/mockProblem"
-import { EMPTY_CODE } from "../../utils/editorTemplates"
 
 type CodeEditorPanelProps = {
   codes: Record<Language, string>
@@ -30,9 +29,6 @@ export default function CodeEditorPanel({
 }: CodeEditorPanelProps) {
 
   function handleLanguageChange(lang: Language) {
-    if (!codes[lang].trim()) {
-      onCodeChange(lang, EMPTY_CODE[lang])
-    }
     onLanguageChange(lang)
   }
 
