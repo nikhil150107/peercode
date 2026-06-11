@@ -16,7 +16,7 @@ const statusConfig = {
   },
 } as const
 
-type SlotCard Props = {
+type SlotCardProps = {
   slot: TimeSlot
   dateLabel: string
   bookedCount: number
@@ -36,7 +36,7 @@ export default function SlotCard({
   isBooked,
   isExpired,
   isClosingSoon,
-}: SlotCard Props) {
+}: SlotCardProps) {
   const status = getSlotStatus(bookedCount, slot.capacity)
   const config = statusConfig[status]
   const isFull = status === "full"
