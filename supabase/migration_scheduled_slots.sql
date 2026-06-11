@@ -12,8 +12,8 @@ ALTER TABLE slot_bookings
 
 -- Ensure status default and check constraint
 ALTER TABLE slot_bookings
-  ALTER COLUMN status SET DEFAULT 'waiting';
+  ALTER COLUMN status SET DEFAULT 'pending';
 
 COMMENT ON COLUMN slot_bookings.slot_date IS 'Date the booking is for (IST calendar date)';
-COMMENT ON COLUMN slot_bookings.status IS 'waiting | matched | cancelled';
+COMMENT ON COLUMN slot_bookings.status IS 'pending | matched | cancelled | completed | expired';
 COMMENT ON COLUMN slot_bookings.room_id IS 'Interview room id assigned when matched';

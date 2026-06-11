@@ -134,7 +134,7 @@ export default function DashboardPage() {
 
       for (const booking of bookings) {
         if (
-          (booking.status === "waiting" || booking.status === "matched") &&
+          (booking.status === "pending" || booking.status === "matched") &&
           !isSlotExpired(booking.slot_time, booking.slot_date)
         ) {
           scheduleSlotReminder(
@@ -277,7 +277,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {activeBooking && activeBooking.status === "waiting" && (
+        {activeBooking && activeBooking.status === "pending" && (
           <div className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/50 px-5 py-4">
             <p className="text-sm text-zinc-400">Your upcoming session</p>
             <p className="mt-1 text-lg font-semibold text-white">

@@ -1,7 +1,12 @@
 import { supabase } from "./supabase"
 import { SERVER_URL } from "./serverUrl"
 
-export type BookingStatus = "waiting" | "matched" | "cancelled" | "completed"
+export type BookingStatus =
+  | "pending"
+  | "matched"
+  | "cancelled"
+  | "completed"
+  | "expired"
 
 export function getBookingErrorMessage(error: unknown): string {
   if (!error) return "Failed to book slot"
@@ -70,7 +75,7 @@ export async function createSlotBooking(
         user_id: userId,
         slot_time: slotTime,
         slot_date: slotDate,
-        status: "waiting",
+        status: "pending",
       })
       .select()
       .single()
@@ -113,7 +118,7 @@ export async function fetchUserBookings(userId: string): Promise<SlotBooking[]> 
     .from("slot_bookings")
     .select("*")
     .eq("user_id", userId)
-    .in("status", ["waiting", "matched"])
+    .in("status", ["pending", "matched"])
     .order("slot_date", { ascending: true })
     .order("created_at", { ascending: false })
 
@@ -128,7 +133,7 @@ export async function fetchSlotBookingCounts(
     .from("slot_bookings")
     .select("slot_time")
     .eq("slot_date", slotDate)
-    .in("status", ["waiting", "matched"])
+    .in("status", ["pending", "matched"])
 
   if (error) throw error
 

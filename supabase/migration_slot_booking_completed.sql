@@ -4,4 +4,4 @@ ALTER TABLE slot_bookings
 
 ALTER TABLE slot_bookings
   ADD CONSTRAINT slot_bookings_status_check
-  CHECK (status IN ('waiting', 'matched', 'cancelled', 'completed'));
+  CHECK (status IN ('pending', 'matched', 'cancelled', 'completed', 'expired'));

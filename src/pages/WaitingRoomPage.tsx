@@ -88,7 +88,7 @@ export default function WaitingRoomPage() {
         setSessionStart(computeSessionStart(slot.time, date))
       }
 
-      if (booking?.status === "waiting") {
+      if (booking?.status === "pending") {
         setStatusMessage(`Waiting for your scheduled match at ${slot.time}`)
       } else {
         setStatusMessage(`Scheduled session at ${slot.time}`)
