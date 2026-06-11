@@ -16,6 +16,10 @@ import {
   type SlotBooking,
 } from "../lib/bookings"
 import {
+  requestNotificationPermission,
+  scheduleSlotReminder,
+} from "../lib/notifications"
+import {
   getDifficultyPreference,
   setDifficultyPreference,
   type DifficultyPreference,
@@ -122,6 +126,27 @@ export default function DashboardPage() {
   useEffect(() => {
     void loadBookings()
   }, [user?.id])
+
+  useEffect(() => {
+    async function setupReminders() {
+      await requestNotificationPermission()
+
+      for (const booking of bookings) {
+        if (
+          (booking.status === "waiting" || booking.status === "matched") &&
+          !isSlotExpired(booking.slot_time, booking.slot_date)
+        ) {
+          scheduleSlotReminder(
+            booking.slot_time,
+            booking.id,
+            booking.slot_date,
+          )
+        }
+      }
+    }
+
+    void setupReminders()
+  }, [bookings])
 
   useEffect(() => {
     void loadSlotCounts(selectedDate)
