@@ -56,7 +56,7 @@ export async function sendBookingConfirmationEmail(
   slotId: string,
 ) {
   try {
-    const res = await fetch(`${SERVER_URL}/api/emails/booking-confirmation`, {
+    const res = await fetch(`${SERVER_URL}/api/emails/send-booking-email`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userEmail, slotTime, slotDate, slotId }),
