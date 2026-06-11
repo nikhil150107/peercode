@@ -1,6 +1,6 @@
-import { getSlotById } from "../data/slots"
+import { TIME_SLOTS, type TimeSlot } from "../data/slots"
 
-export { getSlotById }
+export { getSlotById } from "../data/slots"
 
 function parseSlotHoursMinutes(
   slotTime: string,
@@ -60,6 +60,29 @@ export function computeSessionStart(slotTime: string, slotDate: string): Date {
   )
 
   return new Date(sessionMs)
+}
+
+/** True when the slot start time (IST) is before now. */
+export function isSlotPast(slotTime: string, slotDate: string): boolean {
+  return computeSessionStart(slotTime, slotDate).getTime() < Date.now()
+}
+
+const SLOT_HIDE_AFTER_MINUTES = 30
+
+/** Hide slots from the list once they are more than 30 minutes past start (IST). */
+export function isSlotHiddenFromList(
+  slotTime: string,
+  slotDate: string,
+  hideAfterMinutes = SLOT_HIDE_AFTER_MINUTES,
+): boolean {
+  const sessionStart = computeSessionStart(slotTime, slotDate).getTime()
+  return Date.now() > sessionStart + hideAfterMinutes * 60 * 1000
+}
+
+export function getSlotsForDate(slotDate: string): TimeSlot[] {
+  return TIME_SLOTS.filter(
+    (slot) => !isSlotHiddenFromList(slot.time, slotDate),
+  )
 }
 
 export function formatCountdown(ms: number): string {

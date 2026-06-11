@@ -23,6 +23,7 @@ type SlotCardProps = {
   onBook: (slotId: string) => void | Promise<void>
   isBooking?: boolean
   isBooked?: boolean
+  isExpired?: boolean
 }
 
 export default function SlotCard({
@@ -32,10 +33,12 @@ export default function SlotCard({
   onBook,
   isBooking,
   isBooked,
+  isExpired,
 }: SlotCardProps) {
   const status = getSlotStatus(bookedCount, slot.capacity)
   const config = statusConfig[status]
   const isFull = status === "full"
+  const isUnavailable = isFull || isExpired
 
   return (
     <div className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 transition hover:border-zinc-700">
@@ -47,9 +50,13 @@ export default function SlotCard({
           <p className="mt-1 text-2xl font-bold text-white">{slot.time}</p>
         </div>
         <span
-          className={`rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${config.badge}`}
+          className={`rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${
+            isExpired
+              ? "bg-zinc-500/10 text-zinc-400 ring-zinc-500/20"
+              : config.badge
+          }`}
         >
-          {config.label}
+          {isExpired ? "Expired" : config.label}
         </span>
       </div>
 
@@ -79,11 +86,13 @@ export default function SlotCard({
         <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-zinc-800">
           <div
             className={`h-full rounded-full transition-all ${
-              isFull
-                ? "bg-red-500"
-                : status === "filling-fast"
-                  ? "bg-amber-500"
-                  : "bg-emerald-500"
+              isExpired
+                ? "bg-zinc-600"
+                : isFull
+                  ? "bg-red-500"
+                  : status === "filling-fast"
+                    ? "bg-amber-500"
+                    : "bg-emerald-500"
             }`}
             style={{
               width: `${Math.min((bookedCount / slot.capacity) * 100, 100)}%`,
@@ -92,23 +101,27 @@ export default function SlotCard({
         </div>
         <button
           type="button"
-          disabled={isFull || isBooking || isBooked}
+          disabled={isUnavailable || isBooking || isBooked}
           onClick={() => onBook(slot.id)}
           className={`w-full rounded-lg py-2.5 text-sm font-semibold transition ${
             isBooked
               ? "cursor-default bg-zinc-800 text-emerald-400"
-              : isFull || isBooking
+              : isExpired
                 ? "cursor-not-allowed bg-zinc-800 text-zinc-500"
-                : "bg-emerald-500 text-zinc-950 shadow-lg shadow-emerald-500/20 hover:bg-emerald-400"
+                : isFull || isBooking
+                  ? "cursor-not-allowed bg-zinc-800 text-zinc-500"
+                  : "bg-emerald-500 text-zinc-950 shadow-lg shadow-emerald-500/20 hover:bg-emerald-400"
           }`}
         >
           {isBooked
             ? "Booked"
-            : isFull
-              ? "Slot Full"
-              : isBooking
-                ? "Booking..."
-                : "Book This Slot"}
+            : isExpired
+              ? "Expired"
+              : isFull
+                ? "Slot Full"
+                : isBooking
+                  ? "Booking..."
+                  : "Book This Slot"}
         </button>
       </div>
     </div>

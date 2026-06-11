@@ -5,7 +5,7 @@ import { SlotCardSkeleton } from "../components/Skeleton"
 import UserStats from "../components/UserStats"
 import { useAuth } from "../context/AuthContext"
 import { useToast } from "../context/ToastContext"
-import { TIME_SLOTS, getSlotById } from "../data/slots"
+import { getSlotById, getSlotByTime } from "../data/slots"
 import {
   cancelBooking,
   createSlotBooking,
@@ -38,7 +38,9 @@ import {
 import {
   computeSessionStart,
   formatCountdownHuman,
+  getSlotsForDate,
   isSlotExpired,
+  isSlotPast,
 } from "../utils/sessionTime"
 import {
   getDisplayNameFromEmail,
@@ -87,9 +89,15 @@ export default function DashboardPage() {
   const [slotCounts, setSlotCounts] = useState<Record<string, number>>({})
   const [cancelConfirmId, setCancelConfirmId] = useState<string | null>(null)
   const [cancellingId, setCancellingId] = useState<string | null>(null)
+  const [, setSlotTimeTick] = useState(0)
 
   const selectedDate = getDateForTab(activeTab)
-  const activeBooking = bookings.find((b) => b.slot_date === selectedDate)
+  const visibleSlots = getSlotsForDate(selectedDate)
+  const activeBooking = bookings.find(
+    (b) =>
+      b.slot_date === selectedDate &&
+      !isSlotPast(b.slot_time, b.slot_date),
+  )
   const matchedBooking = bookings.find(
     (b) =>
       b.status === "matched" &&
@@ -125,6 +133,11 @@ export default function DashboardPage() {
   }
 
   useEffect(() => {
+    const interval = setInterval(() => setSlotTimeTick((t) => t + 1), 60_000)
+    return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
     void loadBookings()
   }, [user?.id])
 
@@ -135,7 +148,7 @@ export default function DashboardPage() {
       for (const booking of bookings) {
         if (
           (booking.status === "pending" || booking.status === "matched") &&
-          !isSlotExpired(booking.slot_time, booking.slot_date)
+          !isSlotPast(booking.slot_time, booking.slot_date)
         ) {
           scheduleSlotReminder(
             booking.slot_time,
@@ -195,6 +208,11 @@ export default function DashboardPage() {
     const slot = getSlotById(slotId)
     const slotDate = getDateForTab(activeTab)
 
+    if (isSlotPast(slot.time, slotDate)) {
+      showToast("This slot has already passed", "error")
+      return
+    }
+
     setBookingSlotId(slotId)
 
     try {
@@ -242,7 +260,7 @@ export default function DashboardPage() {
   function getBookedSlotIdForDate(date: string): string | undefined {
     const booking = bookings.find((b) => b.slot_date === date)
     if (!booking) return undefined
-    return TIME_SLOTS.find((s) => s.time === booking.slot_time)?.id
+    return getSlotByTime(booking.slot_time)?.id
   }
 
   return (
@@ -277,7 +295,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {activeBooking && activeBooking.status === "pending" && (
+        {activeBooking?.status === "pending" && (
           <div className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/50 px-5 py-4">
             <p className="text-sm text-zinc-400">Your upcoming session</p>
             <p className="mt-1 text-lg font-semibold text-white">
@@ -292,7 +310,7 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => {
-                  const slot = TIME_SLOTS.find(
+                  const slot = visibleSlots.find(
                     (s) => s.time === activeBooking.slot_time,
                   )
                   if (slot) {
@@ -425,20 +443,30 @@ export default function DashboardPage() {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {slotsLoading
-              ? TIME_SLOTS.map((slot) => (
+              ? visibleSlots.map((slot) => (
                   <SlotCardSkeleton key={`skeleton-${activeTab}-${slot.id}`} />
                 ))
-              : TIME_SLOTS.map((slot) => (
-                  <SlotCard
-                    key={`${activeTab}-${slot.id}`}
-                    slot={slot}
-                    bookedCount={slotCounts[slot.time] ?? 0}
-                    dateLabel={activeTab === "today" ? "Today" : "Tomorrow"}
-                    onBook={handleBook}
-                    isBooking={bookingSlotId === slot.id}
-                    isBooked={getBookedSlotIdForDate(selectedDate) === slot.id}
-                  />
-                ))}
+              : visibleSlots.length === 0 ? (
+                  <p className="col-span-full rounded-xl border border-zinc-800 bg-zinc-900/50 px-5 py-8 text-center text-sm text-zinc-500">
+                    No bookable slots left for{" "}
+                    {activeTab === "today" ? "today" : "tomorrow"}.
+                  </p>
+                ) : (
+                  visibleSlots.map((slot) => (
+                    <SlotCard
+                      key={`${activeTab}-${slot.id}`}
+                      slot={slot}
+                      bookedCount={slotCounts[slot.time] ?? 0}
+                      dateLabel={activeTab === "today" ? "Today" : "Tomorrow"}
+                      onBook={handleBook}
+                      isBooking={bookingSlotId === slot.id}
+                      isBooked={
+                        getBookedSlotIdForDate(selectedDate) === slot.id
+                      }
+                      isExpired={isSlotPast(slot.time, selectedDate)}
+                    />
+                  ))
+                )}
           </div>
         </section>
 
