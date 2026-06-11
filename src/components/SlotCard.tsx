@@ -4,19 +4,19 @@ import { getSlotStatus } from "../data/slots"
 const statusConfig = {
   available: {
     label: "Available",
-    badge: "bg-emerald-500/10 text-emerald-400 ring-emerald-500/20",
+    badge: " bg-emerald-500/10 text-emerald-400 ring-emerald-500/20",
   },
   "filling-fast": {
     label: "Filling Fast",
-    badge: "bg-amber-500/10 text-amber-400 ring-amber-500/20",
+    badge: " bg-amber-500/10 text-amber-400 ring-amber-500/20",
   },
   full: {
     label: "Full",
-    badge: "bg-red-500/10 text-red-400 ring-red-500/20",
+    badge: " bg-red-500/10 text-red-400 ring-red-500/20",
   },
 } as const
 
-type SlotCardProps = {
+type SlotCard Props = {
   slot: TimeSlot
   dateLabel: string
   bookedCount: number
@@ -24,6 +24,7 @@ type SlotCardProps = {
   isBooking?: boolean
   isBooked?: boolean
   isExpired?: boolean
+  isClosingSoon?: boolean
 }
 
 export default function SlotCard({
@@ -34,11 +35,12 @@ export default function SlotCard({
   isBooking,
   isBooked,
   isExpired,
-}: SlotCardProps) {
+  isClosingSoon,
+}: SlotCard Props) {
   const status = getSlotStatus(bookedCount, slot.capacity)
   const config = statusConfig[status]
   const isFull = status === "full"
-  const isUnavailable = isFull || isExpired
+  const isUnavailable = isFull || isExpired || isClosingSoon
 
   return (
     <div className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 transition hover:border-zinc-700">
@@ -52,11 +54,13 @@ export default function SlotCard({
         <span
           className={`rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${
             isExpired
-              ? "bg-zinc-500/10 text-zinc-400 ring-zinc-500/20"
-              : config.badge
+              ? " bg-zinc-500/10 text-zinc-400 ring-zinc-500/20"
+              : isClosingSoon
+                ? " bg-amber-500/10 text-amber-400 ring-amber-500/20"
+                : config.badge
           }`}
         >
-          {isExpired ? "Expired" : config.label}
+          {isExpired ? "Expired" : isClosingSoon ? "Closing soon" : config.label}
         </span>
       </div>
 
@@ -87,12 +91,14 @@ export default function SlotCard({
           <div
             className={`h-full rounded-full transition-all ${
               isExpired
-                ? "bg-zinc-600"
-                : isFull
-                  ? "bg-red-500"
-                  : status === "filling-fast"
-                    ? "bg-amber-500"
-                    : "bg-emerald-500"
+                ? " bg-zinc-600"
+                : isClosingSoon
+                  ? " bg-amber-500"
+                  : isFull
+                    ? " bg-red-500"
+                    : status === "filling-fast"
+                      ? " bg-amber-500"
+                      : " bg-emerald-500"
             }`}
             style={{
               width: `${Math.min((bookedCount / slot.capacity) * 100, 100)}%`,
@@ -106,22 +112,24 @@ export default function SlotCard({
           className={`w-full rounded-lg py-2.5 text-sm font-semibold transition ${
             isBooked
               ? "cursor-default bg-zinc-800 text-emerald-400"
-              : isExpired
+              : isExpired || isClosingSoon
                 ? "cursor-not-allowed bg-zinc-800 text-zinc-500"
                 : isFull || isBooking
                   ? "cursor-not-allowed bg-zinc-800 text-zinc-500"
-                  : "bg-emerald-500 text-zinc-950 shadow-lg shadow-emerald-500/20 hover:bg-emerald-400"
+                  : " bg-emerald-500 text-zinc-950 shadow-lg shadow-emerald-500/20 hover:bg-emerald-400"
           }`}
         >
           {isBooked
             ? "Booked"
             : isExpired
               ? "Expired"
-              : isFull
-                ? "Slot Full"
-                : isBooking
-                  ? "Booking..."
-                  : "Book This Slot"}
+              : isClosingSoon
+                ? "Closing soon"
+                : isFull
+                  ? "Slot Full"
+                  : isBooking
+                    ? "Booking..."
+                    : "Book This Slot"}
         </button>
       </div>
     </div>

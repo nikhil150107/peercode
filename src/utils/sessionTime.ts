@@ -62,9 +62,38 @@ export function computeSessionStart(slotTime: string, slotDate: string): Date {
   return new Date(sessionMs)
 }
 
+/** Milliseconds until slot start (IST). Negative if the slot has started. */
+export function getMsUntilSlotStart(
+  slotTime: string,
+  slotDate: string,
+): number {
+  return computeSessionStart(slotTime, slotDate).getTime() - Date.now()
+}
+
+const BOOKING_CUTOFF_MINUTES = 5
+
+/** True when booking must be blocked (< 5 minutes until slot start, or slot already started). */
+export function isSlotBookingClosed(
+  slotTime: string,
+  slotDate: string,
+  cutoffMinutes = BOOKING_CUTOFF_MINUTES,
+): boolean {
+  return getMsUntilSlotStart(slotTime, slotDate) < cutoffMinutes * 60 * 1000
+}
+
+/** True when the slot is in the final booking window (0–5 minutes before start). */
+export function isSlotClosingSoon(
+  slotTime: string,
+  slotDate: string,
+  cutoffMinutes = BOOKING_CUTOFF_MINUTES,
+): boolean {
+  const msUntil = getMsUntilSlotStart(slotTime, slotDate)
+  return msUntil >= 0 && msUntil < cutoffMinutes * 60 * 1000
+}
+
 /** True when the slot start time (IST) is before now. */
 export function isSlotPast(slotTime: string, slotDate: string): boolean {
-  return computeSessionStart(slotTime, slotDate).getTime() < Date.now()
+  return getMsUntilSlotStart(slotTime, slotDate) < 0
 }
 
 const SLOT_HIDE_AFTER_MINUTES = 30

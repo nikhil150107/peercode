@@ -39,6 +39,8 @@ import {
   computeSessionStart,
   formatCountdownHuman,
   getSlotsForDate,
+  isSlotBookingClosed,
+  isSlotClosingSoon,
   isSlotExpired,
   isSlotPast,
 } from "../utils/sessionTime"
@@ -208,8 +210,13 @@ export default function DashboardPage() {
     const slot = getSlotById(slotId)
     const slotDate = getDateForTab(activeTab)
 
-    if (isSlotPast(slot.time, slotDate)) {
-      showToast("This slot has already passed", "error")
+    if (isSlotBookingClosed(slot.time, slotDate)) {
+      showToast(
+        isSlotPast(slot.time, slotDate)
+          ? "This slot has already passed"
+          : "Bookings close 5 minutes before the slot starts",
+        "error",
+      )
       return
     }
 
@@ -271,8 +278,8 @@ export default function DashboardPage() {
             Hey {displayName}, ready to practice?
           </h1>
           <p className="mt-2 text-zinc-400">
-            Book a slot for today or tomorrow. Matching happens at the
-            scheduled time.
+            Book a slot for today or tomorrow. Matching starts 3 minutes before
+            each slot.
           </p>
         </div>
 
@@ -464,6 +471,10 @@ export default function DashboardPage() {
                         getBookedSlotIdForDate(selectedDate) === slot.id
                       }
                       isExpired={isSlotPast(slot.time, selectedDate)}
+                      isClosingSoon={
+                        !isSlotPast(slot.time, selectedDate) &&
+                        isSlotClosingSoon(slot.time, selectedDate)
+                      }
                     />
                   ))
                 )}

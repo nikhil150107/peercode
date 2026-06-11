@@ -1,6 +1,8 @@
 import { supabase } from "./supabase"
 import { SERVER_URL } from "./serverUrl"
 
+import { isSlotBookingClosed } from "../utils/sessionTime"
+
 export type BookingStatus =
   | "pending"
   | "matched"
@@ -57,6 +59,10 @@ export async function createSlotBooking(
 ) {
   try {
     console.log("[booking] createSlotBooking", { userId, slotTime, slotDate })
+
+    if (isSlotBookingClosed(slotTime, slotDate)) {
+      throw new Error("Bookings close 5 minutes before the slot starts")
+    }
 
     const { error: deleteError } = await supabase
       .from("slot_bookings")
