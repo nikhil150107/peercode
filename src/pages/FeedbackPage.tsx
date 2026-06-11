@@ -4,7 +4,11 @@ import { Link, useNavigate } from "react-router-dom"
 import Logo from "../components/Logo"
 import StarRating from "../components/StarRating"
 import { useToast } from "../context/ToastContext"
-import { submitSessionFeedback } from "../lib/sessions"
+import { useAuth } from "../context/AuthContext"
+import {
+  lookupPeerIdByEmail,
+  submitSessionFeedback,
+} from "../lib/sessions"
 import { getPeerDisplayLabel, getStoredPeerEmail } from "../utils/userDisplay"
 
 const peerTraits = [
@@ -25,6 +29,7 @@ const struggleTopics = [
 
 export default function FeedbackPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const { showToast } = useToast()
   const lastQuestion =
     localStorage.getItem("peercode_last_question") ?? "Practice problem"
@@ -66,7 +71,18 @@ export default function FeedbackPage() {
     const roomId =
       localStorage.getItem("peercode_room_id") ??
       localStorage.getItem("peercode_roomId")
-    const peerId = localStorage.getItem("peercode_peer_id")
+    let peerId = localStorage.getItem("peercode_peer_id")
+
+    if (!peerId && storedPeerEmail) {
+      try {
+        peerId = await lookupPeerIdByEmail(storedPeerEmail)
+        if (peerId) {
+          localStorage.setItem("peercode_peer_id", peerId)
+        }
+      } catch (err) {
+        console.error("[feedback] Peer lookup failed:", err)
+      }
+    }
 
     const feedbackTags = peerTraits.filter((trait) => peerTraitsChecked[trait])
 
@@ -90,6 +106,7 @@ export default function FeedbackPage() {
           peerId,
           ratingGiven: peerRating,
           feedbackTags,
+          raterUserId: user?.id,
         })
         showToast("Rating submitted", "success")
       } catch (err) {

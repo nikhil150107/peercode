@@ -1,4 +1,5 @@
 import { supabase } from "./supabase"
+import { SERVER_URL } from "./serverUrl"
 
 export type UserRole = "interviewer" | "interviewee"
 
@@ -217,28 +218,38 @@ export async function updatePeerRatingReceived(
   peerId: string,
   roomId: string,
   rating: number,
+  raterUserId?: string,
 ) {
-  console.log("[sessions] updating rating_received for peer:", peerId, roomId)
+  console.log("[sessions] saving rating_received on peer row via API:", {
+    peerId,
+    roomId,
+    rating,
+    raterUserId,
+  })
 
-  const { data, error } = await supabase
-    .from("sessions")
-    .update({ rating, rating_received: rating })
-    .eq("room_id", roomId)
-    .eq("user_id", peerId)
-    .select("id, user_id, rating, rating_received")
+  const res = await fetch(`${SERVER_URL}/api/sessions/rating-received`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      peerId,
+      roomId,
+      rating,
+      raterUserId,
+    }),
+  })
 
-  if (error) throw error
+  const payload = (await res.json().catch(() => null)) as {
+    ok?: boolean
+    error?: string
+    session?: { id: string; user_id: string; rating: number; rating_received: number }
+  } | null
 
-  if (!data?.length) {
-    console.warn(
-      "[sessions] no peer session row found for rating_received",
-      { peerId, roomId },
-    )
-    return null
+  if (!res.ok || !payload?.ok) {
+    throw new Error(payload?.error ?? "Failed to save peer rating")
   }
 
-  console.log("[sessions] rating_received saved on peer row:", data[0])
-  return data[0]
+  console.log("[sessions] rating_received saved on peer row:", payload.session)
+  return payload.session ?? null
 }
 
 export async function submitSessionFeedback(input: {
@@ -247,21 +258,22 @@ export async function submitSessionFeedback(input: {
   peerId: string | null
   ratingGiven: number
   feedbackTags: string[]
+  raterUserId?: string
 }) {
   await updateRatingGiven(input.sessionId, input.ratingGiven, input.feedbackTags)
 
-  if (input.peerId && input.roomId) {
-    await updatePeerRatingReceived(
-      input.peerId,
-      input.roomId,
-      input.ratingGiven,
+  if (!input.peerId || !input.roomId) {
+    throw new Error(
+      "Could not identify your peer for this session — rating saved locally only",
     )
-  } else {
-    console.warn("[sessions] skipping rating_received — missing peerId or roomId", {
-      peerId: input.peerId,
-      roomId: input.roomId,
-    })
   }
+
+  await updatePeerRatingReceived(
+    input.peerId,
+    input.roomId,
+    input.ratingGiven,
+    input.raterUserId,
+  )
 }
 
 export async function fetchUserSessions(
