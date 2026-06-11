@@ -1,6 +1,5 @@
 import { supabase } from "./supabase"
-
-const SERVER_URL = import.meta.env.VITE_SERVER_URL ?? "http://localhost:3001"
+import { SERVER_URL } from "./serverUrl"
 
 export type BookingStatus = "waiting" | "matched" | "cancelled"
 

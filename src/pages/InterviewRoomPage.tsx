@@ -34,12 +34,12 @@ import {
 } from "../utils/topicPreference"
 import { EMPTY_CODE } from "../utils/editorTemplates"
 import { getQuestionHints } from "../utils/questionHints"
+import { SERVER_URL } from "../lib/serverUrl"
 import { getDisplayNameFromEmail } from "../utils/userDisplay"
 
 const SESSION_SECONDS = 45 * 60
 const SWAP_ALERT_AT = 22 * 60 + 30
 const SWAP_AT = 22 * 60
-const SOCKET_URL = "http://localhost:3001"
 
 const ICE_SERVERS: RTCConfiguration = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
@@ -435,7 +435,7 @@ export default function InterviewRoomPage() {
     }
 
     function setupSocket() {
-      const socket = io(SOCKET_URL)
+      const socket = io(SERVER_URL)
       socketRef.current = socket
 
       socket.on("connect", () => {

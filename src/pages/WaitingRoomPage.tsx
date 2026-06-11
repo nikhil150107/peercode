@@ -8,13 +8,12 @@ import { getSlotById } from "../data/slots"
 import { fetchUserBookings } from "../lib/bookings"
 import { getDifficultyPreference } from "../utils/difficultyPreference"
 import { getTopicPreference } from "../utils/topicPreference"
+import { SERVER_URL } from "../lib/serverUrl"
 import {
   computeSessionStart,
   formatCountdown,
   formatCountdownHuman,
 } from "../utils/sessionTime"
-
-const SOCKET_URL = "http://localhost:3001"
 
 type MatchFoundPayload = {
   roomId: string
@@ -105,7 +104,7 @@ export default function WaitingRoomPage() {
   useEffect(() => {
     if (!user?.id || !user.email) return
 
-    const socket = io(SOCKET_URL)
+    const socket = io(SERVER_URL)
     socketRef.current = socket
     ;(window as any).__peerSocket = socket
 
