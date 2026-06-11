@@ -670,7 +670,6 @@ export default function InterviewRoomPage() {
   }
 
   function handleCodeChange(lang: Language, code: string) {
-    if (role === "interviewer") return
     setCodes((prev) => ({ ...prev, [lang]: code }))
     emitCodeChange(code, lang)
   }
@@ -696,7 +695,6 @@ export default function InterviewRoomPage() {
   }
 
   function handleLanguageChange(lang: Language) {
-    if (role === "interviewer") return
     setLanguage(lang)
     setCodes((prev) => {
       emitCodeChange(prev[lang], lang)
@@ -831,7 +829,6 @@ export default function InterviewRoomPage() {
         <CodeEditorPanel
           codes={codes}
           language={language}
-          readOnly={role === "interviewer"}
           hints={
             role === "interviewer" && question
               ? getQuestionHints(question)

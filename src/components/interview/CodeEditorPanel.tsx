@@ -6,7 +6,6 @@ import { EMPTY_CODE } from "../../utils/editorTemplates"
 type CodeEditorPanelProps = {
   codes: Record<Language, string>
   language: Language
-  readOnly?: boolean
   hints?: string[]
   testOutput?: string
   running?: boolean
@@ -20,7 +19,6 @@ type CodeEditorPanelProps = {
 export default function CodeEditorPanel({
   codes,
   language,
-  readOnly = false,
   hints,
   testOutput = "Run your code against example test cases.",
   running = false,
@@ -46,8 +44,7 @@ export default function CodeEditorPanel({
         <select
           value={language}
           onChange={(e) => handleLanguageChange(e.target.value as Language)}
-          disabled={readOnly}
-          className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500/50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500/50"
         >
           {languageOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -58,7 +55,7 @@ export default function CodeEditorPanel({
         <button
           type="button"
           onClick={onRunCode}
-          disabled={running || readOnly || !onRunCode}
+          disabled={running || !onRunCode}
           className="rounded-lg bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-zinc-950 transition hover:bg-emerald-400 disabled:opacity-60"
         >
           {running ? "Running..." : "Run Code"}
@@ -66,16 +63,11 @@ export default function CodeEditorPanel({
         <button
           type="button"
           onClick={onSubmitCode}
-          disabled={running || readOnly || !onSubmitCode}
+          disabled={running || !onSubmitCode}
           className="rounded-lg bg-violet-500 px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-60"
         >
           {running ? "Submitting..." : "Submit"}
         </button>
-        {readOnly && (
-          <span className="text-xs font-medium text-violet-400">
-            View only — interviewee is coding
-          </span>
-        )}
       </div>
 
       {hints && hints.length > 0 && (
@@ -99,11 +91,9 @@ export default function CodeEditorPanel({
           language={monacoLanguage[language]}
           theme="vs-dark"
           value={codes[language]}
-          onChange={(value) => {
-            if (!readOnly) onCodeChange(language, value ?? "")
-          }}
+          onChange={(value) => onCodeChange(language, value ?? "")}
           options={{
-            readOnly,
+            readOnly: false,
             minimap: { enabled: false },
             fontSize: 14,
             scrollBeyondLastLine: false,
