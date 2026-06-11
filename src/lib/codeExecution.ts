@@ -1,13 +1,16 @@
 import type { Language } from "../data/mockProblem"
 import type { QuestionExample } from "../types/question"
 
-const JUDGE0_URL = "https://ce.judge0.com/submissions?wait=true"
+const JUDGE0_BASE_URL =
+  import.meta.env.VITE_JUDGE0_URL?.replace(/\/$/, "") ?? "https://ce.judge0.com"
+const JUDGE0_URL = `${JUDGE0_BASE_URL}/submissions?base64_encoded=true&wait=true`
+const JUDGE0_AUTH_TOKEN = import.meta.env.VITE_JUDGE0_AUTH_TOKEN
 
 export const JUDGE0_LANGUAGE_IDS: Record<Language, number> = {
   python: 71,
   javascript: 63,
   java: 62,
-  cpp: 54,
+  cpp: 54, // C++ (GCC 9.2.0)
 }
 
 type Judge0Submission = {
@@ -27,28 +30,79 @@ export type TestCaseResult = {
   error?: string
 }
 
+function encodeBase64(text: string): string {
+  const bytes = new TextEncoder().encode(text)
+  let binary = ""
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i])
+  }
+  return btoa(binary)
+}
+
+function decodeBase64Field(value: string | null): string | null {
+  if (!value) return value
+
+  try {
+    const binary = atob(value)
+    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0))
+    return new TextDecoder().decode(bytes)
+  } catch {
+    return value
+  }
+}
+
+function decodeJudge0Submission(submission: Judge0Submission): Judge0Submission {
+  return {
+    ...submission,
+    stdout: decodeBase64Field(submission.stdout),
+    stderr: decodeBase64Field(submission.stderr),
+    compile_output: decodeBase64Field(submission.compile_output),
+    message: decodeBase64Field(submission.message),
+  }
+}
+
 export async function submitToJudge0(
   sourceCode: string,
   languageId: number,
   stdin = "",
 ): Promise<Judge0Submission> {
+  console.log("=== CODE SENT TO JUDGE0 ===", sourceCode)
+  console.log("=== STDIN ===", stdin)
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  }
+  if (JUDGE0_AUTH_TOKEN) {
+    headers["X-Auth-Token"] = JUDGE0_AUTH_TOKEN
+  }
+
+  const requestBody = {
+    source_code: encodeBase64(sourceCode),
+    language_id: languageId,
+    stdin: encodeBase64(stdin),
+  }
+
+  console.log("=== JUDGE0 URL ===", JUDGE0_URL)
+  console.log("=== JUDGE0 LANGUAGE ID ===", languageId)
+  console.log("=== JUDGE0 AUTH ===", JUDGE0_AUTH_TOKEN ? "token set" : "no token")
+
   const response = await fetch(JUDGE0_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      source_code: sourceCode,
-      language_id: languageId,
-      stdin,
-    }),
+    headers,
+    body: JSON.stringify(requestBody),
   })
 
+  const responseText = await response.text()
+
   if (!response.ok) {
+    console.error("=== JUDGE0 ERROR ===", response.status, responseText)
     throw new Error(
-      `Judge0 request failed (${response.status}): ${response.statusText}`,
+      `Judge0 request failed (${response.status}): ${responseText || response.statusText}`,
     )
   }
 
-  return response.json() as Promise<Judge0Submission>
+  const submission = JSON.parse(responseText) as Judge0Submission
+  return decodeJudge0Submission(submission)
 }
 
 function splitTopLevelCommas(input: string): string[] {

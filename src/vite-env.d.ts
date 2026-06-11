@@ -6,6 +6,8 @@ interface ImportMetaEnv {
   readonly VITE_DAILY_API_KEY: string
   readonly VITE_DAILY_DOMAIN: string
   readonly VITE_SERVER_URL: string
+  readonly VITE_JUDGE0_URL?: string
+  readonly VITE_JUDGE0_AUTH_TOKEN?: string
 }
 
 interface ImportMeta {
