@@ -3,6 +3,24 @@ import { SERVER_URL } from "./serverUrl"
 
 export type BookingStatus = "waiting" | "matched" | "cancelled" | "completed"
 
+export function getBookingErrorMessage(error: unknown): string {
+  if (!error) return "Failed to book slot"
+
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const pg = error as {
+      message?: string
+      details?: string
+      hint?: string
+      code?: string
+    }
+    const parts = [pg.message, pg.details, pg.hint, pg.code].filter(Boolean)
+    if (parts.length > 0) return parts.join(" — ")
+  }
+
+  if (error instanceof Error) return error.message
+  return String(error)
+}
+
 export type SlotBooking = {
   id: string
   user_id: string
@@ -32,21 +50,41 @@ export async function createSlotBooking(
   slotTime: string,
   slotDate: string,
 ) {
-  await deleteBookingsForUserOnDate(userId, slotDate)
+  try {
+    console.log("[booking] createSlotBooking", { userId, slotTime, slotDate })
 
-  const { data, error } = await supabase
-    .from("slot_bookings")
-    .insert({
-      user_id: userId,
-      slot_time: slotTime,
-      slot_date: slotDate,
-      status: "waiting",
-    })
-    .select()
-    .single()
+    const { error: deleteError } = await supabase
+      .from("slot_bookings")
+      .delete()
+      .eq("user_id", userId)
+      .eq("slot_date", slotDate)
 
-  if (error) throw error
-  return data as SlotBooking
+    if (deleteError) {
+      console.error("[booking] deleteBookingsForUserOnDate failed:", deleteError)
+      throw deleteError
+    }
+
+    const { data, error } = await supabase
+      .from("slot_bookings")
+      .insert({
+        user_id: userId,
+        slot_time: slotTime,
+        slot_date: slotDate,
+        status: "waiting",
+      })
+      .select()
+      .single()
+
+    if (error) {
+      console.error("[booking] insert failed:", error)
+      throw error
+    }
+
+    return data as SlotBooking
+  } catch (error) {
+    console.error("[booking] createSlotBooking error:", error)
+    throw error
+  }
 }
 
 export async function sendBookingConfirmationEmail(

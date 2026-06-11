@@ -12,6 +12,7 @@ import {
   fetchPeerEmail,
   fetchSlotBookingCounts,
   fetchUserBookings,
+  getBookingErrorMessage,
   sendBookingConfirmationEmail,
   type SlotBooking,
 } from "../lib/bookings"
@@ -212,10 +213,8 @@ export default function DashboardPage() {
 
       showToast("Slot booked successfully", "success")
     } catch (err) {
-      showToast(
-        err instanceof Error ? err.message : "Failed to book slot",
-        "error",
-      )
+      console.error("[dashboard] handleBook failed:", err)
+      showToast(getBookingErrorMessage(err), "error")
     } finally {
       setBookingSlotId(null)
     }
