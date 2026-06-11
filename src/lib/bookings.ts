@@ -1,7 +1,7 @@
 import { supabase } from "./supabase"
 import { SERVER_URL } from "./serverUrl"
 
-export type BookingStatus = "waiting" | "matched" | "cancelled"
+export type BookingStatus = "waiting" | "matched" | "cancelled" | "completed"
 
 export type SlotBooking = {
   id: string
@@ -107,6 +107,20 @@ export async function cancelBooking(bookingId: string) {
     .from("slot_bookings")
     .delete()
     .eq("id", bookingId)
+
+  if (error) throw error
+}
+
+export async function completeBookingByRoom(
+  userId: string,
+  roomId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from("slot_bookings")
+    .update({ status: "completed" })
+    .eq("user_id", userId)
+    .eq("room_id", roomId)
+    .eq("status", "matched")
 
   if (error) throw error
 }

@@ -77,6 +77,18 @@ export function formatCountdown(ms: number): string {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
 }
 
+const SLOT_EXPIRY_MINUTES = 70
+
+export function isSlotExpired(
+  slotTime: string,
+  slotDate: string,
+  graceMinutes = SLOT_EXPIRY_MINUTES,
+): boolean {
+  const sessionStart = computeSessionStart(slotTime, slotDate)
+  const expiryMs = sessionStart.getTime() + graceMinutes * 60 * 1000
+  return Date.now() > expiryMs
+}
+
 export function formatCountdownHuman(ms: number): string {
   if (ms <= 0) return "Starting now"
 

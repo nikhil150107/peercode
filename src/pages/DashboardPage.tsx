@@ -33,6 +33,7 @@ import {
 import {
   computeSessionStart,
   formatCountdownHuman,
+  isSlotExpired,
 } from "../utils/sessionTime"
 import {
   getDisplayNameFromEmail,
@@ -85,7 +86,10 @@ export default function DashboardPage() {
   const selectedDate = getDateForTab(activeTab)
   const activeBooking = bookings.find((b) => b.slot_date === selectedDate)
   const matchedBooking = bookings.find(
-    (b) => b.status === "matched" && b.room_id,
+    (b) =>
+      b.status === "matched" &&
+      b.room_id &&
+      !isSlotExpired(b.slot_time, b.slot_date),
   )
 
   async function loadSlotCounts(date: string) {

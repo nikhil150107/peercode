@@ -18,6 +18,7 @@ import {
   applyQuestionSeen,
   fetchRandomUnseenQuestion,
 } from "../lib/questions"
+import { completeBookingByRoom } from "../lib/bookings"
 import {
   createSession,
   lookupPeerIdByEmail,
@@ -62,6 +63,7 @@ export default function InterviewRoomPage() {
 
   const [role, setRole] = useState<Role>("interviewee")
   const [secondsLeft, setSecondsLeft] = useState(SESSION_SECONDS)
+  const [timerStarted, setTimerStarted] = useState(false)
   const [showSwapAlert, setShowSwapAlert] = useState(false)
   const [codes, setCodes] = useState<Record<Language, string>>(EMPTY_CODE)
   const [language, setLanguage] = useState<Language>("python")
@@ -199,13 +201,28 @@ export default function InterviewRoomPage() {
     }
   }
 
-  async function handleEndSession() {
+  async function markBookingCompleted() {
+    if (!user?.id || !roomId) return
+
+    try {
+      await completeBookingByRoom(user.id, roomId)
+    } catch (err) {
+      console.error("[booking] Failed to mark booking completed:", err)
+    }
+  }
+
+  async function finishSession() {
     saveLastQuestionForFeedback()
     const saved = await persistSession()
+    await markBookingCompleted()
     if (saved) {
       showToast("Session saved", "success")
     }
     navigate("/feedback")
+  }
+
+  async function handleEndSession() {
+    await finishSession()
   }
   const [testOutput, setTestOutput] = useState(
     "Run your code against example test cases.",
@@ -556,6 +573,15 @@ export default function InterviewRoomPage() {
       })
 
       socket.on(
+        "start_timer",
+        ({ durationSeconds }: { durationSeconds?: number }) => {
+          console.log("[interview] start_timer received", { durationSeconds })
+          setSecondsLeft(durationSeconds ?? SESSION_SECONDS)
+          setTimerStarted(true)
+        },
+      )
+
+      socket.on(
         "code_output",
         ({
           output,
@@ -597,15 +623,13 @@ export default function InterviewRoomPage() {
   }, [roomId, user?.id])
 
   useEffect(() => {
+    if (!timerStarted) return
+
     const interval = setInterval(() => {
       setSecondsLeft((prev) => {
         if (prev <= 1) {
           clearInterval(interval)
-          const myQuestion = localStorage.getItem("peercode_my_question")
-          if (myQuestion) {
-            localStorage.setItem("peercode_last_question", myQuestion)
-          }
-          void persistSession().then(() => navigate("/feedback"))
+          void finishSession()
           return 0
         }
         return prev - 1
@@ -613,9 +637,11 @@ export default function InterviewRoomPage() {
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [navigate])
+  }, [timerStarted, navigate])
 
   useEffect(() => {
+    if (!timerStarted) return
+
     if (secondsLeft === SWAP_ALERT_AT) {
       setShowSwapAlert(true)
     }
@@ -623,7 +649,7 @@ export default function InterviewRoomPage() {
       setShowSwapAlert(false)
       setRole((r) => (r === "interviewer" ? "interviewee" : "interviewer"))
     }
-  }, [secondsLeft])
+  }, [secondsLeft, timerStarted])
 
   function emitCodeChange(code: string, lang: Language) {
     if (
@@ -760,7 +786,7 @@ export default function InterviewRoomPage() {
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-zinc-950 text-zinc-100">
       <InterviewTopBar
-        timer={formatTimer(secondsLeft)}
+        timer={timerStarted ? formatTimer(secondsLeft) : "Waiting..."}
         role={role}
         showSwapAlert={showSwapAlert}
         onSwapRoles={handleSwapRoles}

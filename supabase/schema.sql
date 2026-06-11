@@ -15,7 +15,7 @@ CREATE TABLE slot_bookings (
   user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
   slot_time text NOT NULL,
   slot_date date NOT NULL,
-  status text DEFAULT 'waiting' CHECK (status IN ('waiting', 'matched', 'cancelled')),
+  status text DEFAULT 'waiting' CHECK (status IN ('waiting', 'matched', 'cancelled', 'completed')),
   matched_with uuid REFERENCES auth.users(id) ON DELETE SET NULL,
   room_id text,
   created_at timestamp DEFAULT now(),
