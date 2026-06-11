@@ -12,6 +12,7 @@ export type SessionRecord = {
   question_difficulty: string | null
   question_topic: string | null
   user_role: UserRole | null
+  rating: number | null
   rating_given: number | null
   rating_received: number | null
   feedback_tags: string[] | null
@@ -221,10 +222,10 @@ export async function updatePeerRatingReceived(
 
   const { data, error } = await supabase
     .from("sessions")
-    .update({ rating_received: rating })
+    .update({ rating, rating_received: rating })
     .eq("room_id", roomId)
     .eq("user_id", peerId)
-    .select("id, user_id, rating_received")
+    .select("id, user_id, rating, rating_received")
 
   if (error) throw error
 
@@ -286,12 +287,29 @@ export function computeTopicsPracticed(sessions: SessionRecord[]): string[] {
   return [...topics].sort()
 }
 
+export function getIntervieweeReceivedRating(
+  session: SessionRecord,
+): number | null {
+  if (session.user_role !== "interviewee") return null
+
+  if (session.rating != null && session.rating > 0) {
+    return session.rating
+  }
+
+  if (session.rating_received != null && session.rating_received > 0) {
+    return session.rating_received
+  }
+
+  // Legacy rows: interviewee rating stored as rating_given
+  if (session.rating_given != null && session.rating_given > 0) {
+    return session.rating_given
+  }
+
+  return null
+}
+
 function hasValidRatingReceived(session: SessionRecord): boolean {
-  return (
-    session.user_role === "interviewee" &&
-    session.rating_received != null &&
-    session.rating_received > 0
-  )
+  return getIntervieweeReceivedRating(session) != null
 }
 
 export function computeProfileStats(sessions: SessionRecord[]): ProfileStats {
@@ -299,7 +317,7 @@ export function computeProfileStats(sessions: SessionRecord[]): ProfileStats {
   const averageRatingReceived =
     ratedIntervieweeSessions.length > 0
       ? ratedIntervieweeSessions.reduce(
-          (sum, session) => sum + (session.rating_received ?? 0),
+          (sum, session) => sum + (getIntervieweeReceivedRating(session) ?? 0),
           0,
         ) / ratedIntervieweeSessions.length
       : null

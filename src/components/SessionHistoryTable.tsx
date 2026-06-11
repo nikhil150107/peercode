@@ -1,4 +1,7 @@
-import type { SessionRecord } from "../lib/sessions"
+import {
+  getIntervieweeReceivedRating,
+  type SessionRecord,
+} from "../lib/sessions"
 
 type SessionHistoryTableProps = {
   sessions: SessionRecord[]
@@ -84,19 +87,26 @@ export default function SessionHistoryTable({
                 {session.user_role ?? "—"}
               </td>
               <td className="px-4 py-3 text-zinc-300">
-                {session.rating_received != null ? (
-                  <span>
-                    <span className="text-amber-400">★</span>{" "}
-                    {session.rating_received}/5 received
-                  </span>
-                ) : session.rating_given != null ? (
-                  <span>
-                    <span className="text-amber-400">★</span>{" "}
-                    {session.rating_given}/5 given
-                  </span>
-                ) : (
-                  "—"
-                )}
+                {(() => {
+                  const received = getIntervieweeReceivedRating(session)
+                  if (received != null) {
+                    return (
+                      <span>
+                        <span className="text-amber-400">★</span> {received}/5
+                        received
+                      </span>
+                    )
+                  }
+                  if (session.rating_given != null) {
+                    return (
+                      <span>
+                        <span className="text-amber-400">★</span>{" "}
+                        {session.rating_given}/5 given
+                      </span>
+                    )
+                  }
+                  return "—"
+                })()}
               </td>
             </tr>
           ))}

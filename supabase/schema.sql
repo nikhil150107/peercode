@@ -32,6 +32,7 @@ CREATE TABLE sessions (
   question_difficulty text,
   question_topic text,
   user_role text,
+  rating integer,
   rating_given integer,
   rating_received integer,
   feedback_tags text[],
