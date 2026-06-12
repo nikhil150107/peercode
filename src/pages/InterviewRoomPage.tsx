@@ -34,7 +34,6 @@ import {
 import {
   DEFAULT_EDITOR_LANGUAGE,
   defaultCompilerVersion,
-  harnessLanguageForEditor,
   resolveJudge0LanguageId,
 } from "../data/compilerVersions"
 import {
@@ -62,7 +61,7 @@ import { EMPTY_CODE, isPlaceholderCode } from "../utils/editorTemplates"
 import { getQuestionHints } from "../utils/questionHints"
 import {
   buildStarterCodeForLanguage,
-  resolveFunctionName,
+  CP_EXECUTION_HINT,
 } from "../utils/questionExecution"
 import { SERVER_URL } from "../lib/serverUrl"
 import {
@@ -277,9 +276,7 @@ export default function InterviewRoomPage() {
 
   function buildExecutionOptions() {
     return {
-      functionName: question ? resolveFunctionName(question) : undefined,
       languageId: resolveJudge0LanguageId(language, compilerVersionId),
-      harnessLanguage: harnessLanguageForEditor[language],
     }
   }
 
@@ -1665,6 +1662,7 @@ export default function InterviewRoomPage() {
             testOutput={testOutput}
             customTests={customTests}
             customInputPlaceholder={question?.examples[0]?.input ?? ""}
+            executionHint={CP_EXECUTION_HINT}
             running={runningTests}
             runningCustom={runningCustom}
             runningCustomTestId={runningCustomTestId}

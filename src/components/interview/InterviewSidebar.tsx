@@ -203,11 +203,15 @@ export default function InterviewSidebar({
                     <p className="font-medium text-content">
                       Example {i + 1}
                     </p>
-                    <p className="mt-1 font-mono text-xs text-content-muted">
-                      Input: {ex.input}
+                    <p className="mt-1 whitespace-pre-wrap font-mono text-xs text-content-muted">
+                      Input (stdin):
+                      {"\n"}
+                      {ex.input}
                     </p>
-                    <p className="mt-1 font-mono text-xs text-brand-soft">
-                      Output: {ex.output}
+                    <p className="mt-1 whitespace-pre-wrap font-mono text-xs text-brand-soft">
+                      Expected stdout:
+                      {"\n"}
+                      {ex.output}
                     </p>
                     {ex.explanation && (
                       <p className="mt-1 text-xs text-content-muted">

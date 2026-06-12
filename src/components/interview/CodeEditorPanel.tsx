@@ -21,6 +21,7 @@ type CodeEditorPanelProps = {
   language: Language
   compilerVersionId?: number
   hints?: string[]
+  executionHint?: string
   testOutput?: string
   customTests?: CustomTestCase[]
   customInputPlaceholder?: string
@@ -53,6 +54,7 @@ export default function CodeEditorPanel({
   language,
   compilerVersionId,
   hints,
+  executionHint,
   testOutput = "Run your code against example test cases.",
   customTests = [],
   customInputPlaceholder = "",
@@ -82,7 +84,7 @@ export default function CodeEditorPanel({
     tests.find((test) => test.id === activeCustomId) ?? tests[0]
   const inputPlaceholder =
     customInputPlaceholder.trim() ||
-    "Enter test input using the same format as the question examples"
+    "Paste stdin for your program (matches the example format in the question panel)"
 
   const versions = compilerVersionsByLanguage[language]
   const selectedVersion = getCompilerVersion(language, compilerVersionId)
@@ -212,6 +214,14 @@ export default function CodeEditorPanel({
           {running ? "Submitting..." : "Submit"}
         </button>
       </div>
+
+      {executionHint && (
+        <div className="shrink-0 border-b border-stroke bg-emerald-500/5 px-4 py-2.5">
+          <p className="text-sm leading-relaxed text-content-muted">
+            {executionHint}
+          </p>
+        </div>
+      )}
 
       {hints && hints.length > 0 && (
         <div className="shrink-0 border-b border-stroke bg-violet-500/5 px-4 py-3">

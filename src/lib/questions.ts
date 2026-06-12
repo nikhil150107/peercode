@@ -1,6 +1,7 @@
 import type { Question, QuestionExample } from "../types/question"
 import type { DifficultyPreference } from "../utils/difficultyPreference"
 import type { TopicPreference } from "../utils/topicPreference"
+import { normalizeExampleForCp } from "./testCaseFormat"
 import { supabase } from "./supabase"
 import {
   clearSeenQuestions,
@@ -37,11 +38,11 @@ function parseExamples(raw: unknown): QuestionExample[] {
 export function normalizeQuestion(question: Question): Question {
   return {
     ...question,
-    examples: parseQuestionExamples(question.examples),
+    examples: parseQuestionExamples(question.examples).map(normalizeExampleForCp),
     hidden_tests:
       question.hidden_tests == null
         ? null
-        : parseQuestionExamples(question.hidden_tests),
+        : parseQuestionExamples(question.hidden_tests).map(normalizeExampleForCp),
   }
 }
 
@@ -57,7 +58,7 @@ function mapRowToQuestion(row: Record<string, unknown>): Question {
       ? (starterRaw as Question["starter_code"])
       : null
 
-  return {
+  return normalizeQuestion({
     id: row.id as string,
     title: row.title as string,
     difficulty: row.difficulty as Question["difficulty"],
@@ -69,7 +70,7 @@ function mapRowToQuestion(row: Record<string, unknown>): Question {
     constraints: (row.constraints as string) ?? null,
     function_name: (row.function_name as string) ?? null,
     starter_code,
-  }
+  })
 }
 
 export async function fetchAllQuestions(): Promise<Question[]> {
