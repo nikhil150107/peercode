@@ -82,7 +82,13 @@ export default function InterviewSidebar({
     >
       <div className="relative shrink-0 border-b border-stroke p-2 sm:p-3">
         {videoError && (
-          <div className="mb-2 rounded-lg bg-red-500/10 px-3 py-2 text-center text-xs text-danger">
+          <div
+            className={`mb-2 rounded-lg px-3 py-2 text-center text-xs ${
+              videoError === "Video unavailable"
+                ? "bg-amber-500/10 text-warn"
+                : "bg-red-500/10 text-danger"
+            }`}
+          >
             {videoError}
           </div>
         )}
@@ -123,7 +129,7 @@ export default function InterviewSidebar({
           )}
         </div>
         <div className="flex gap-2">
-          <div className="flex flex-1 flex-col overflow-hidden rounded-lg border border-stroke bg-surface-secondary/60 sm:rounded-xl">
+          <div className="relative flex flex-1 flex-col overflow-hidden rounded-lg border border-stroke bg-surface-secondary/60 sm:rounded-xl">
             <video
               ref={localVideoRef}
               autoPlay
@@ -131,6 +137,11 @@ export default function InterviewSidebar({
               muted
               className="aspect-video max-h-20 w-full bg-surface-primary object-cover sm:max-h-none"
             />
+            {!videoLoading && videoError === "Video unavailable" && (
+              <p className="absolute inset-x-0 top-8 text-center text-[10px] font-medium text-warn sm:top-12 sm:text-xs">
+                Video unavailable
+              </p>
+            )}
             <p className="px-2 py-1.5 text-center text-xs font-medium text-content-muted">
               You
             </p>

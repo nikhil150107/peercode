@@ -16,8 +16,8 @@ import ResizeHandle from "../components/interview/ResizeHandle"
 import { useAuth } from "../context/AuthContext"
 import { useToast } from "../context/ToastContext"
 import type { Language } from "../data/mockProblem"
+import { acquireLocalMediaStream } from "../lib/acquireMediaStream"
 import {
-  allSubmitTestsPassed,
   countSubmitTestResults,
   formatSubmitResults,
   formatTestResults,
@@ -787,21 +787,76 @@ export default function InterviewRoomPage() {
       pendingCandidatesRef.current = []
 
       let stream = localStreamRef.current
+      let videoEnabled = Boolean(stream?.getVideoTracks().some((t) => t.enabled))
+
       if (!stream) {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        })
-        localStreamRef.current = stream
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream
+        try {
+          const acquired = await acquireLocalMediaStream()
+          stream = acquired.stream
+          videoEnabled = acquired.videoEnabled
+          attachLocalPreview(stream, videoEnabled)
+          if (!videoEnabled) {
+            setVideoError(acquired.videoUnavailableMessage ?? "Video unavailable")
+            setVideoLoading(false)
+            clearVideoConnectTimeout()
+          }
+        } catch (err) {
+          console.error("[interview] reconnect media failed:", err)
+          setVideoConnectionStatus("failed")
+          setVideoError(
+            err instanceof Error ? err.message : "Failed to access microphone",
+          )
+          setVideoLoading(false)
+          clearVideoConnectTimeout()
+          return
         }
       }
 
       const pc = new RTCPeerConnection(ICE_SERVERS)
       pcRef.current = pc
       stream.getTracks().forEach((track) => pc.addTrack(track, stream))
+      createPeerConnectionHandlers(pc)
 
+      const offer = await pc.createOffer()
+      await pc.setLocalDescription(offer)
+      socket.emit("webrtc_offer", { roomId, offer, userId })
+    }
+
+    let webrtcStarted = false
+    let webrtcHandlersRegistered = false
+    let pendingRoomReadyPeers: string[] | null = null
+    let pendingRemoteOffer: RTCSessionDescriptionInit | null = null
+
+    async function handleRemoteOffer(
+      socket: Socket,
+      offer: RTCSessionDescriptionInit,
+    ) {
+      const pc = pcRef.current
+      if (!pc) {
+        pendingRemoteOffer = offer
+        return
+      }
+
+      console.log("[webrtc] Received offer")
+      if (makingOfferRef.current) return
+
+      await pc.setRemoteDescription(new RTCSessionDescription(offer))
+      await flushPendingCandidates(pc)
+
+      const answer = await pc.createAnswer()
+      await pc.setLocalDescription(answer)
+      socket.emit("webrtc_answer", { roomId, answer, userId })
+      console.log("[webrtc] Sent answer")
+    }
+
+    function attachLocalPreview(stream: MediaStream, videoEnabled: boolean) {
+      localStreamRef.current = stream
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = videoEnabled ? stream : null
+      }
+    }
+
+    function createPeerConnectionHandlers(pc: RTCPeerConnection) {
       pc.ontrack = (event) => {
         if (remoteVideoRef.current && event.streams[0]) {
           remoteVideoRef.current.srcObject = event.streams[0]
@@ -816,6 +871,15 @@ export default function InterviewRoomPage() {
         if (state === "connected") {
           setVideoConnectionStatus("connected")
           clearVideoConnectTimeout()
+        } else if (state === "connecting") {
+          setVideoConnectionStatus("connecting")
+        } else if (state === "disconnected") {
+          setVideoConnectionStatus("reconnecting")
+          window.setTimeout(() => {
+            if (pc.connectionState === "disconnected") {
+              void retryVideoConnection()
+            }
+          }, 2000)
         } else if (state === "failed") {
           setVideoConnectionStatus("failed")
           clearVideoConnectTimeout()
@@ -831,138 +895,120 @@ export default function InterviewRoomPage() {
           })
         }
       }
-
-      const offer = await pc.createOffer()
-      await pc.setLocalDescription(offer)
-      socket.emit("webrtc_offer", { roomId, offer, userId })
     }
 
-    async function setupWebRTC(socket: Socket) {
+    async function handleRoomReady(socket: Socket, peers: string[]) {
+      const pc = pcRef.current
+      if (!pc) {
+        pendingRoomReadyPeers = peers
+        return
+      }
+
+      console.log("[interview] Room ready, peers:", peers)
+      setPeerStatus("connected")
+      scheduleTimerFallback(peers.length)
+      const sortedPeers = [...peers].sort()
+      const isOfferer = sortedPeers[0] === userId
+
+      if (isOfferer && pc.signalingState === "stable") {
+        await createOffer(pc, socket)
+      }
+    }
+
+    function registerWebRTCSocketHandlers(socket: Socket) {
+      if (webrtcHandlersRegistered) return
+      webrtcHandlersRegistered = true
+
+      socket.on("room_ready", async ({ peers }: { peers: string[] }) => {
+        await handleRoomReady(socket, peers)
+      })
+
+      socket.on("webrtc_offer", async ({ offer }) => {
+        await handleRemoteOffer(socket, offer)
+      })
+
+      socket.on("webrtc_answer", async ({ answer }) => {
+        const pc = pcRef.current
+        if (!pc) return
+
+        console.log("[webrtc] Received answer")
+        await pc.setRemoteDescription(new RTCSessionDescription(answer))
+        await flushPendingCandidates(pc)
+        setVideoLoading(false)
+      })
+
+      socket.on("webrtc_ice_candidate", async ({ candidate }) => {
+        const pc = pcRef.current
+        if (!pc || !candidate) return
+
+        try {
+          if (pc.remoteDescription) {
+            await pc.addIceCandidate(new RTCIceCandidate(candidate))
+          } else {
+            pendingCandidatesRef.current.push(candidate)
+          }
+        } catch (err) {
+          console.warn("[webrtc] ICE candidate failed, queueing retry", err)
+          pendingCandidatesRef.current.push(candidate)
+          window.setTimeout(() => {
+            void flushPendingCandidates(pc)
+          }, 500)
+        }
+      })
+    }
+
+    async function startWebRTC(socket: Socket) {
+      if (webrtcStarted || cancelled) return
+      webrtcStarted = true
+
       socketForWebRTCRef.current = socket
       setVideoConnectionStatus("connecting")
       scheduleVideoConnectTimeout()
+      setVideoLoading(true)
+      setVideoError(null)
 
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        })
+        const { stream, videoEnabled, videoUnavailableMessage } =
+          await acquireLocalMediaStream()
+
         if (cancelled) {
-          stream.getTracks().forEach((t) => t.stop())
+          stream.getTracks().forEach((track) => track.stop())
           return
         }
 
-        localStreamRef.current = stream
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream
+        attachLocalPreview(stream, videoEnabled)
+
+        if (!videoEnabled) {
+          setVideoError(videoUnavailableMessage ?? "Video unavailable")
+          setVideoLoading(false)
+          clearVideoConnectTimeout()
         }
 
         const pc = new RTCPeerConnection(ICE_SERVERS)
         pcRef.current = pc
-
+        createPeerConnectionHandlers(pc)
         stream.getTracks().forEach((track) => pc.addTrack(track, stream))
 
-        pc.ontrack = (event) => {
-          if (remoteVideoRef.current && event.streams[0]) {
-            remoteVideoRef.current.srcObject = event.streams[0]
-            setVideoLoading(false)
-            setVideoConnectionStatus("connected")
-            clearVideoConnectTimeout()
-          }
-        }
-
-        pc.onconnectionstatechange = () => {
-          const state = pc.connectionState
-          if (state === "connected") {
-            setVideoConnectionStatus("connected")
-            clearVideoConnectTimeout()
-          } else if (state === "connecting") {
-            setVideoConnectionStatus("connecting")
-          } else if (state === "disconnected") {
-            setVideoConnectionStatus("reconnecting")
-            window.setTimeout(() => {
-              if (pc.connectionState === "disconnected") {
-                void retryVideoConnection()
-              }
-            }, 2000)
-          } else if (state === "failed") {
-            setVideoConnectionStatus("failed")
-            clearVideoConnectTimeout()
-          }
-        }
-
-        pc.onicecandidate = (event) => {
-          if (event.candidate && socketRef.current) {
-            socketRef.current.emit("webrtc_ice_candidate", {
-              roomId,
-              candidate: event.candidate,
-              userId,
-            })
-          }
-        }
-
-        socket.on("room_ready", async ({ peers }: { peers: string[] }) => {
-          console.log("[interview] Room ready, peers:", peers)
-          setPeerStatus("connected")
-          scheduleTimerFallback(peers.length)
-          const sortedPeers = [...peers].sort()
-          const isOfferer = sortedPeers[0] === userId
-
-          if (isOfferer && pc.signalingState === "stable") {
-            await createOffer(pc, socket)
-          }
-        })
-
-        socket.on("webrtc_offer", async ({ offer }) => {
-          console.log("[webrtc] Received offer")
-          if (makingOfferRef.current) return
-
-          await pc.setRemoteDescription(new RTCSessionDescription(offer))
-          await flushPendingCandidates(pc)
-
-          const answer = await pc.createAnswer()
-          await pc.setLocalDescription(answer)
-          socket.emit("webrtc_answer", { roomId, answer, userId })
-          console.log("[webrtc] Sent answer")
-        })
-
-        socket.on("webrtc_answer", async ({ answer }) => {
-          console.log("[webrtc] Received answer")
-          await pc.setRemoteDescription(new RTCSessionDescription(answer))
-          await flushPendingCandidates(pc)
-          setVideoLoading(false)
-        })
-
-        socket.on("webrtc_ice_candidate", async ({ candidate }) => {
-          if (!candidate) return
-          try {
-            if (pc.remoteDescription) {
-              await pc.addIceCandidate(new RTCIceCandidate(candidate))
-            } else {
-              pendingCandidatesRef.current.push(candidate)
-            }
-          } catch (err) {
-            console.warn("[webrtc] ICE candidate failed, queueing retry", err)
-            pendingCandidatesRef.current.push(candidate)
-            window.setTimeout(() => {
-              void flushPendingCandidates(pc)
-            }, 500)
-          }
-        })
-
         reconnectWebRTCRef.current = reconnectPeerConnection
+
+        if (pendingRemoteOffer) {
+          const offer = pendingRemoteOffer
+          pendingRemoteOffer = null
+          await handleRemoteOffer(socket, offer)
+        }
+
+        if (pendingRoomReadyPeers) {
+          const peers = pendingRoomReadyPeers
+          pendingRoomReadyPeers = null
+          await handleRoomReady(socket, peers)
+        }
       } catch (err) {
         console.error("[interview] WebRTC setup failed:", err)
         setVideoConnectionStatus("failed")
         clearVideoConnectTimeout()
-        const message =
-          err instanceof DOMException &&
-          (err.name === "NotReadableError" || err.name === "NotAllowedError")
-            ? "Device in use — video unavailable. Interview continues without camera."
-            : err instanceof Error
-              ? err.message
-              : "Failed to start video call"
-        setVideoError(message)
+        setVideoError(
+          err instanceof Error ? err.message : "Failed to start video call",
+        )
         setVideoLoading(false)
       }
     }
@@ -1014,6 +1060,7 @@ export default function InterviewRoomPage() {
           assignRoleFromFirstPeer(isFirstPeer)
           console.log("[interview] room_joined", { peerCount, isFirstPeer })
           scheduleTimerFallback(peerCount)
+          void startWebRTC(socket)
 
           if (restoredFromServerRef.current && questionIdRef.current) {
             return
@@ -1170,7 +1217,7 @@ export default function InterviewRoomPage() {
         },
       )
 
-      void setupWebRTC(socket)
+      registerWebRTCSocketHandlers(socket)
     }
 
     setupSocket()
