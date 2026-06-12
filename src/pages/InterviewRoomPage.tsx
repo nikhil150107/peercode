@@ -74,34 +74,15 @@ import {
 } from "../lib/roomState"
 import { getDisplayNameFromEmail } from "../utils/userDisplay"
 import { summarizeCodeDiff } from "../utils/codeDiff"
-
-const SESSION_SECONDS = 120 * 60
-const SWAP_ALERT_AT = 22 * 60 + 30
-const SWAP_AT = 22 * 60
-const TIMER_FALLBACK_MS = 5000
-const VIDEO_CONNECT_TIMEOUT_MS = 10_000
-const ALL_LANGUAGES: Language[] = [
-  "python",
-  "javascript",
-  "typescript",
-  "java",
-  "cpp",
-  "c",
-  "go",
-  "rust",
-  "kotlin",
-  "csharp",
-  "php",
-  "ruby",
-  "swift",
-]
-
-const ICE_SERVERS: RTCConfiguration = {
-  iceServers: [
-    { urls: "stun:stun.l.google.com:19302" },
-    { urls: "stun:stun1.l.google.com:19302" },
-  ],
-}
+import {
+  ALL_LANGUAGES,
+  ICE_SERVERS,
+  SESSION_SECONDS,
+  SWAP_ALERT_AT,
+  SWAP_AT,
+  TIMER_FALLBACK_MS,
+  VIDEO_CONNECT_TIMEOUT_MS,
+} from "../lib/interviewRoomConstants"
 
 type VideoConnectionStatus =
   | "connecting"
@@ -168,13 +149,12 @@ export default function InterviewRoomPage() {
   const [peerStatus, setPeerStatus] = useState<
     "connected" | "disconnected" | "left"
   >("connected")
-
-  const peerEmail =
-    localStorage.getItem("peercode_peerEmail") ?? "peer@example.com"
-  const peerLabel = getDisplayNameFromEmail(peerEmail)
-  const myDisplayName =
-    user?.user_metadata?.full_name?.trim() ||
-    getDisplayNameFromEmail(user?.email ?? "You")
+  const [testOutput, setTestOutput] = useState(
+    "Run your code against example test cases.",
+  )
+  const [runningTests, setRunningTests] = useState(false)
+  const [videoError, setVideoError] = useState<string | null>(null)
+  const [videoLoading, setVideoLoading] = useState(true)
 
   const localVideoRef = useRef<HTMLVideoElement>(null)
   const remoteVideoRef = useRef<HTMLVideoElement>(null)
@@ -216,6 +196,13 @@ export default function InterviewRoomPage() {
   const codeEditBurstRef = useRef<{ lang: Language; startCode: string } | null>(
     null,
   )
+
+  const peerEmail =
+    localStorage.getItem("peercode_peerEmail") ?? "peer@example.com"
+  const peerLabel = getDisplayNameFromEmail(peerEmail)
+  const myDisplayName =
+    user?.user_metadata?.full_name?.trim() ||
+    getDisplayNameFromEmail(user?.email ?? "You")
 
   function retryAttachVideoElements() {
     const localStream = localStreamRef.current
@@ -693,12 +680,6 @@ export default function InterviewRoomPage() {
     }
     await finishSession()
   }
-  const [testOutput, setTestOutput] = useState(
-    "Run your code against example test cases.",
-  )
-  const [runningTests, setRunningTests] = useState(false)
-  const [videoError, setVideoError] = useState<string | null>(null)
-  const [videoLoading, setVideoLoading] = useState(true)
 
   useEffect(() => {
     if (peerStatus !== "disconnected") return
