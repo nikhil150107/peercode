@@ -338,10 +338,24 @@ function buildAssignments(
 function toJavaAssignment(name: string, value: string): string {
   if (value.startsWith("[")) {
     const inner = value.slice(1, -1).trim()
-    if (!inner) return `var ${name} = new int[] {};`
-    const nums = inner.split(",").map((n) => n.trim())
-    if (nums.every((n) => /^-?\d+$/.test(n))) {
-      return `int[] ${name} = {${nums.join(", ")}};`
+    if (!inner) {
+      if (isJavaTreeArrayParam(name, value)) {
+        return `Integer[] __${name}_values__ = new Integer[0];`
+      }
+      return `int[] ${name} = new int[] {};`
+    }
+
+    if (isJavaTreeArrayParam(name, value)) {
+      return toJavaIntegerArrayAssignment(name, value)
+    }
+
+    const nums = splitTopLevelCommas(inner)
+    if (nums.every((n) => /^-?\d+$/.test(n.trim()))) {
+      return `int[] ${name} = {${nums.map((n) => n.trim()).join(", ")}};`
+    }
+
+    if (nums.some((n) => n.trim().toLowerCase() === "null")) {
+      return toJavaIntegerArrayAssignment(name, value)
     }
   }
   if (value.startsWith('"')) {
@@ -355,6 +369,108 @@ function toJavaAssignment(name: string, value: string): string {
   }
   return `var ${name} = ${value};`
 }
+
+const JAVA_TREE_PARAM_NAMES = new Set(["root", "p", "q"])
+
+function isJavaTreeArrayParam(name: string, value: string): boolean {
+  if (!value.startsWith("[")) return false
+  return JAVA_TREE_PARAM_NAMES.has(name)
+}
+
+function toJavaIntegerArrayAssignment(name: string, value: string): string {
+  const inner = value.slice(1, -1).trim()
+  if (!inner) {
+    return `Integer[] __${name}_values__ = new Integer[0];`
+  }
+
+  const elements = splitTopLevelCommas(inner).map((element) => {
+    const trimmed = element.trim()
+    if (trimmed.toLowerCase() === "null") return "null"
+    return trimmed
+  })
+
+  return `Integer[] __${name}_values__ = new Integer[]{${elements.join(", ")}};`
+}
+
+function userDefinesTreeNode(code: string): boolean {
+  return /class\s+TreeNode\b/.test(code)
+}
+
+function buildJavaHarnessContext(
+  assignments: { name: string; value: string }[],
+  cleanedCode: string,
+): {
+  assignmentBlock: string
+  argList: string
+  usesTreeConversion: boolean
+  injectTreeNodeClass: boolean
+} {
+  const lines: string[] = []
+  const args: string[] = []
+  let usesTreeConversion = false
+
+  for (const { name, value } of assignments) {
+    if (isJavaTreeArrayParam(name, value)) {
+      usesTreeConversion = true
+      lines.push(toJavaIntegerArrayAssignment(name, value))
+      lines.push(`TreeNode ${name} = __peer_build_tree__(__${name}_values__);`)
+      args.push(name)
+      continue
+    }
+
+    lines.push(toJavaAssignment(name, value))
+    args.push(name)
+  }
+
+  return {
+    assignmentBlock: lines.join("\n"),
+    argList: args.join(", "),
+    usesTreeConversion,
+    injectTreeNodeClass:
+      usesTreeConversion && !userDefinesTreeNode(cleanedCode),
+  }
+}
+
+const JAVA_TREE_NODE_CLASS = `
+class TreeNode {
+  int val;
+  TreeNode left;
+  TreeNode right;
+  TreeNode() {}
+  TreeNode(int val) { this.val = val; }
+  TreeNode(int val, TreeNode left, TreeNode right) {
+    this.val = val;
+    this.left = left;
+    this.right = right;
+  }
+}
+`
+
+const JAVA_TREE_MAIN_HELPERS = `
+  static TreeNode __peer_build_tree__(Integer[] nodes) {
+    if (nodes == null || nodes.length == 0 || nodes[0] == null) {
+      return null;
+    }
+    TreeNode root = new TreeNode(nodes[0]);
+    java.util.Queue<TreeNode> queue = new java.util.LinkedList<>();
+    queue.offer(root);
+    int i = 1;
+    while (!queue.isEmpty() && i < nodes.length) {
+      TreeNode current = queue.poll();
+      if (i < nodes.length && nodes[i] != null) {
+        current.left = new TreeNode(nodes[i]);
+        queue.offer(current.left);
+      }
+      i++;
+      if (i < nodes.length && nodes[i] != null) {
+        current.right = new TreeNode(nodes[i]);
+        queue.offer(current.right);
+      }
+      i++;
+    }
+    return root;
+  }
+`
 
 function jsonArrayToCppInit(value: string): string {
   const inner = value.slice(1, -1).trim()
@@ -506,15 +622,24 @@ throw new Error("Could not find a matching solution function");
 
   if (language === "java") {
     const methodName = functionNames[0] ?? "solution"
+    const javaContext = buildJavaHarnessContext(assignments, cleanedCode)
+    const javaAssignments = javaContext.assignmentBlock.replace(/^/gm, "    ")
+    const javaArgs = javaContext.argList
+    const treeNodeClass = javaContext.injectTreeNodeClass
+      ? JAVA_TREE_NODE_CLASS
+      : ""
+    const treeMainHelpers = javaContext.usesTreeConversion
+      ? JAVA_TREE_MAIN_HELPERS
+      : ""
 
     if (voidExecution) {
       return `${cleanedCode}
-
-public class Main {
+${treeNodeClass}
+public class Main {${treeMainHelpers}
   public static void main(String[] args) {
-    ${assignmentBlock.replace(/^/gm, "    ")}
+${javaAssignments}
     Solution sol = new Solution();
-    sol.${methodName}(${argList});
+    sol.${methodName}(${javaArgs});
     int[] __out__ = java.util.Arrays.copyOfRange(${voidExecution.outputVar}, 0, ${voidExecution.lengthExpr});
     System.out.println(java.util.Arrays.toString(__out__));
   }
@@ -523,12 +648,12 @@ public class Main {
     }
 
     return `${cleanedCode}
-
-public class Main {
+${treeNodeClass}
+public class Main {${treeMainHelpers}
   public static void main(String[] args) {
-    ${assignmentBlock.replace(/^/gm, "    ")}
+${javaAssignments}
     Solution sol = new Solution();
-    Object __result__ = sol.${methodName}(${argList});
+    Object __result__ = sol.${methodName}(${javaArgs});
     if (__result__ instanceof Boolean) {
       System.out.println(__result__);
     } else if (__result__ instanceof Integer || __result__ instanceof Long || __result__ instanceof Double) {

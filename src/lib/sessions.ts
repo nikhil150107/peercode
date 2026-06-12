@@ -13,7 +13,6 @@ export type SessionRecord = {
   question_difficulty: string | null
   question_topic: string | null
   user_role: UserRole | null
-  rating: number | null
   rating_given: number | null
   rating_received: number | null
   feedback_tags: string[] | null
@@ -241,7 +240,7 @@ export async function updatePeerRatingReceived(
   const payload = (await res.json().catch(() => null)) as {
     ok?: boolean
     error?: string
-    session?: { id: string; user_id: string; rating: number; rating_received: number }
+    session?: { id: string; user_id: string; rating_received: number }
   } | null
 
   if (!res.ok || !payload?.ok) {
@@ -306,10 +305,6 @@ export function getIntervieweeReceivedRating(
 
   if (session.rating_received != null && session.rating_received > 0) {
     return session.rating_received
-  }
-
-  if (session.rating != null && session.rating > 0) {
-    return session.rating
   }
 
   return null

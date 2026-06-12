@@ -31,9 +31,6 @@ function getSessionRating(session: SessionRecord): number | null {
   if (session.rating_received != null && session.rating_received > 0) {
     return session.rating_received
   }
-  if (session.rating != null && session.rating > 0) {
-    return session.rating
-  }
   if (session.rating_given != null && session.rating_given > 0) {
     return session.rating_given
   }

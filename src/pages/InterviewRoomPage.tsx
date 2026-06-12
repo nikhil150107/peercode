@@ -49,6 +49,7 @@ import { getDisplayNameFromEmail } from "../utils/userDisplay"
 const SESSION_SECONDS = 120 * 60
 const SWAP_ALERT_AT = 22 * 60 + 30
 const SWAP_AT = 22 * 60
+const TIMER_FALLBACK_MS = 5000
 const ALL_LANGUAGES: Language[] = ["python", "javascript", "java", "cpp"]
 
 const ICE_SERVERS: RTCConfiguration = {
@@ -120,6 +121,9 @@ export default function InterviewRoomPage() {
   const submissionPassedRef = useRef(false)
   const passedTestsRef = useRef(0)
   const totalTestsRef = useRef(0)
+  const timerStartedRef = useRef(false)
+  const timerFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const peerCountRef = useRef(0)
 
   useEffect(() => {
     roleRef.current = role
@@ -136,6 +140,42 @@ export default function InterviewRoomPage() {
   useEffect(() => {
     languageRef.current = language
   }, [language])
+
+  useEffect(() => {
+    timerStartedRef.current = timerStarted
+  }, [timerStarted])
+
+  function clearTimerFallback() {
+    if (timerFallbackRef.current) {
+      clearTimeout(timerFallbackRef.current)
+      timerFallbackRef.current = null
+    }
+  }
+
+  function startSessionTimer(durationSeconds = SESSION_SECONDS) {
+    if (timerStartedRef.current) return
+
+    clearTimerFallback()
+    timerStartedRef.current = true
+    setSecondsLeft(durationSeconds)
+    setTimerStarted(true)
+    console.log("[interview] session timer started", { durationSeconds })
+  }
+
+  function scheduleTimerFallback(peerCount: number) {
+    peerCountRef.current = peerCount
+    if (peerCount < 2 || timerStartedRef.current) return
+
+    clearTimerFallback()
+    timerFallbackRef.current = setTimeout(() => {
+      if (!timerStartedRef.current && peerCountRef.current >= 2) {
+        console.log(
+          "[interview] timer fallback: starting after 5s with both peers in room",
+        )
+        startSessionTimer(SESSION_SECONDS)
+      }
+    }, TIMER_FALLBACK_MS)
+  }
 
   function mergeStarterCodes(
     q: Question,
@@ -462,6 +502,7 @@ export default function InterviewRoomPage() {
         socket.on("room_ready", async ({ peers }: { peers: string[] }) => {
           console.log("[interview] Room ready, peers:", peers)
           setPeerStatus("connected")
+          scheduleTimerFallback(peers.length)
           const sortedPeers = [...peers].sort()
           const isOfferer = sortedPeers[0] === userId
 
@@ -532,6 +573,7 @@ export default function InterviewRoomPage() {
         }) => {
           assignRoleFromFirstPeer(isFirstPeer)
           console.log("[interview] room_joined", { peerCount, isFirstPeer })
+          scheduleTimerFallback(peerCount)
           const difficultyPreference = getDifficultyPreference()
           const topicPreference = getTopicPreference()
           console.log("[question] requesting question for room", {
@@ -637,8 +679,7 @@ export default function InterviewRoomPage() {
         "start_timer",
         ({ durationSeconds }: { durationSeconds?: number }) => {
           console.log("[interview] start_timer received", { durationSeconds })
-          setSecondsLeft(durationSeconds ?? SESSION_SECONDS)
-          setTimerStarted(true)
+          startSessionTimer(durationSeconds ?? SESSION_SECONDS)
         },
       )
 
@@ -671,6 +712,7 @@ export default function InterviewRoomPage() {
 
     return () => {
       cancelled = true
+      clearTimerFallback()
       questionLockedRef.current = false
       questionIdRef.current = null
       isFetchingQuestionRef.current = false
