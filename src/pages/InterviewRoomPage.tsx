@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom"
 import { io } from "socket.io-client"
 import type { Socket } from "socket.io-client"
 import CodeEditorPanel, {
+  createCustomTest,
   type CustomTestCase,
 } from "../components/interview/CodeEditorPanel"
 import CodeHistoryPanel, {
@@ -128,11 +129,11 @@ export default function InterviewRoomPage() {
   const [compilerVersionId, setCompilerVersionId] = useState(
     defaultCompilerVersion(DEFAULT_EDITOR_LANGUAGE).id,
   )
-  const [customTests, setCustomTests] = useState<CustomTestCase[]>([
-    { id: crypto.randomUUID(), input: "nums = [2,7], target = 9" },
+  const [customTests, setCustomTests] = useState<CustomTestCase[]>(() => [
+    createCustomTest(),
   ])
-  const [customOutput, setCustomOutput] = useState(
-    "Run a custom test case to see output here.",
+  const [runningCustomTestId, setRunningCustomTestId] = useState<string | null>(
+    null,
   )
   const [runningCustom, setRunningCustom] = useState(false)
   const [codeHistory, setCodeHistory] = useState<CodeHistoryEntry[]>([])
@@ -661,6 +662,7 @@ export default function InterviewRoomPage() {
       setQuestionLoadingMessage(loadingMessage)
       setQuestionError(null)
       setTestOutput("Run your code against example test cases.")
+      setCustomTests([createCustomTest()])
     }
 
     function applyQuestion(rawQuestion: Question) {
@@ -686,6 +688,7 @@ export default function InterviewRoomPage() {
       setQuestionLoadingMessage("Loading question...")
       setQuestionError(null)
       setTestOutput("Run your code against example test cases.")
+      setCustomTests([createCustomTest()])
       applyQuestionSeen(userId, q.id)
     }
 
@@ -1410,11 +1413,18 @@ export default function InterviewRoomPage() {
     }
   }
 
-  async function handleRunCustom(input: string) {
+  async function handleRunCustom(testId: string, input: string) {
     if (role === "interviewer" || runningCustom || !input.trim()) return
 
     setRunningCustom(true)
-    setCustomOutput("Running custom test...")
+    setRunningCustomTestId(testId)
+    setCustomTests((prev) =>
+      prev.map((test) =>
+        test.id === testId
+          ? { ...test, output: "Running custom test..." }
+          : test,
+      ),
+    )
 
     try {
       const output = await runCustomInput(
@@ -1423,15 +1433,27 @@ export default function InterviewRoomPage() {
         input,
         buildExecutionOptions(),
       )
-      setCustomOutput(output)
+      setCustomTests((prev) =>
+        prev.map((test) =>
+          test.id === testId ? { ...test, output } : test,
+        ),
+      )
     } catch (err) {
-      setCustomOutput(
-        `Failed to run custom test: ${
-          err instanceof Error ? err.message : "Unknown error"
-        }`,
+      setCustomTests((prev) =>
+        prev.map((test) =>
+          test.id === testId
+            ? {
+                ...test,
+                output: `Failed to run custom test: ${
+                  err instanceof Error ? err.message : "Unknown error"
+                }`,
+              }
+            : test,
+        ),
       )
     } finally {
       setRunningCustom(false)
+      setRunningCustomTestId(null)
     }
   }
 
@@ -1566,16 +1588,17 @@ export default function InterviewRoomPage() {
                 : undefined
             }
             testOutput={testOutput}
-            customOutput={customOutput}
             customTests={customTests}
+            customInputPlaceholder={question?.examples[0]?.input ?? ""}
             running={runningTests}
             runningCustom={runningCustom}
+            runningCustomTestId={runningCustomTestId}
             className="min-h-0 flex-1"
             outputHeight={outputHeight}
             onOutputHeightChange={setOutputHeight}
             onRunCode={() => void handleRunCode()}
             onSubmitCode={() => void handleSubmitCode()}
-            onRunCustom={(input) => void handleRunCustom(input)}
+            onRunCustom={(testId, input) => void handleRunCustom(testId, input)}
             onCustomTestsChange={setCustomTests}
             onCodeChange={handleCodeChange}
             onLanguageChange={handleLanguageChange}

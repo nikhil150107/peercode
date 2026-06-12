@@ -22,21 +22,30 @@ type CodeEditorPanelProps = {
   compilerVersionId?: number
   hints?: string[]
   testOutput?: string
-  customOutput?: string
   customTests?: CustomTestCase[]
+  customInputPlaceholder?: string
   running?: boolean
   runningCustom?: boolean
+  runningCustomTestId?: string | null
   className?: string
   style?: CSSProperties
   outputHeight?: number
   onOutputHeightChange?: (height: number) => void
   onRunCode?: () => void
   onSubmitCode?: () => void
-  onRunCustom?: (input: string) => void
+  onRunCustom?: (testId: string, input: string) => void
   onCustomTestsChange?: (tests: CustomTestCase[]) => void
   onCodeChange: (lang: Language, code: string) => void
   onLanguageChange: (lang: Language) => void
   onCompilerVersionChange?: (versionId: number) => void
+}
+
+export function createCustomTest(input = ""): CustomTestCase {
+  return {
+    id: crypto.randomUUID(),
+    input,
+    output: undefined,
+  }
 }
 
 export default function CodeEditorPanel({
@@ -45,10 +54,11 @@ export default function CodeEditorPanel({
   compilerVersionId,
   hints,
   testOutput = "Run your code against example test cases.",
-  customOutput = "Run a custom test case to see output here.",
   customTests = [],
+  customInputPlaceholder = "",
   running = false,
   runningCustom = false,
+  runningCustomTestId = null,
   className = "",
   style,
   outputHeight = 192,
@@ -65,9 +75,14 @@ export default function CodeEditorPanel({
   const [activeCustomId, setActiveCustomId] = useState(
     () => customTests[0]?.id ?? "",
   )
-  const [draftCustomInput, setDraftCustomInput] = useState(
-    () => customTests[0]?.input ?? "nums = [2,7], target = 9",
-  )
+
+  const tests =
+    customTests.length > 0 ? customTests : [createCustomTest()]
+  const activeTest =
+    tests.find((test) => test.id === activeCustomId) ?? tests[0]
+  const inputPlaceholder =
+    customInputPlaceholder.trim() ||
+    "Enter test input using the same format as the question examples"
 
   const versions = compilerVersionsByLanguage[language]
   const selectedVersion = getCompilerVersion(language, compilerVersionId)
@@ -83,6 +98,12 @@ export default function CodeEditorPanel({
     }
   }, [compilerVersionId, language, selectedVersionId, onCompilerVersionChange])
 
+  useEffect(() => {
+    if (!tests.some((test) => test.id === activeCustomId)) {
+      setActiveCustomId(tests[0]?.id ?? "")
+    }
+  }, [tests, activeCustomId])
+
   function handleLanguageChange(lang: Language) {
     onLanguageChange(lang)
     const nextDefault = getCompilerVersion(lang)
@@ -94,40 +115,50 @@ export default function CodeEditorPanel({
     onOutputHeightChange(Math.min(480, Math.max(96, outputHeight - delta)))
   }
 
-  function addCustomTest() {
-    const next: CustomTestCase = {
-      id: crypto.randomUUID(),
-      input: draftCustomInput.trim() || "nums = [], target = 0",
-    }
-    const updated = [...customTests, next]
-    onCustomTestsChange?.(updated)
-    setActiveCustomId(next.id)
+  function updateActiveTestInput(input: string) {
+    if (!onCustomTestsChange) return
+    onCustomTestsChange(
+      tests.map((test) =>
+        test.id === activeTest.id ? { ...test, input } : test,
+      ),
+    )
   }
 
-  function saveCustomTestInput() {
+  function addCustomTest() {
+    const next = createCustomTest("")
+    onCustomTestsChange?.([...tests, next])
+    setActiveCustomId(next.id)
+    setOutputTab("custom")
+  }
+
+  function deleteCustomTest(testId: string) {
     if (!onCustomTestsChange) return
-    if (customTests.length === 0) {
-      addCustomTest()
+
+    if (tests.length <= 1) {
+      const reset = createCustomTest("")
+      onCustomTestsChange([reset])
+      setActiveCustomId(reset.id)
       return
     }
-    const updated = customTests.map((test) =>
-      test.id === activeCustomId
-        ? { ...test, input: draftCustomInput }
-        : test,
-    )
-    onCustomTestsChange(updated)
-  }
 
-  function selectCustomTest(test: CustomTestCase) {
-    setActiveCustomId(test.id)
-    setDraftCustomInput(test.input)
+    const updated = tests.filter((test) => test.id !== testId)
+    onCustomTestsChange(updated)
+    if (activeCustomId === testId) {
+      setActiveCustomId(updated[0]?.id ?? "")
+    }
   }
 
   function handleRunCustomClick() {
-    saveCustomTestInput()
-    onRunCustom?.(draftCustomInput.trim())
+    const input = activeTest.input.trim()
+    if (!input || !onRunCustom) return
+    onRunCustom(activeTest.id, input)
     setOutputTab("custom")
   }
+
+  const activeOutput =
+    runningCustom && runningCustomTestId === activeTest.id
+      ? "Running custom test..."
+      : activeTest.output ?? "Run a custom test to see output here."
 
   return (
     <div
@@ -255,50 +286,72 @@ export default function CodeEditorPanel({
           </pre>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col gap-2 p-3">
-            <textarea
-              value={draftCustomInput}
-              onChange={(e) => setDraftCustomInput(e.target.value)}
-              onBlur={saveCustomTestInput}
-              placeholder='nums = [2,7], target = 9'
-              className="min-h-[72px] flex-1 resize-none rounded-lg border border-stroke bg-surface-primary px-3 py-2 font-mono text-xs text-content outline-none focus:border-emerald-500/50"
-            />
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={handleRunCustomClick}
-                disabled={runningCustom || !onRunCustom}
-                className="rounded-lg bg-emerald-500/90 px-3 py-1.5 text-xs font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-60"
-              >
-                {runningCustom ? "Running..." : "Run Custom"}
-              </button>
-              <button
-                type="button"
-                onClick={addCustomTest}
-                className="rounded-lg border border-stroke px-3 py-1.5 text-xs text-content hover:border-stroke"
-              >
-                Add test
-              </button>
-            </div>
-            {customTests.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 overflow-x-auto">
-                {customTests.map((test, index) => (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {tests.map((test, index) => (
+                <div
+                  key={test.id}
+                  className={`flex items-center overflow-hidden rounded-md border ${
+                    test.id === activeTest.id
+                      ? "border-emerald-500/40 bg-emerald-500/10"
+                      : "border-stroke bg-surface-primary"
+                  }`}
+                >
                   <button
-                    key={test.id}
                     type="button"
-                    onClick={() => selectCustomTest(test)}
-                    className={`rounded-md px-2 py-1 text-[10px] font-medium ${
-                      test.id === activeCustomId
-                        ? "bg-emerald-500/20 text-brand-hover"
-                        : "bg-surface-hover text-content-muted"
+                    onClick={() => setActiveCustomId(test.id)}
+                    className={`px-2 py-1 text-[10px] font-medium ${
+                      test.id === activeTest.id
+                        ? "text-brand-hover"
+                        : "text-content-muted hover:text-content"
                     }`}
                   >
                     Test {index + 1}
                   </button>
-                ))}
-              </div>
-            )}
+                  {tests.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => deleteCustomTest(test.id)}
+                      aria-label={`Delete test ${index + 1}`}
+                      className="border-l border-stroke px-1.5 py-1 text-[10px] text-content-muted hover:bg-red-500/10 hover:text-danger"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addCustomTest}
+                className="rounded-md border border-dashed border-stroke px-2 py-1 text-[10px] font-medium text-content-muted hover:border-emerald-500/40 hover:text-brand"
+              >
+                + Add test
+              </button>
+            </div>
+
+            <textarea
+              value={activeTest.input}
+              onChange={(e) => updateActiveTestInput(e.target.value)}
+              placeholder={inputPlaceholder}
+              className="min-h-[72px] flex-1 resize-none rounded-lg border border-stroke bg-surface-primary px-3 py-2 font-mono text-xs text-content outline-none focus:border-emerald-500/50"
+            />
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleRunCustomClick}
+                disabled={
+                  runningCustom || !onRunCustom || !activeTest.input.trim()
+                }
+                className="rounded-lg bg-emerald-500/90 px-3 py-1.5 text-xs font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-60"
+              >
+                {runningCustom && runningCustomTestId === activeTest.id
+                  ? "Running..."
+                  : "Run Custom"}
+              </button>
+            </div>
+
             <pre className="max-h-24 overflow-auto rounded-lg border border-stroke bg-surface-primary p-2 font-mono text-xs text-brand whitespace-pre-wrap">
-              {runningCustom ? "Running custom test..." : customOutput}
+              {activeOutput}
             </pre>
           </div>
         )}
