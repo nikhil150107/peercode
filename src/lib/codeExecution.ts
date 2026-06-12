@@ -132,10 +132,19 @@ function splitTopLevelCommas(input: string): string[] {
     if (char === "]" || char === ")" || char === "}") depth--
 
     if (char === "," && depth === 0) {
-      parts.push(current.trim())
+      if (current.trim()) parts.push(current.trim())
       current = ""
       continue
     }
+
+    // Also split on newlines between top-level param assignments (LeetCode format).
+    if (char === "\n" && depth === 0) {
+      if (current.trim()) parts.push(current.trim())
+      current = ""
+      continue
+    }
+
+    if (char === "\r") continue
 
     current += char
   }
@@ -147,14 +156,15 @@ function splitTopLevelCommas(input: string): string[] {
 export function parseExampleInput(
   input: string,
 ): { name: string; value: string }[] {
-  return splitTopLevelCommas(input)
+  return splitTopLevelCommas(input.trim())
     .map((part) => {
-      const eqIndex = part.indexOf("=")
-      if (eqIndex === -1) return null
-      return {
-        name: part.slice(0, eqIndex).trim(),
-        value: part.slice(eqIndex + 1).trim(),
-      }
+      const trimmed = part.trim()
+      if (!trimmed || !trimmed.includes("=")) return null
+      const eqIndex = trimmed.indexOf("=")
+      const name = trimmed.slice(0, eqIndex).trim()
+      const value = trimmed.slice(eqIndex + 1).trim()
+      if (!name || !value) return null
+      return { name, value }
     })
     .filter((part): part is { name: string; value: string } => part !== null)
 }

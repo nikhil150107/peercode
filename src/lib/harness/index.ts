@@ -39,10 +39,18 @@ export function splitTopLevelCommas(input: string): string[] {
     if (char === "]" || char === ")" || char === "}") depth--
 
     if (char === "," && depth === 0) {
-      parts.push(current.trim())
+      if (current.trim()) parts.push(current.trim())
       current = ""
       continue
     }
+
+    if (char === "\n" && depth === 0) {
+      if (current.trim()) parts.push(current.trim())
+      current = ""
+      continue
+    }
+
+    if (char === "\r") continue
 
     current += char
   }

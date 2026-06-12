@@ -23,6 +23,7 @@ import {
   scheduleVideoAttachment,
 } from "../lib/videoStreamAttach"
 import {
+  allSubmitTestsPassed,
   countSubmitTestResults,
   formatSubmitResults,
   formatTestResults,
