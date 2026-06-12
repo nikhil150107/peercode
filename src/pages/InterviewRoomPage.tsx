@@ -80,7 +80,6 @@ import {
   SESSION_SECONDS,
   SWAP_ALERT_AT,
   SWAP_AT,
-  TIMER_FALLBACK_MS,
   VIDEO_CONNECT_TIMEOUT_MS,
 } from "../lib/interviewRoomConstants"
 
@@ -372,15 +371,22 @@ export default function InterviewRoomPage() {
     durationSeconds = SESSION_SECONDS,
     startedAt?: number | null,
   ) {
-    if (timerStartedRef.current && startedAt == null) return
-
     clearTimerFallback()
+
+    let remaining = durationSeconds
+    const anchorStartedAt = startedAt ?? timerStartedAtRef.current ?? null
+
+    if (anchorStartedAt != null) {
+      const elapsed = Math.floor((Date.now() - anchorStartedAt) / 1000)
+      remaining = Math.max(0, SESSION_SECONDS - elapsed)
+    }
+
     timerStartedRef.current = true
-    timerStartedAtRef.current = startedAt ?? Date.now()
-    setSecondsLeft(durationSeconds)
+    timerStartedAtRef.current = anchorStartedAt ?? Date.now()
+    setSecondsLeft(remaining)
     setTimerStarted(true)
     console.log("[interview] session timer started", {
-      durationSeconds,
+      remaining,
       startedAt: timerStartedAtRef.current,
     })
   }
@@ -434,10 +440,12 @@ export default function InterviewRoomPage() {
     }
 
     if (state.timerStarted) {
-      let remaining = state.secondsLeft ?? SESSION_SECONDS
+      let remaining = SESSION_SECONDS
       if (state.timerStartedAt) {
         const elapsed = Math.floor((Date.now() - state.timerStartedAt) / 1000)
         remaining = Math.max(0, SESSION_SECONDS - elapsed)
+      } else if (state.secondsLeft != null) {
+        remaining = Math.max(0, state.secondsLeft)
       }
       startSessionTimer(remaining, state.timerStartedAt)
     }
@@ -467,17 +475,8 @@ export default function InterviewRoomPage() {
 
   function scheduleTimerFallback(peerCount: number) {
     peerCountRef.current = peerCount
-    if (peerCount < 2 || timerStartedRef.current) return
-
-    clearTimerFallback()
-    timerFallbackRef.current = setTimeout(() => {
-      if (!timerStartedRef.current && peerCountRef.current >= 2) {
-        console.log(
-          "[interview] timer fallback: starting after 5s with both peers in room",
-        )
-        startSessionTimer(SESSION_SECONDS)
-      }
-    }, TIMER_FALLBACK_MS)
+    // Timer start is owned by the server (persisted via room_live_state).
+    // Do not start a local 120:00 countdown here — that resets on refresh.
   }
 
   function mergeStarterCodes(
@@ -719,6 +718,18 @@ export default function InterviewRoomPage() {
       const q = normalizeQuestion(rawQuestion)
 
       if (questionLockedRef.current && questionIdRef.current === q.id) {
+        return
+      }
+
+      if (
+        questionLockedRef.current &&
+        questionIdRef.current &&
+        questionIdRef.current !== q.id
+      ) {
+        console.warn(
+          "[question] ignoring new question — session question is locked",
+          { current: questionIdRef.current, incoming: q.id },
+        )
         return
       }
 
@@ -1091,6 +1102,15 @@ export default function InterviewRoomPage() {
         ({ state }: { state: RoomLiveState }) => {
           if (!restoredFromServerRef.current) {
             applyRestoredRoomState(state)
+            return
+          }
+
+          if (state.timerStarted && state.timerStartedAt) {
+            const elapsed = Math.floor(
+              (Date.now() - state.timerStartedAt) / 1000,
+            )
+            const remaining = Math.max(0, SESSION_SECONDS - elapsed)
+            startSessionTimer(remaining, state.timerStartedAt)
           }
         },
       )
@@ -1188,8 +1208,6 @@ export default function InterviewRoomPage() {
           } else if (userId === newIntervieweeUserId) {
             setRole("interviewee")
           }
-
-          resetQuestionState("Loading new question...")
         },
       )
 
