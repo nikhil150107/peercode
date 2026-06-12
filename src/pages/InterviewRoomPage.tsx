@@ -19,6 +19,10 @@ import { useToast } from "../context/ToastContext"
 import type { Language } from "../data/mockProblem"
 import { acquireLocalMediaStream } from "../lib/acquireMediaStream"
 import {
+  attachStreamToVideoElement,
+  scheduleVideoAttachment,
+} from "../lib/videoStreamAttach"
+import {
   countSubmitTestResults,
   formatSubmitResults,
   formatTestResults,
@@ -177,6 +181,8 @@ export default function InterviewRoomPage() {
   const pcRef = useRef<RTCPeerConnection | null>(null)
   const socketRef = useRef<Socket | null>(null)
   const localStreamRef = useRef<MediaStream | null>(null)
+  const remoteStreamRef = useRef<MediaStream | null>(null)
+  const localVideoEnabledRef = useRef(true)
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([])
   const makingOfferRef = useRef(false)
   const isRemoteCodeUpdateRef = useRef(false)
@@ -210,6 +216,69 @@ export default function InterviewRoomPage() {
   const codeEditBurstRef = useRef<{ lang: Language; startCode: string } | null>(
     null,
   )
+
+  function retryAttachVideoElements() {
+    const localStream = localStreamRef.current
+    if (
+      localStream &&
+      localVideoEnabledRef.current &&
+      localVideoRef.current
+    ) {
+      attachStreamToVideoElement(localVideoRef.current, localStream)
+    }
+
+    const remoteStream = remoteStreamRef.current
+    if (remoteStream && remoteVideoRef.current) {
+      attachStreamToVideoElement(remoteVideoRef.current, remoteStream)
+    }
+  }
+
+  function attachLocalPreview(stream: MediaStream, videoEnabled: boolean) {
+    localStreamRef.current = stream
+    const showVideo =
+      videoEnabled &&
+      stream.getVideoTracks().some((track) => track.readyState !== "ended")
+    localVideoEnabledRef.current = showVideo
+
+    console.log("[video] attaching local preview", {
+      showVideo,
+      tracks: stream.getTracks().map((track) => ({
+        kind: track.kind,
+        enabled: track.enabled,
+        readyState: track.readyState,
+      })),
+    })
+
+    if (showVideo && localVideoRef.current) {
+      attachStreamToVideoElement(localVideoRef.current, stream)
+    } else if (localVideoRef.current) {
+      localVideoRef.current.srcObject = null
+    }
+
+    scheduleVideoAttachment(retryAttachVideoElements)
+  }
+
+  function attachRemotePreview(stream: MediaStream) {
+    remoteStreamRef.current = stream
+
+    console.log("[video] attaching remote preview", {
+      tracks: stream.getTracks().map((track) => ({
+        kind: track.kind,
+        enabled: track.enabled,
+        readyState: track.readyState,
+      })),
+    })
+
+    if (remoteVideoRef.current) {
+      attachStreamToVideoElement(remoteVideoRef.current, stream)
+    }
+
+    scheduleVideoAttachment(retryAttachVideoElements)
+  }
+
+  useEffect(() => {
+    retryAttachVideoElements()
+  }, [mobilePanel, videoConnectionStatus, videoLoading])
 
   useEffect(() => {
     codesRef.current = codes
@@ -790,7 +859,9 @@ export default function InterviewRoomPage() {
       pendingCandidatesRef.current = []
 
       let stream = localStreamRef.current
-      let videoEnabled = Boolean(stream?.getVideoTracks().some((t) => t.enabled))
+      let videoEnabled = Boolean(
+        stream?.getVideoTracks().some((track) => track.enabled),
+      )
 
       if (!stream) {
         try {
@@ -813,6 +884,8 @@ export default function InterviewRoomPage() {
           clearVideoConnectTimeout()
           return
         }
+      } else {
+        attachLocalPreview(stream, videoEnabled)
       }
 
       const pc = new RTCPeerConnection(ICE_SERVERS)
@@ -852,21 +925,14 @@ export default function InterviewRoomPage() {
       console.log("[webrtc] Sent answer")
     }
 
-    function attachLocalPreview(stream: MediaStream, videoEnabled: boolean) {
-      localStreamRef.current = stream
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = videoEnabled ? stream : null
-      }
-    }
-
     function createPeerConnectionHandlers(pc: RTCPeerConnection) {
       pc.ontrack = (event) => {
-        if (remoteVideoRef.current && event.streams[0]) {
-          remoteVideoRef.current.srcObject = event.streams[0]
-          setVideoLoading(false)
-          setVideoConnectionStatus("connected")
-          clearVideoConnectTimeout()
-        }
+        const stream =
+          event.streams[0] ?? new MediaStream([event.track])
+        attachRemotePreview(stream)
+        setVideoLoading(false)
+        setVideoConnectionStatus("connected")
+        clearVideoConnectTimeout()
       }
 
       pc.onconnectionstatechange = () => {
@@ -874,6 +940,8 @@ export default function InterviewRoomPage() {
         if (state === "connected") {
           setVideoConnectionStatus("connected")
           clearVideoConnectTimeout()
+          retryAttachVideoElements()
+          scheduleVideoAttachment(retryAttachVideoElements)
         } else if (state === "connecting") {
           setVideoConnectionStatus("connecting")
         } else if (state === "disconnected") {
@@ -978,6 +1046,12 @@ export default function InterviewRoomPage() {
           stream.getTracks().forEach((track) => track.stop())
           return
         }
+
+        console.log("[video] getUserMedia succeeded before WebRTC connect", {
+          videoTracks: stream.getVideoTracks().length,
+          audioTracks: stream.getAudioTracks().length,
+          videoEnabled,
+        })
 
         attachLocalPreview(stream, videoEnabled)
 
@@ -1240,6 +1314,7 @@ export default function InterviewRoomPage() {
       isFetchingQuestionRef.current = false
       localStreamRef.current?.getTracks().forEach((t) => t.stop())
       localStreamRef.current = null
+      remoteStreamRef.current = null
       pcRef.current?.close()
       pcRef.current = null
       socketRef.current?.disconnect()
