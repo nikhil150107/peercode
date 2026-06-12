@@ -1,6 +1,9 @@
 import type { Language } from "../data/mockProblem"
 import type { QuestionExample } from "../types/question"
-import { harnessLanguageForEditor } from "../data/compilerVersions"
+import {
+  harnessLanguageForEditor,
+  resolveJudge0LanguageId,
+} from "../data/compilerVersions"
 import { SERVER_URL } from "./serverUrl"
 import { getVoidExecutionMeta } from "../utils/questionExecution"
 import {
@@ -12,21 +15,6 @@ function camelToSnake(name: string): string {
   return name.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "")
 }
 
-export const JUDGE0_LANGUAGE_IDS: Partial<Record<Language, number>> = {
-  python: 71,
-  javascript: 63,
-  typescript: 74,
-  java: 62,
-  cpp: 54,
-  c: 50,
-  go: 60,
-  rust: 73,
-  kotlin: 78,
-  csharp: 51,
-  php: 68,
-  ruby: 72,
-  swift: 83,
-}
 
 type ExecuteResponse = {
   ok?: boolean
@@ -62,14 +50,11 @@ export type TestCaseResult = {
   error?: string
 }
 
-function languageFromId(languageId: number): Language {
-  const entry = Object.entries(JUDGE0_LANGUAGE_IDS).find(
-    ([, id]) => id === languageId,
-  )
-  if (!entry) {
-    throw new Error(`Unknown language id: ${languageId}`)
-  }
-  return entry[0] as Language
+function resolveExecutionLanguageId(
+  language: Language,
+  options: ExecutionOptions,
+): number {
+  return resolveJudge0LanguageId(language, options.languageId)
 }
 
 export async function submitToJudge0(
@@ -951,11 +936,7 @@ export async function runTestCase(
 ): Promise<TestCaseResult> {
   const harnessLanguage =
     options.harnessLanguage ?? harnessLanguageForEditor[language] ?? language
-  const languageId =
-    options.languageId ??
-    JUDGE0_LANGUAGE_IDS[harnessLanguage] ??
-    JUDGE0_LANGUAGE_IDS[language] ??
-    71
+  const languageId = resolveExecutionLanguageId(language, options)
   const runnableCode = buildRunnableCode(
     userCode,
     language,
@@ -1022,11 +1003,7 @@ export async function runCustomInput(
 ): Promise<string> {
   const harnessLanguage =
     options.harnessLanguage ?? harnessLanguageForEditor[language] ?? language
-  const languageId =
-    options.languageId ??
-    JUDGE0_LANGUAGE_IDS[harnessLanguage] ??
-    JUDGE0_LANGUAGE_IDS[language] ??
-    71
+  const languageId = resolveExecutionLanguageId(language, options)
   const runnableCode = buildRunnableCode(
     userCode,
     language,

@@ -26,8 +26,10 @@ import {
   runSubmitTests,
 } from "../lib/codeExecution"
 import {
+  DEFAULT_EDITOR_LANGUAGE,
   defaultCompilerVersion,
   harnessLanguageForEditor,
+  resolveJudge0LanguageId,
 } from "../data/compilerVersions"
 import {
   applyQuestionSeen,
@@ -122,9 +124,9 @@ export default function InterviewRoomPage() {
   const [timerStarted, setTimerStarted] = useState(false)
   const [showSwapAlert, setShowSwapAlert] = useState(false)
   const [codes, setCodes] = useState<Record<Language, string>>(EMPTY_CODE)
-  const [language, setLanguage] = useState<Language>("python")
+  const [language, setLanguage] = useState<Language>(DEFAULT_EDITOR_LANGUAGE)
   const [compilerVersionId, setCompilerVersionId] = useState(
-    defaultCompilerVersion("python").id,
+    defaultCompilerVersion(DEFAULT_EDITOR_LANGUAGE).id,
   )
   const [customTests, setCustomTests] = useState<CustomTestCase[]>([
     { id: crypto.randomUUID(), input: "nums = [2,7], target = 9" },
@@ -219,7 +221,7 @@ export default function InterviewRoomPage() {
   function buildExecutionOptions() {
     return {
       functionName: question ? resolveFunctionName(question) : undefined,
-      languageId: compilerVersionId,
+      languageId: resolveJudge0LanguageId(language, compilerVersionId),
       harnessLanguage: harnessLanguageForEditor[language],
     }
   }
@@ -348,6 +350,7 @@ export default function InterviewRoomPage() {
     if (state.language) {
       setLanguage(state.language)
       languageRef.current = state.language
+      setCompilerVersionId(defaultCompilerVersion(state.language).id)
     }
 
     if (state.question) {
@@ -1100,6 +1103,7 @@ export default function InterviewRoomPage() {
 
           isRemoteCodeUpdateRef.current = true
           setLanguage(remoteLanguage)
+          setCompilerVersionId(defaultCompilerVersion(remoteLanguage).id)
           setCodes((prev) => {
             const previous = prev[remoteLanguage] ?? ""
             pushCodeHistory("Peer", remoteLanguage, previous, code)

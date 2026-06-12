@@ -1,10 +1,10 @@
 import Editor from "@monaco-editor/react"
-import { useState, type CSSProperties } from "react"
+import { useEffect, useState, type CSSProperties } from "react"
 import type { Language } from "../../data/mockProblem"
 import { languageOptions, monacoLanguage } from "../../data/mockProblem"
 import {
   compilerVersionsByLanguage,
-  defaultCompilerVersion,
+  getCompilerVersion,
 } from "../../data/compilerVersions"
 import ResizeHandle from "./ResizeHandle"
 
@@ -70,12 +70,22 @@ export default function CodeEditorPanel({
   )
 
   const versions = compilerVersionsByLanguage[language]
-  const selectedVersionId =
-    compilerVersionId ?? defaultCompilerVersion(language).id
+  const selectedVersion = getCompilerVersion(language, compilerVersionId)
+  const selectedVersionId = selectedVersion.id
+
+  useEffect(() => {
+    if (
+      compilerVersionId != null &&
+      compilerVersionId !== selectedVersionId &&
+      onCompilerVersionChange
+    ) {
+      onCompilerVersionChange(selectedVersionId)
+    }
+  }, [compilerVersionId, language, selectedVersionId, onCompilerVersionChange])
 
   function handleLanguageChange(lang: Language) {
     onLanguageChange(lang)
-    const nextDefault = defaultCompilerVersion(lang)
+    const nextDefault = getCompilerVersion(lang)
     onCompilerVersionChange?.(nextDefault.id)
   }
 
