@@ -45,19 +45,19 @@ export default function FeedbackButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-40 rounded-full border border-zinc-700 bg-zinc-900/90 px-4 py-2.5 text-sm font-medium text-zinc-300 shadow-lg backdrop-blur transition hover:border-emerald-500/40 hover:text-emerald-400"
+        className="fixed bottom-5 right-5 z-40 rounded-full border border-stroke bg-surface-secondary/90 px-4 py-2.5 text-sm font-medium text-content shadow-lg backdrop-blur transition hover:border-emerald-500/40 hover:text-emerald-400"
       >
         💬 Feedback
       </button>
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-surface-overlay/60 p-4 sm:items-center"
           onClick={closeModal}
           role="presentation"
         >
           <div
-            className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900 p-5 shadow-xl"
+            className="w-full max-w-md rounded-2xl border border-stroke bg-surface-secondary p-5 shadow-xl"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-labelledby="feedback-title"
@@ -65,7 +65,7 @@ export default function FeedbackButton() {
           >
             <h2
               id="feedback-title"
-              className="text-lg font-semibold text-white"
+              className="text-lg font-semibold text-content"
             >
               Share your feedback
             </h2>
@@ -84,14 +84,14 @@ export default function FeedbackButton() {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="What's working? What's missing? Any bugs? Tell us anything!"
-                  className="w-full resize-none rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                  className="w-full resize-none rounded-lg border border-stroke bg-surface-primary px-3 py-2.5 text-sm text-content placeholder:text-content-muted focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="feedback-name"
-                  className="mb-1.5 block text-xs font-medium text-zinc-500"
+                  className="mb-1.5 block text-xs font-medium text-content-muted"
                 >
                   Name (optional)
                 </label>
@@ -101,7 +101,7 @@ export default function FeedbackButton() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Your name"
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                  className="w-full rounded-lg border border-stroke bg-surface-primary px-3 py-2 text-sm text-content placeholder:text-content-muted focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
                 />
               </div>
 
@@ -109,14 +109,14 @@ export default function FeedbackButton() {
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="rounded-lg px-4 py-2 text-sm font-medium text-zinc-400 transition hover:text-zinc-200"
+                  className="rounded-lg px-4 py-2 text-sm font-medium text-content-muted transition hover:text-content"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-60"
+                  className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-content transition hover:bg-emerald-500 disabled:opacity-60"
                 >
                   {submitting ? "Sending..." : "Submit"}
                 </button>

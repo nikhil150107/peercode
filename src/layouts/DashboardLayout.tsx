@@ -8,7 +8,7 @@ export default function DashboardLayout() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="min-h-screen bg-surface-primary text-content">
       <DashboardNavbar
         mobileNavOpen={mobileNavOpen}
         onMobileNavToggle={() => setMobileNavOpen((open) => !open)}

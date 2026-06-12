@@ -13,7 +13,7 @@ export default function ThemeToggle({ className = "" }: ThemeToggleProps) {
       onClick={toggleTheme}
       aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
       title={theme === "dark" ? "Light mode" : "Dark mode"}
-      className={`flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--pc-border)] bg-[var(--pc-surface-muted)] text-[var(--pc-text-muted)] transition hover:border-emerald-500/40 hover:text-emerald-400 ${className}`}
+      className={`flex h-10 w-10 items-center justify-center rounded-lg border border-stroke bg-surface-card text-content-muted transition hover:border-accent/40 hover:text-accent ${className}`}
     >
       {theme === "dark" ? (
         <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">

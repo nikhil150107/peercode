@@ -65,19 +65,19 @@ export default function QuestionBankPage() {
     <div className="p-6 lg:p-8">
       <div className="mx-auto max-w-5xl">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+          <h1 className="text-2xl font-bold tracking-tight text-content sm:text-3xl">
             Question Bank
           </h1>
-          <p className="mt-2 text-zinc-400">
+          <p className="mt-2 text-content-muted">
             Browse 100+ curated DSA problems by topic and difficulty.
           </p>
         </div>
 
-        <div className="mb-6 space-y-4 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5">
+        <div className="mb-6 space-y-4 rounded-2xl border border-stroke bg-surface-card/80 p-5">
           <div>
             <label
               htmlFor="question-search"
-              className="text-sm font-medium text-zinc-400"
+              className="text-sm font-medium text-content-muted"
             >
               Search by title
             </label>
@@ -87,12 +87,12 @@ export default function QuestionBankPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="e.g. Two Sum, Binary Search..."
-              className="mt-2 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 outline-none transition focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
+              className="mt-2 w-full rounded-lg border border-stroke bg-surface-primary px-4 py-2.5 text-sm text-content placeholder:text-content-muted outline-none transition focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
             />
           </div>
 
           <div>
-            <p className="text-sm font-medium text-zinc-400">Difficulty</p>
+            <p className="text-sm font-medium text-content-muted">Difficulty</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {difficultyFilters.map((value) => (
                 <button
@@ -102,7 +102,7 @@ export default function QuestionBankPage() {
                   className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
                     difficulty === value
                       ? "bg-emerald-500 text-zinc-950"
-                      : "border border-zinc-700 bg-zinc-950 text-zinc-300 hover:border-zinc-500"
+                      : "border border-stroke bg-surface-primary text-content hover:border-stroke"
                   }`}
                 >
                   {value}
@@ -112,7 +112,7 @@ export default function QuestionBankPage() {
           </div>
 
           <div>
-            <p className="text-sm font-medium text-zinc-400">Topic</p>
+            <p className="text-sm font-medium text-content-muted">Topic</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {topics.map((value) => (
                 <button
@@ -122,7 +122,7 @@ export default function QuestionBankPage() {
                   className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
                     topic === value
                       ? "bg-emerald-500 text-zinc-950"
-                      : "border border-zinc-700 bg-zinc-950 text-zinc-300 hover:border-zinc-500"
+                      : "border border-stroke bg-surface-primary text-content hover:border-stroke"
                   }`}
                 >
                   {value}
@@ -133,18 +133,18 @@ export default function QuestionBankPage() {
         </div>
 
         {loading ? (
-          <div className="overflow-hidden rounded-xl border border-zinc-800">
+          <div className="overflow-hidden rounded-xl border border-stroke">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-zinc-800 bg-zinc-900/80">
+              <thead className="border-b border-stroke bg-surface-secondary/80">
                 <tr>
-                  <th className="px-4 py-3 font-medium text-zinc-500">Title</th>
-                  <th className="hidden px-4 py-3 font-medium text-zinc-500 sm:table-cell">
+                  <th className="px-4 py-3 font-medium text-content-muted">Title</th>
+                  <th className="hidden px-4 py-3 font-medium text-content-muted sm:table-cell">
                     Difficulty
                   </th>
-                  <th className="px-4 py-3 font-medium text-zinc-500">Topic</th>
+                  <th className="px-4 py-3 font-medium text-content-muted">Topic</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800 bg-zinc-950">
+              <tbody className="divide-y divide-stroke bg-surface-primary">
                 {Array.from({ length: 8 }).map((_, i) => (
                   <QuestionRowSkeleton key={i} />
                 ))}
@@ -157,37 +157,37 @@ export default function QuestionBankPage() {
           </div>
         ) : (
           <>
-            <p className="mb-4 text-sm text-zinc-500">
+            <p className="mb-4 text-sm text-content-muted">
               Showing {filtered.length} of {questions.length} questions
             </p>
 
             {filtered.length === 0 ? (
-              <div className="rounded-xl border border-zinc-800 bg-zinc-950 px-6 py-12 text-center text-sm text-zinc-500">
+              <div className="rounded-xl border border-stroke bg-surface-primary px-6 py-12 text-center text-sm text-content-muted">
                 No questions match your filters.
               </div>
             ) : (
-              <div className="overflow-hidden rounded-xl border border-zinc-800">
+              <div className="overflow-hidden rounded-xl border border-stroke">
                 <table className="w-full text-left text-sm">
-                  <thead className="border-b border-zinc-800 bg-zinc-900/80">
+                  <thead className="border-b border-stroke bg-surface-secondary/80">
                     <tr>
-                      <th className="px-4 py-3 font-medium text-zinc-500">
+                      <th className="px-4 py-3 font-medium text-content-muted">
                         Title
                       </th>
-                      <th className="hidden px-4 py-3 font-medium text-zinc-500 sm:table-cell">
+                      <th className="hidden px-4 py-3 font-medium text-content-muted sm:table-cell">
                         Difficulty
                       </th>
-                      <th className="px-4 py-3 font-medium text-zinc-500">
+                      <th className="px-4 py-3 font-medium text-content-muted">
                         Topic
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-800 bg-zinc-950">
+                  <tbody className="divide-y divide-stroke bg-surface-primary">
                     {filtered.map((question) => (
                       <tr
                         key={question.id}
-                        className="transition hover:bg-zinc-900/50"
+                        className="transition hover:bg-surface-card/80"
                       >
-                        <td className="px-4 py-3 font-medium text-white">
+                        <td className="px-4 py-3 font-medium text-content">
                           {question.title}
                           <span
                             className={`mt-1 inline-block rounded-md px-2 py-0.5 text-xs font-medium ring-1 sm:hidden ${difficultyStyles[question.difficulty]}`}
@@ -202,7 +202,7 @@ export default function QuestionBankPage() {
                             {question.difficulty}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-zinc-400">
+                        <td className="px-4 py-3 text-content-muted">
                           {question.topic}
                         </td>
                       </tr>

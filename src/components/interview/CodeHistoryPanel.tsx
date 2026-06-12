@@ -28,11 +28,11 @@ export default function CodeHistoryPanel({
   onToggle,
 }: CodeHistoryPanelProps) {
   return (
-    <div className="shrink-0 border-t border-zinc-800 bg-zinc-900/60">
+    <div className="shrink-0 border-t border-stroke bg-surface-secondary/60">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500 transition hover:text-zinc-300"
+        className="flex w-full items-center justify-between px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-content-muted transition hover:text-content"
       >
         <span>Activity log ({entries.length})</span>
         <svg
@@ -48,14 +48,14 @@ export default function CodeHistoryPanel({
       </button>
 
       {open && (
-        <div className="max-h-36 space-y-2 overflow-y-auto border-t border-zinc-800 px-4 py-3">
+        <div className="max-h-36 space-y-2 overflow-y-auto border-t border-stroke px-4 py-3">
           {entries.length === 0 ? (
-            <p className="text-xs text-zinc-600">No edits recorded yet.</p>
+            <p className="text-xs text-content-muted">No edits recorded yet.</p>
           ) : (
             entries.map((entry) => (
               <div
                 key={entry.id}
-                className="rounded-lg border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-xs"
+                className="rounded-lg border border-stroke bg-navbar/80 px-3 py-2 text-xs"
               >
                 <div className="flex items-center justify-between gap-2">
                   <span
@@ -67,9 +67,9 @@ export default function CodeHistoryPanel({
                   >
                     {entry.author}
                   </span>
-                  <span className="text-zinc-600">{formatTime(entry.timestamp)}</span>
+                  <span className="text-content-muted">{formatTime(entry.timestamp)}</span>
                 </div>
-                <p className="mt-1 text-zinc-500">
+                <p className="mt-1 text-content-muted">
                   {entry.language} ·{" "}
                   <span className="text-emerald-400/80">+{entry.diff.added}</span>{" "}
                   <span className="text-red-400/80">−{entry.diff.removed}</span> lines

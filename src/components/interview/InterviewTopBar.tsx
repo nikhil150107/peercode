@@ -1,4 +1,5 @@
 import Logo from "../Logo"
+import ThemeToggle from "../ThemeToggle"
 
 type Role = "interviewer" | "interviewee"
 
@@ -20,7 +21,7 @@ export default function InterviewTopBar({
   const roleLabel = role === "interviewer" ? "Interviewer" : "Interviewee"
 
   return (
-    <header className="shrink-0 border-b border-zinc-800 bg-zinc-950">
+    <header className="shrink-0 border-b border-stroke bg-navbar">
       {showSwapAlert && (
         <div className="bg-amber-500/15 px-4 py-2 text-center text-sm font-medium text-amber-400">
           Roles swapping in 30s
@@ -29,12 +30,13 @@ export default function InterviewTopBar({
       <div className="flex h-14 items-center justify-between gap-2 px-3 sm:gap-4 sm:px-4">
         <Logo />
 
-        <div className="flex items-center gap-2 font-mono text-lg font-bold tabular-nums text-white sm:text-2xl">
+        <div className="flex items-center gap-2 font-mono text-lg font-bold tabular-nums text-content sm:text-2xl">
           <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
           {timer}
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-3">
+          <ThemeToggle className="h-9 w-9" />
           <span
             className={`hidden rounded-lg px-2 py-1 text-xs font-semibold uppercase tracking-wide sm:inline-flex sm:px-3 sm:py-1.5 ${
               role === "interviewer"

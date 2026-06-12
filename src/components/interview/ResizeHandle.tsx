@@ -49,7 +49,7 @@ export default function ResizeHandle({
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
-      className={`shrink-0 touch-none select-none bg-zinc-800/80 transition-colors hover:bg-emerald-500/40 active:bg-emerald-500/60 ${
+      className={`shrink-0 touch-none select-none bg-surface-hover/80 transition-colors hover:bg-emerald-500/40 active:bg-emerald-500/60 ${
         direction === "horizontal"
           ? "w-1.5 cursor-col-resize"
           : "h-1.5 cursor-row-resize"

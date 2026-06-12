@@ -19,7 +19,7 @@ export default function LandingPage() {
   }, [location])
 
   return (
-    <div className="min-h-screen bg-[var(--pc-bg)] text-[var(--pc-text)]">
+    <div className="min-h-screen bg-surface-primary text-content">
       <Navbar />
       <main>
         <Hero />

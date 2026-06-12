@@ -23,7 +23,7 @@ function difficultyClass(difficulty: string | null): string {
     case "Hard":
       return "text-red-400"
     default:
-      return "text-zinc-400"
+      return "text-content-muted"
   }
 }
 
@@ -43,22 +43,22 @@ export default function SessionHistoryTable({
 }: SessionHistoryTableProps) {
   if (sessions.length === 0) {
     return (
-      <div className="rounded-xl border border-zinc-800 bg-zinc-950 px-6 py-12 text-center text-sm text-zinc-500">
+      <div className="rounded-xl border border-stroke bg-surface-primary px-6 py-12 text-center text-sm text-content-muted">
         {emptyMessage}
       </div>
     )
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-zinc-800">
+    <div className="overflow-x-auto rounded-xl border border-stroke">
       <table className="w-full min-w-[540px] text-left text-sm">
         <thead>
-          <tr className="border-b border-zinc-800 bg-zinc-900/80">
-            <th className="px-4 py-3 font-medium text-zinc-500">Date</th>
-            <th className="px-4 py-3 font-medium text-zinc-500">Question</th>
-            <th className="px-4 py-3 font-medium text-zinc-500">Difficulty</th>
-            <th className="px-4 py-3 font-medium text-zinc-500">Topic</th>
-            <th className="px-4 py-3 font-medium text-zinc-500">Rating</th>
+          <tr className="border-b border-stroke bg-surface-secondary/80">
+            <th className="px-4 py-3 font-medium text-content-muted">Date</th>
+            <th className="px-4 py-3 font-medium text-content-muted">Question</th>
+            <th className="px-4 py-3 font-medium text-content-muted">Difficulty</th>
+            <th className="px-4 py-3 font-medium text-content-muted">Topic</th>
+            <th className="px-4 py-3 font-medium text-content-muted">Rating</th>
           </tr>
         </thead>
         <tbody>
@@ -68,12 +68,12 @@ export default function SessionHistoryTable({
             return (
             <tr
               key={session.id}
-              className="border-b border-zinc-800/80 bg-zinc-950/50 last:border-0"
+              className="border-b border-stroke/80 bg-surface-primary/50 last:border-0"
             >
-              <td className="px-4 py-3 text-zinc-300">
+              <td className="px-4 py-3 text-content">
                 {formatDate(session.completed_at)}
               </td>
-              <td className="px-4 py-3 font-medium text-white">
+              <td className="px-4 py-3 font-medium text-content">
                 {session.question_title ?? "—"}
               </td>
               <td
@@ -81,10 +81,10 @@ export default function SessionHistoryTable({
               >
                 {session.question_difficulty ?? "—"}
               </td>
-              <td className="px-4 py-3 text-zinc-300">
+              <td className="px-4 py-3 text-content">
                 {session.question_topic ?? "—"}
               </td>
-              <td className="px-4 py-3 text-zinc-300">
+              <td className="px-4 py-3 text-content">
                 {rating != null ? (
                   <span>
                     <span className="text-amber-400">★</span> {rating}/5

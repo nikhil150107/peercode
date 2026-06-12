@@ -5,7 +5,7 @@ type SkeletonProps = {
 export function Skeleton({ className = "" }: SkeletonProps) {
   return (
     <div
-      className={`animate-pulse rounded-lg bg-zinc-800/80 ${className}`}
+      className={`animate-pulse rounded-lg bg-surface-hover/80 ${className}`}
       aria-hidden="true"
     />
   )
@@ -13,7 +13,7 @@ export function Skeleton({ className = "" }: SkeletonProps) {
 
 export function SlotCardSkeleton() {
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
+    <div className="rounded-2xl border border-stroke bg-surface-card/80 p-6">
       <div className="mb-4 flex items-start justify-between">
         <div className="space-y-2">
           <Skeleton className="h-3 w-20" />
@@ -30,7 +30,7 @@ export function SlotCardSkeleton() {
 
 export function StatCardSkeleton() {
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
+    <div className="rounded-xl border border-stroke bg-surface-card/80 p-5">
       <Skeleton className="mb-3 h-4 w-28" />
       <Skeleton className="h-9 w-16" />
     </div>
@@ -39,7 +39,7 @@ export function StatCardSkeleton() {
 
 export function QuestionRowSkeleton() {
   return (
-    <tr className="border-b border-zinc-800/80">
+    <tr className="border-b border-stroke/80">
       <td className="px-4 py-3">
         <Skeleton className="h-4 w-48" />
       </td>

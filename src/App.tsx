@@ -20,7 +20,8 @@ import AboutPage from "./pages/AboutPage"
 
 function App() {
   return (
-    <Routes>
+    <div className="min-h-screen bg-surface-primary text-content">
+      <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/terms" element={<TermsPage />} />
@@ -88,7 +89,8 @@ function App() {
         }
       />
       <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+      </Routes>
+    </div>
   )
 }
 

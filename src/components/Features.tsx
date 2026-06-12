@@ -72,13 +72,13 @@ const features = [
 
 export default function Features() {
   return (
-    <section id="features" className="border-t border-zinc-800/60 bg-zinc-900/30 py-24">
+    <section id="features" className="border-t border-stroke/60 bg-surface-secondary/30 py-24">
       <div className="mx-auto max-w-6xl px-6">
         <div className="text-center">
           <p className="text-sm font-semibold uppercase tracking-widest text-emerald-400">
             Features
           </p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-content sm:text-4xl">
             Everything you need to prepare
           </h2>
         </div>
@@ -87,15 +87,15 @@ export default function Features() {
           {features.map((feature) => (
             <div
               key={feature.title}
-              className="group rounded-2xl border border-zinc-800 bg-zinc-950 p-8 transition hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5"
+              className="group rounded-2xl border border-stroke bg-surface-primary p-8 transition hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5"
             >
               <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20 transition group-hover:bg-emerald-500/20">
                 {feature.icon}
               </div>
-              <h3 className="text-lg font-semibold text-white">
+              <h3 className="text-lg font-semibold text-content">
                 {feature.title}
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-zinc-400">
+              <p className="mt-2 text-sm leading-relaxed text-content-muted">
                 {feature.description}
               </p>
             </div>

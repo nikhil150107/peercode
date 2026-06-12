@@ -55,7 +55,7 @@ function linkClass({ isActive }: { isActive: boolean }) {
   return `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
     isActive
       ? "bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20"
-      : "text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200"
+      : "text-content-muted hover:bg-surface-hover/50 hover:text-content"
   }`
 }
 
@@ -70,7 +70,7 @@ export default function DashboardSidebar({
 }: DashboardSidebarProps) {
   return (
     <>
-      <aside className="hidden w-56 shrink-0 border-r border-zinc-800/80 bg-zinc-950 lg:block">
+      <aside className="hidden w-56 shrink-0 border-r border-stroke/80 bg-sidebar lg:block">
         <nav className="flex flex-col gap-1 p-4">
           {navItems.map((item) => (
             <NavLink
@@ -88,14 +88,14 @@ export default function DashboardSidebar({
 
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 lg:hidden"
+          className="fixed inset-0 z-40 bg-surface-overlay/60 lg:hidden"
           onClick={onMobileClose}
           aria-hidden="true"
         />
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 border-r border-zinc-800/80 bg-zinc-950 pt-16 transition-transform duration-200 lg:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 border-r border-stroke/80 bg-sidebar pt-16 transition-transform duration-200 lg:hidden ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >

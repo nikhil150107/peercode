@@ -2,18 +2,18 @@ import { Link } from "react-router-dom"
 
 export default function CTASection() {
   return (
-    <section className="border-t border-zinc-800/60 py-24">
+    <section className="border-t border-stroke/60 py-24">
       <div className="mx-auto max-w-6xl px-6">
-        <div className="relative overflow-hidden rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 via-zinc-900/80 to-zinc-950 px-8 py-16 text-center sm:px-16">
+        <div className="relative overflow-hidden rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 via-surface-secondary/80 to-surface-primary px-8 py-16 text-center sm:px-16">
           <div
             className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.15),transparent_60%)]"
             aria-hidden="true"
           />
           <div className="relative">
-            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            <h2 className="text-3xl font-bold tracking-tight text-content sm:text-4xl">
               Ready to ace your next interview?
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-zinc-400">
+            <p className="mx-auto mt-4 max-w-xl text-content-muted">
               Join PeerCode today and start practicing with real peers — completely
               free, no credit card required.
             </p>

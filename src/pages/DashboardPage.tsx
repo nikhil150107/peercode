@@ -274,10 +274,10 @@ export default function DashboardPage() {
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-5xl">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+          <h1 className="text-2xl font-bold tracking-tight text-content sm:text-3xl">
             Hey {displayName}, ready to practice?
           </h1>
-          <p className="mt-2 text-zinc-400">
+          <p className="mt-2 text-content-muted">
             Book a slot for today or tomorrow. Matching starts 3 minutes before
             each slot.
           </p>
@@ -288,14 +288,14 @@ export default function DashboardPage() {
             <p className="text-sm font-semibold text-violet-300">
               Match found!
             </p>
-            <p className="mt-1 text-sm text-zinc-300">
+            <p className="mt-1 text-sm text-content">
               {matchedBooking.slot_time} ·{" "}
               {formatISTDateLabel(matchedBooking.slot_date)}
               {peerEmail ? ` · paired with ${getDisplayNameFromEmail(peerEmail)}` : ""}
             </p>
             <Link
               to={`/interview?room=${matchedBooking.room_id}`}
-              className="mt-4 inline-block rounded-lg bg-violet-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-400"
+              className="mt-4 inline-block rounded-lg bg-violet-500 px-5 py-2.5 text-sm font-semibold text-content transition hover:bg-violet-400"
             >
               Join Room
             </Link>
@@ -303,9 +303,9 @@ export default function DashboardPage() {
         )}
 
         {activeBooking?.status === "pending" && (
-          <div className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/50 px-5 py-4">
-            <p className="text-sm text-zinc-400">Your upcoming session</p>
-            <p className="mt-1 text-lg font-semibold text-white">
+          <div className="mb-6 rounded-xl border border-stroke bg-surface-card/80 px-5 py-4">
+            <p className="text-sm text-content-muted">Your upcoming session</p>
+            <p className="mt-1 text-lg font-semibold text-content">
               {activeBooking.slot_time} · {formatISTDateLabel(activeBooking.slot_date)}
             </p>
             {countdown && (
@@ -333,7 +333,7 @@ export default function DashboardPage() {
 
               {cancelConfirmId === activeBooking.id ? (
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm text-zinc-400">
+                  <span className="text-sm text-content-muted">
                     Are you sure you want to cancel?
                   </span>
                   <button
@@ -349,7 +349,7 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     onClick={() => setCancelConfirmId(null)}
-                    className="text-sm text-zinc-500 transition hover:text-zinc-300"
+                    className="text-sm text-content-muted transition hover:text-content"
                   >
                     No
                   </button>
@@ -367,11 +367,11 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <section className="mb-8 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">
+        <section className="mb-8 rounded-2xl border border-stroke bg-surface-card/80 p-5">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-content-muted">
             Preferred difficulty
           </h2>
-          <p className="mt-1 text-sm text-zinc-400">
+          <p className="mt-1 text-sm text-content-muted">
             Choose the question difficulty for your next interview session.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -383,7 +383,7 @@ export default function DashboardPage() {
                 className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
                   difficulty === opt.value
                     ? "bg-emerald-500 text-zinc-950"
-                    : "border border-zinc-700 bg-zinc-950 text-zinc-300 hover:border-zinc-500"
+                    : "border border-stroke bg-surface-primary text-content hover:border-stroke"
                 }`}
               >
                 {opt.label}
@@ -391,11 +391,11 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          <div className="mt-6 border-t border-zinc-800 pt-6">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">
+          <div className="mt-6 border-t border-stroke pt-6">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-content-muted">
               Preferred topic
             </h2>
-            <p className="mt-1 text-sm text-zinc-400">
+            <p className="mt-1 text-sm text-content-muted">
               Narrow questions to a specific topic, or choose Any for all topics.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -407,7 +407,7 @@ export default function DashboardPage() {
                   className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
                     topic === opt.value
                       ? "bg-emerald-500 text-zinc-950"
-                      : "border border-zinc-700 bg-zinc-950 text-zinc-300 hover:border-zinc-500"
+                      : "border border-stroke bg-surface-primary text-content hover:border-stroke"
                   }`}
                 >
                   {opt.label}
@@ -419,14 +419,14 @@ export default function DashboardPage() {
 
         <section>
           <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex gap-2 rounded-lg border border-zinc-800 bg-zinc-900/50 p-1">
+            <div className="flex gap-2 rounded-lg border border-stroke bg-surface-card/80 p-1">
               <button
                 type="button"
                 onClick={() => setActiveTab("today")}
                 className={`rounded-md px-4 py-2 text-sm font-medium transition ${
                   activeTab === "today"
                     ? "bg-emerald-500 text-zinc-950"
-                    : "text-zinc-400 hover:text-zinc-200"
+                    : "text-content-muted hover:text-content"
                 }`}
               >
                 Today
@@ -437,18 +437,18 @@ export default function DashboardPage() {
                 className={`rounded-md px-4 py-2 text-sm font-medium transition ${
                   activeTab === "tomorrow"
                     ? "bg-emerald-500 text-zinc-950"
-                    : "text-zinc-400 hover:text-zinc-200"
+                    : "text-content-muted hover:text-content"
                 }`}
               >
                 Tomorrow
               </button>
             </div>
-            <span className="text-sm text-zinc-500">
+            <span className="text-sm text-content-muted">
               {formatISTDateLabel(selectedDate)} · IST
             </span>
           </div>
 
-          <p className="mb-4 text-xs leading-relaxed text-zinc-500">
+          <p className="mb-4 text-xs leading-relaxed text-content-muted">
             📌 Book at least 5 minutes before a slot. Peer matching happens 3
             minutes before start time.
           </p>
@@ -459,7 +459,7 @@ export default function DashboardPage() {
                   <SlotCardSkeleton key={`skeleton-${activeTab}-${slot.id}`} />
                 ))
               : visibleSlots.length === 0 ? (
-                  <p className="col-span-full rounded-xl border border-zinc-800 bg-zinc-900/50 px-5 py-8 text-center text-sm text-zinc-500">
+                  <p className="col-span-full rounded-xl border border-stroke bg-surface-card/80 px-5 py-8 text-center text-sm text-content-muted">
                     No bookable slots left for{" "}
                     {activeTab === "today" ? "today" : "tomorrow"}.
                   </p>

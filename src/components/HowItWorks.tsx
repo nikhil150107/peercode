@@ -72,16 +72,16 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <section id="how-it-works" className="border-t border-zinc-800/60 py-24">
+    <section id="how-it-works" className="border-t border-stroke/60 py-24">
       <div className="mx-auto max-w-6xl px-6">
         <div className="text-center">
           <p className="text-sm font-semibold uppercase tracking-widest text-emerald-400">
             How it works
           </p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-content sm:text-4xl">
             Three steps to interview-ready
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-zinc-400">
+          <p className="mx-auto mt-4 max-w-xl text-content-muted">
             No coaches, no subscriptions. Just structured peer practice that
             mirrors the real thing.
           </p>
@@ -96,17 +96,17 @@ export default function HowItWorks() {
                   aria-hidden="true"
                 />
               )}
-              <div className="flex h-full flex-col rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8 transition hover:border-zinc-700 hover:bg-zinc-900/80">
+              <div className="flex h-full flex-col rounded-2xl border border-stroke bg-surface-card/80 p-8 transition hover:border-stroke hover:bg-surface-secondary/80">
                 <div className="mb-6 flex items-center justify-between">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20">
                     {step.icon}
                   </div>
-                  <span className="font-mono text-sm text-zinc-600">
+                  <span className="font-mono text-sm text-content-muted">
                     {step.number}
                   </span>
                 </div>
-                <h3 className="text-xl font-semibold text-white">{step.title}</h3>
-                <p className="mt-3 flex-1 text-sm leading-relaxed text-zinc-400">
+                <h3 className="text-xl font-semibold text-content">{step.title}</h3>
+                <p className="mt-3 flex-1 text-sm leading-relaxed text-content-muted">
                   {step.description}
                 </p>
               </div>

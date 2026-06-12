@@ -1,39 +1,60 @@
 @import "tailwindcss";
 
 @custom-variant light (&:where(.light, .light *));
+@custom-variant dark (&:where(.dark, .dark *));
 
-@theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-}
-
-html.dark {
+/* Default before JS runs */
+html,
+html.dark,
+:root.dark {
   color-scheme: dark;
-  --pc-bg: #09090b;
-  --pc-bg-elevated: #18181b;
-  --pc-surface: #18181b;
-  --pc-surface-muted: #27272a;
-  --pc-border: #3f3f46;
-  --pc-text: #fafafa;
-  --pc-text-muted: #a1a1aa;
-  --pc-text-subtle: #71717a;
-  --pc-nav-bg: rgb(9 9 11 / 0.8);
-  --pc-accent: #10b981;
-  --pc-accent-soft: rgb(16 185 129 / 0.15);
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #111111;
+  --bg-card: #1a1a1a;
+  --bg-input: #1a1a1a;
+  --bg-hover: #27272a;
+  --bg-overlay: rgb(0 0 0 / 0.6);
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --border: #2a2a2a;
+  --navbar-bg: #0a0a0a;
+  --sidebar-bg: #111111;
+  --accent: #10b981;
+  --accent-soft: rgb(16 185 129 / 0.15);
 }
 
-html.light {
+html.light,
+:root.light {
   color-scheme: light;
-  --pc-bg: #f4f4f5;
-  --pc-bg-elevated: #ffffff;
-  --pc-surface: #ffffff;
-  --pc-surface-muted: #f4f4f5;
-  --pc-border: #e4e4e7;
-  --pc-text: #18181b;
-  --pc-text-muted: #52525b;
-  --pc-text-subtle: #71717a;
-  --pc-nav-bg: rgb(255 255 255 / 0.85);
-  --pc-accent: #10b981;
-  --pc-accent-soft: rgb(16 185 129 / 0.12);
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-card: #ffffff;
+  --bg-input: #ffffff;
+  --bg-hover: #f3f4f6;
+  --bg-overlay: rgb(0 0 0 / 0.4);
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --border: #e5e7eb;
+  --navbar-bg: #ffffff;
+  --sidebar-bg: #f9fafb;
+  --accent: #10b981;
+  --accent-soft: rgb(16 185 129 / 0.12);
+}
+
+@theme inline {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-surface-primary: var(--bg-primary);
+  --color-surface-secondary: var(--bg-secondary);
+  --color-surface-card: var(--bg-card);
+  --color-surface-input: var(--bg-input);
+  --color-surface-hover: var(--bg-hover);
+  --color-surface-overlay: var(--bg-overlay);
+  --color-content: var(--text-primary);
+  --color-content-muted: var(--text-secondary);
+  --color-stroke: var(--border);
+  --color-navbar: var(--navbar-bg);
+  --color-sidebar: var(--sidebar-bg);
+  --color-accent: var(--accent);
 }
 
 html {
@@ -43,25 +64,39 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: var(--pc-bg);
-  color: var(--pc-text);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
-.light .theme-surface {
-  background-color: var(--pc-surface);
-  border-color: var(--pc-border);
-  color: var(--pc-text);
+#root {
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
-.light .theme-nav {
-  background-color: var(--pc-nav-bg);
-  border-color: var(--pc-border);
+/* Themed form controls */
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  border-color: var(--border);
 }
 
-.light .theme-muted-text {
-  color: var(--pc-text-muted);
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-secondary);
+}
+
+/* Code editor stays dark for readability */
+.monaco-editor,
+.monaco-editor-background,
+.monaco-editor .margin {
+  background-color: #1e1e1e !important;
 }

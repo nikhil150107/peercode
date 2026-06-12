@@ -29,14 +29,14 @@ export default function SessionsPage() {
   return (
     <div className="p-6 lg:p-8">
       <div className="mx-auto max-w-5xl">
-        <h1 className="text-2xl font-bold text-white sm:text-3xl">My Sessions</h1>
-        <p className="mt-2 text-zinc-400">
+        <h1 className="text-2xl font-bold text-content sm:text-3xl">My Sessions</h1>
+        <p className="mt-2 text-content-muted">
           View your past mock interview sessions and ratings.
         </p>
 
         <div className="mt-8">
           {loading ? (
-            <p className="text-sm text-zinc-500">Loading sessions...</p>
+            <p className="text-sm text-content-muted">Loading sessions...</p>
           ) : (
             <SessionHistoryTable sessions={sessions} />
           )}

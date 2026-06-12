@@ -58,7 +58,7 @@ export default function DashboardNavbar({
   }
 
   return (
-    <header className="theme-nav sticky top-0 z-50 border-b border-[var(--pc-border)] bg-[var(--pc-nav-bg)] backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-stroke bg-navbar backdrop-blur-md">
       <nav className="flex h-16 items-center justify-between gap-3 px-4 sm:px-6">
         <div className="flex items-center gap-3">
           <button
@@ -66,7 +66,7 @@ export default function DashboardNavbar({
             onClick={onMobileNavToggle}
             aria-expanded={mobileNavOpen}
             aria-label="Open navigation menu"
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900/50 text-zinc-300 transition hover:border-zinc-700 hover:text-white lg:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-stroke bg-surface-card/80 text-content transition hover:border-stroke hover:text-content lg:hidden"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <line x1="3" y1="12" x2="21" y2="12" />
@@ -85,20 +85,20 @@ export default function DashboardNavbar({
             onClick={() => setMenuOpen((open) => !open)}
             aria-expanded={menuOpen}
             aria-haspopup="menu"
-            className="flex cursor-pointer items-center gap-2 rounded-lg border border-transparent px-1.5 py-1.5 transition hover:border-zinc-700 hover:bg-zinc-900/60 sm:gap-3 sm:px-2"
+            className="flex cursor-pointer items-center gap-2 rounded-lg border border-transparent px-1.5 py-1.5 transition hover:border-stroke hover:bg-surface-secondary/60 sm:gap-3 sm:px-2"
           >
-            <span className="hidden max-w-[180px] truncate text-sm text-zinc-400 md:inline">
+            <span className="hidden max-w-[180px] truncate text-sm text-content-muted md:inline">
               {email}
             </span>
-            <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/50 py-1.5 pl-1.5 pr-2 sm:gap-2.5 sm:pr-3">
+            <div className="flex items-center gap-2 rounded-lg border border-stroke bg-surface-card/80 py-1.5 pl-1.5 pr-2 sm:gap-2.5 sm:pr-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20 text-xs font-semibold text-emerald-400 ring-1 ring-emerald-500/30">
                 {initials}
               </div>
-              <span className="hidden max-w-[120px] truncate text-sm font-medium text-white sm:inline">
+              <span className="hidden max-w-[120px] truncate text-sm font-medium text-content sm:inline">
                 {displayName}
               </span>
               <svg
-                className={`h-4 w-4 shrink-0 text-zinc-500 transition ${menuOpen ? "rotate-180" : ""}`}
+                className={`h-4 w-4 shrink-0 text-content-muted transition ${menuOpen ? "rotate-180" : ""}`}
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -115,25 +115,25 @@ export default function DashboardNavbar({
           {menuOpen && (
             <div
               role="menu"
-              className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 py-1 shadow-xl shadow-black/40"
+              className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl border border-stroke bg-surface-secondary py-1 shadow-xl shadow-black/40"
             >
-              <div className="border-b border-zinc-800 px-4 py-2.5 md:hidden">
-                <p className="truncate text-sm font-medium text-white">{displayName}</p>
-                <p className="truncate text-xs text-zinc-500">{email}</p>
+              <div className="border-b border-stroke px-4 py-2.5 md:hidden">
+                <p className="truncate text-sm font-medium text-content">{displayName}</p>
+                <p className="truncate text-xs text-content-muted">{email}</p>
               </div>
               <button
                 type="button"
                 role="menuitem"
                 onClick={goToProfile}
-                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-zinc-300 transition hover:bg-zinc-800 hover:text-white"
+                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-content transition hover:bg-surface-hover hover:text-content"
               >
-                <svg className="h-4 w-4 text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <svg className="h-4 w-4 text-content-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
                 View Profile
               </button>
-              <div className="my-1 border-t border-zinc-800" />
+              <div className="my-1 border-t border-stroke" />
               <button
                 type="button"
                 role="menuitem"

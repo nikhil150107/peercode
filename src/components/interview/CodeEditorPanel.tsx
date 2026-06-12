@@ -121,14 +121,14 @@ export default function CodeEditorPanel({
 
   return (
     <div
-      className={`flex h-full min-w-0 shrink-0 flex-col bg-zinc-950 ${className}`}
+      className={`flex h-full min-w-0 shrink-0 flex-col bg-surface-primary ${className}`}
       style={style}
     >
-      <div className="flex flex-wrap items-center gap-2 border-b border-zinc-800 px-4 py-2">
+      <div className="flex flex-wrap items-center gap-2 border-b border-stroke px-4 py-2">
         <select
           value={language}
           onChange={(e) => handleLanguageChange(e.target.value as Language)}
-          className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500/50"
+          className="rounded-lg border border-stroke bg-surface-secondary px-3 py-1.5 text-sm text-content outline-none focus:border-emerald-500/50"
         >
           {languageOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -143,7 +143,7 @@ export default function CodeEditorPanel({
             onChange={(e) =>
               onCompilerVersionChange?.(Number(e.target.value))
             }
-            className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500/50"
+            className="rounded-lg border border-stroke bg-surface-secondary px-3 py-1.5 text-sm text-content outline-none focus:border-emerald-500/50"
             aria-label="Compiler version"
           >
             {versions.map((version) => (
@@ -166,20 +166,20 @@ export default function CodeEditorPanel({
           type="button"
           onClick={onSubmitCode}
           disabled={running || !onSubmitCode}
-          className="rounded-lg bg-violet-500 px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-60"
+          className="rounded-lg bg-violet-500 px-4 py-1.5 text-sm font-semibold text-content transition hover:bg-violet-400 disabled:opacity-60"
         >
           {running ? "Submitting..." : "Submit"}
         </button>
       </div>
 
       {hints && hints.length > 0 && (
-        <div className="shrink-0 border-b border-zinc-800 bg-violet-500/5 px-4 py-3">
+        <div className="shrink-0 border-b border-stroke bg-violet-500/5 px-4 py-3">
           <p className="text-xs font-semibold uppercase tracking-wider text-violet-400">
             Hints
           </p>
           <ul className="mt-2 space-y-1.5">
             {hints.map((hint, i) => (
-              <li key={i} className="text-sm leading-relaxed text-zinc-300">
+              <li key={i} className="text-sm leading-relaxed text-content">
                 {i + 1}. {hint}
               </li>
             ))}
@@ -211,17 +211,17 @@ export default function CodeEditorPanel({
       )}
 
       <div
-        className="flex shrink-0 flex-col border-t border-zinc-800 bg-zinc-900/80"
+        className="flex shrink-0 flex-col border-t border-stroke bg-surface-secondary/80"
         style={{ height: outputHeight }}
       >
-        <div className="flex items-center border-b border-zinc-800">
+        <div className="flex items-center border-b border-stroke">
           <button
             type="button"
             onClick={() => setOutputTab("tests")}
             className={`px-4 py-2 text-xs font-medium uppercase tracking-wider transition ${
               outputTab === "tests"
                 ? "border-b-2 border-emerald-500 text-emerald-400"
-                : "text-zinc-500 hover:text-zinc-300"
+                : "text-content-muted hover:text-content"
             }`}
           >
             Output
@@ -232,7 +232,7 @@ export default function CodeEditorPanel({
             className={`px-4 py-2 text-xs font-medium uppercase tracking-wider transition ${
               outputTab === "custom"
                 ? "border-b-2 border-emerald-500 text-emerald-400"
-                : "text-zinc-500 hover:text-zinc-300"
+                : "text-content-muted hover:text-content"
             }`}
           >
             Custom Test
@@ -250,7 +250,7 @@ export default function CodeEditorPanel({
               onChange={(e) => setDraftCustomInput(e.target.value)}
               onBlur={saveCustomTestInput}
               placeholder='nums = [2,7], target = 9'
-              className="min-h-[72px] flex-1 resize-none rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 font-mono text-xs text-zinc-200 outline-none focus:border-emerald-500/50"
+              className="min-h-[72px] flex-1 resize-none rounded-lg border border-stroke bg-surface-primary px-3 py-2 font-mono text-xs text-content outline-none focus:border-emerald-500/50"
             />
             <div className="flex flex-wrap items-center gap-2">
               <button
@@ -264,7 +264,7 @@ export default function CodeEditorPanel({
               <button
                 type="button"
                 onClick={addCustomTest}
-                className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:border-zinc-500"
+                className="rounded-lg border border-stroke px-3 py-1.5 text-xs text-content hover:border-stroke"
               >
                 Add test
               </button>
@@ -279,7 +279,7 @@ export default function CodeEditorPanel({
                     className={`rounded-md px-2 py-1 text-[10px] font-medium ${
                       test.id === activeCustomId
                         ? "bg-emerald-500/20 text-emerald-300"
-                        : "bg-zinc-800 text-zinc-400"
+                        : "bg-surface-hover text-content-muted"
                     }`}
                   >
                     Test {index + 1}
@@ -287,7 +287,7 @@ export default function CodeEditorPanel({
                 ))}
               </div>
             )}
-            <pre className="max-h-24 overflow-auto rounded-lg border border-zinc-800 bg-zinc-950 p-2 font-mono text-xs text-emerald-400 whitespace-pre-wrap">
+            <pre className="max-h-24 overflow-auto rounded-lg border border-stroke bg-surface-primary p-2 font-mono text-xs text-emerald-400 whitespace-pre-wrap">
               {runningCustom ? "Running custom test..." : customOutput}
             </pre>
           </div>

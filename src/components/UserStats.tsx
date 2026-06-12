@@ -38,32 +38,32 @@ export default function UserStats() {
   }, [user?.id])
 
   return (
-    <section className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
-      <h2 className="text-lg font-semibold text-white">Your stats</h2>
-      <p className="mt-1 text-sm text-zinc-400">
+    <section className="rounded-2xl border border-stroke bg-surface-card/80 p-6">
+      <h2 className="text-lg font-semibold text-content">Your stats</h2>
+      <p className="mt-1 text-sm text-content-muted">
         Track your interview practice progress
       </p>
 
       {loading ? (
-        <p className="mt-6 text-sm text-zinc-500">Loading stats...</p>
+        <p className="mt-6 text-sm text-content-muted">Loading stats...</p>
       ) : (
         <>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-5">
-              <p className="text-sm text-zinc-500">Total sessions</p>
-              <p className="mt-1 text-3xl font-bold text-white">
+            <div className="rounded-xl border border-stroke bg-surface-primary p-5">
+              <p className="text-sm text-content-muted">Total sessions</p>
+              <p className="mt-1 text-3xl font-bold text-content">
                 {totalSessions}
               </p>
             </div>
-            <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-5">
-              <p className="text-sm text-zinc-500">Average rating</p>
+            <div className="rounded-xl border border-stroke bg-surface-primary p-5">
+              <p className="text-sm text-content-muted">Average rating</p>
               <div className="mt-1 flex items-baseline gap-1.5">
-                <p className="text-3xl font-bold text-white">
+                <p className="text-3xl font-bold text-content">
                   {averageRating != null ? averageRating : "—"}
                 </p>
                 {averageRating != null && (
                   <>
-                    <span className="text-sm text-zinc-500">/ 5</span>
+                    <span className="text-sm text-content-muted">/ 5</span>
                     <span className="ml-1 text-amber-400">★</span>
                   </>
                 )}
@@ -72,9 +72,9 @@ export default function UserStats() {
           </div>
 
           <div className="mt-6">
-            <p className="text-sm font-medium text-zinc-400">Topics practiced</p>
+            <p className="text-sm font-medium text-content-muted">Topics practiced</p>
             {topics.length === 0 ? (
-              <p className="mt-3 text-sm text-zinc-500">None yet</p>
+              <p className="mt-3 text-sm text-content-muted">None yet</p>
             ) : (
               <div className="mt-3 flex flex-wrap gap-2">
                 {topics.map((topic) => (

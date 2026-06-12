@@ -21,7 +21,7 @@ export default function Navbar() {
   }, [menuOpen])
 
   return (
-    <header className="theme-nav fixed inset-x-0 top-0 z-50 border-b border-[var(--pc-border)] bg-[var(--pc-nav-bg)] backdrop-blur-md">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-stroke bg-navbar backdrop-blur-md">
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Logo />
 
@@ -29,13 +29,13 @@ export default function Navbar() {
           <ThemeToggle />
           <Link
             to="/about"
-            className="rounded-lg px-4 py-2 text-sm font-medium text-zinc-400 transition hover:text-white"
+            className="rounded-lg px-4 py-2 text-sm font-medium text-content-muted transition hover:text-content"
           >
             About
           </Link>
           <Link
             to="/login"
-            className="rounded-lg px-4 py-2 text-sm font-medium text-zinc-400 transition hover:text-white"
+            className="rounded-lg px-4 py-2 text-sm font-medium text-content-muted transition hover:text-content"
           >
             Login
           </Link>
@@ -54,7 +54,7 @@ export default function Navbar() {
             onClick={() => setMenuOpen((open) => !open)}
             aria-expanded={menuOpen}
             aria-label="Open menu"
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900/50 text-zinc-300 transition hover:border-zinc-700 hover:text-white"
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-stroke bg-surface-card/80 text-content transition hover:border-stroke hover:text-content"
           >
             {menuOpen ? (
               <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -71,20 +71,20 @@ export default function Navbar() {
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 py-1 shadow-xl shadow-black/40">
+            <div className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl border border-stroke bg-surface-secondary py-1 shadow-xl shadow-black/40">
               <Link
                 to="/about"
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-zinc-300 transition hover:bg-zinc-800 hover:text-white"
+                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-content transition hover:bg-surface-hover hover:text-content"
               >
                 About
               </Link>
               <Link
                 to="/login"
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-zinc-300 transition hover:bg-zinc-800 hover:text-white"
+                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-content transition hover:bg-surface-hover hover:text-content"
               >
-                <svg className="h-4 w-4 text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                <svg className="h-4 w-4 text-content-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
                   <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
                   <polyline points="10 17 15 12 10 7" />
                   <line x1="15" y1="12" x2="3" y2="12" />
@@ -94,7 +94,7 @@ export default function Navbar() {
               <Link
                 to="/signup"
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-emerald-400 transition hover:bg-zinc-800"
+                className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-emerald-400 transition hover:bg-surface-hover"
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
                   <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />

@@ -10,7 +10,7 @@ export default function PublicOnlyRoute({
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-zinc-400">
+      <div className="flex min-h-screen items-center justify-center bg-surface-primary text-content-muted">
         Loading...
       </div>
     )

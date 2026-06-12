@@ -1454,7 +1454,7 @@ export default function InterviewRoomPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-zinc-950 text-zinc-100">
+    <div className="flex h-screen flex-col overflow-hidden bg-surface-primary text-content">
       <InterviewTopBar
         timer={timerStarted ? formatTimer(secondsLeft) : "Waiting..."}
         role={role}
@@ -1472,14 +1472,14 @@ export default function InterviewRoomPage() {
           Peer left the session. You can end the session now.
         </div>
       )}
-      <div className="flex shrink-0 border-b border-zinc-800 lg:hidden">
+      <div className="flex shrink-0 border-b border-stroke lg:hidden">
         <button
           type="button"
           onClick={() => setMobilePanel("code")}
           className={`flex-1 px-4 py-2.5 text-sm font-medium transition ${
             mobilePanel === "code"
               ? "border-b-2 border-emerald-500 text-emerald-400"
-              : "text-zinc-500"
+              : "text-content-muted"
           }`}
         >
           Code Editor
@@ -1490,7 +1490,7 @@ export default function InterviewRoomPage() {
           className={`flex-1 px-4 py-2.5 text-sm font-medium transition ${
             mobilePanel === "question"
               ? "border-b-2 border-emerald-500 text-emerald-400"
-              : "text-zinc-500"
+              : "text-content-muted"
           }`}
         >
           Question & Video

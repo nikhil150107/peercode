@@ -43,18 +43,18 @@ export default function SlotCard({
   const isUnavailable = isFull || isExpired || isClosingSoon
 
   return (
-    <div className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 transition hover:border-zinc-700">
+    <div className="flex flex-col rounded-2xl border border-stroke bg-surface-card/80 p-6 transition hover:border-stroke">
       <div className="mb-4 flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+          <p className="text-xs font-medium uppercase tracking-wider text-content-muted">
             {dateLabel} · IST
           </p>
-          <p className="mt-1 text-2xl font-bold text-white">{slot.time}</p>
+          <p className="mt-1 text-2xl font-bold text-content">{slot.time}</p>
         </div>
         <span
           className={`rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${
             isExpired
-              ? " bg-zinc-500/10 text-zinc-400 ring-zinc-500/20"
+              ? " bg-surface-hover text-content-muted ring-stroke"
               : isClosingSoon
                 ? " bg-amber-500/10 text-amber-400 ring-amber-500/20"
                 : config.badge
@@ -64,9 +64,9 @@ export default function SlotCard({
         </span>
       </div>
 
-      <div className="mb-6 flex items-center gap-2 text-sm text-zinc-400">
+      <div className="mb-6 flex items-center gap-2 text-sm text-content-muted">
         <svg
-          className="h-4 w-4 text-zinc-500"
+          className="h-4 w-4 text-content-muted"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -81,17 +81,17 @@ export default function SlotCard({
           <path d="M16 3.13a4 4 0 0 1 0 7.75" />
         </svg>
         <span>
-          <span className="font-medium text-zinc-300">{bookedCount}</span>{" "}
+          <span className="font-medium text-content">{bookedCount}</span>{" "}
           booked
         </span>
       </div>
 
       <div className="mt-auto">
-        <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-zinc-800">
+        <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-surface-hover">
           <div
             className={`h-full rounded-full transition-all ${
               isExpired
-                ? " bg-zinc-600"
+                ? " bg-content-muted/40"
                 : isClosingSoon
                   ? " bg-amber-500"
                   : isFull
@@ -111,11 +111,11 @@ export default function SlotCard({
           onClick={() => onBook(slot.id)}
           className={`w-full rounded-lg py-2.5 text-sm font-semibold transition ${
             isBooked
-              ? "cursor-default bg-zinc-800 text-emerald-400"
+              ? "cursor-default bg-surface-hover text-emerald-400"
               : isExpired || isClosingSoon
-                ? "cursor-not-allowed bg-zinc-800 text-zinc-500"
+                ? "cursor-not-allowed bg-surface-hover text-content-muted"
                 : isFull || isBooking
-                  ? "cursor-not-allowed bg-zinc-800 text-zinc-500"
+                  ? "cursor-not-allowed bg-surface-hover text-content-muted"
                   : " bg-emerald-500 text-zinc-950 shadow-lg shadow-emerald-500/20 hover:bg-emerald-400"
           }`}
         >

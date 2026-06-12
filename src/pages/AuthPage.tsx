@@ -128,7 +128,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="min-h-screen bg-surface-primary text-content">
       <Navbar />
 
       <main className="relative flex min-h-screen items-center justify-center px-6 pt-16 pb-12">
@@ -141,25 +141,25 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
 
         <div className="w-full max-w-md">
           <div className="mb-8 text-center">
-            <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+            <h1 className="text-2xl font-bold tracking-tight text-content sm:text-3xl">
               {isLogin ? "Welcome back" : "Create your account"}
             </h1>
-            <p className="mt-2 text-sm text-zinc-400">
+            <p className="mt-2 text-sm text-content-muted">
               {isLogin
                 ? "Log in to book your next mock interview"
                 : "Start practicing DSA interviews for free"}
             </p>
           </div>
 
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8 shadow-xl shadow-black/20">
-            <div className="mb-6 flex rounded-lg bg-zinc-950 p-1 ring-1 ring-zinc-800">
+          <div className="rounded-2xl border border-stroke bg-surface-card/80 p-8 shadow-xl shadow-black/20">
+            <div className="mb-6 flex rounded-lg bg-surface-primary p-1 ring-1 ring-stroke">
               <button
                 type="button"
                 onClick={() => switchMode("login")}
                 className={`flex-1 rounded-md py-2 text-sm font-medium transition ${
                   isLogin
-                    ? "bg-zinc-800 text-white shadow-sm"
-                    : "text-zinc-400 hover:text-zinc-200"
+                    ? "bg-surface-hover text-content shadow-sm"
+                    : "text-content-muted hover:text-content"
                 }`}
               >
                 Log in
@@ -169,8 +169,8 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
                 onClick={() => switchMode("signup")}
                 className={`flex-1 rounded-md py-2 text-sm font-medium transition ${
                   !isLogin
-                    ? "bg-zinc-800 text-white shadow-sm"
-                    : "text-zinc-400 hover:text-zinc-200"
+                    ? "bg-surface-hover text-content shadow-sm"
+                    : "text-content-muted hover:text-content"
                 }`}
               >
                 Sign up
@@ -192,9 +192,9 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
             {showForgotPassword && isLogin && (
               <form
                 onSubmit={(e) => void handleForgotPassword(e)}
-                className="mb-6 space-y-3 rounded-lg border border-zinc-800 bg-zinc-950/50 p-4"
+                className="mb-6 space-y-3 rounded-lg border border-stroke bg-surface-primary/50 p-4"
               >
-                <p className="text-sm text-zinc-400">
+                <p className="text-sm text-content-muted">
                   Enter your email and we&apos;ll send you a reset link.
                 </p>
                 <input
@@ -204,7 +204,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 outline-none transition focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-60"
+                  className="w-full rounded-lg border border-stroke bg-surface-primary px-4 py-2.5 text-sm text-content placeholder:text-content-muted outline-none transition focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-60"
                 />
                 <div className="flex gap-2">
                   <button
@@ -221,7 +221,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
                       setResetSuccess(false)
                       setError(null)
                     }}
-                    className="rounded-lg border border-zinc-700 px-4 py-2 text-sm text-zinc-400 transition hover:border-zinc-500 hover:text-zinc-200"
+                    className="rounded-lg border border-stroke px-4 py-2 text-sm text-content-muted transition hover:border-stroke hover:text-content"
                   >
                     Cancel
                   </button>
@@ -233,7 +233,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
               type="button"
               onClick={() => void handleGoogleLogin()}
               disabled={loading}
-              className="flex w-full items-center justify-center gap-3 rounded-lg border border-zinc-300 bg-white py-2.5 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-zinc-50 disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-3 rounded-lg border border-stroke bg-surface-card py-2.5 text-sm font-medium text-content shadow-sm transition hover:bg-surface-hover disabled:opacity-60"
             >
               <GoogleIcon />
               Continue with Google
@@ -241,10 +241,10 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
 
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-zinc-800" />
+                <div className="w-full border-t border-stroke" />
               </div>
               <div className="relative flex justify-center">
-                <span className="bg-zinc-900/50 px-3 text-xs text-zinc-500">
+                <span className="bg-surface-card/80 px-3 text-xs text-content-muted">
                   ── or continue with email ──
                 </span>
               </div>
@@ -254,7 +254,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
               <div>
                 <label
                   htmlFor="email"
-                  className="mb-1.5 block text-sm font-medium text-zinc-300"
+                  className="mb-1.5 block text-sm font-medium text-content"
                 >
                   Email
                 </label>
@@ -267,14 +267,14 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 outline-none transition focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-60"
+                  className="w-full rounded-lg border border-stroke bg-surface-primary px-4 py-2.5 text-sm text-content placeholder:text-content-muted outline-none transition focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-60"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="password"
-                  className="mb-1.5 block text-sm font-medium text-zinc-300"
+                  className="mb-1.5 block text-sm font-medium text-content"
                 >
                   Password
                 </label>
@@ -288,7 +288,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={isLogin ? "Your password" : "At least 8 characters"}
                   minLength={isLogin ? undefined : 8}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 outline-none transition focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-60"
+                  className="w-full rounded-lg border border-stroke bg-surface-primary px-4 py-2.5 text-sm text-content placeholder:text-content-muted outline-none transition focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-60"
                 />
               </div>
 
@@ -323,7 +323,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
             </form>
           </div>
 
-          <p className="mt-6 text-center text-sm text-zinc-500">
+          <p className="mt-6 text-center text-sm text-content-muted">
             {isLogin ? (
               <>
                 Don&apos;t have an account?{" "}
@@ -349,13 +349,13 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
             )}
           </p>
 
-          <p className="mt-4 text-center text-xs text-zinc-600">
+          <p className="mt-4 text-center text-xs text-content-muted">
             By continuing, you agree to PeerCode&apos;s{" "}
-            <Link to="/" className="underline hover:text-zinc-400">
+            <Link to="/" className="underline hover:text-content-muted">
               Terms
             </Link>{" "}
             and{" "}
-            <Link to="/" className="underline hover:text-zinc-400">
+            <Link to="/" className="underline hover:text-content-muted">
               Privacy Policy
             </Link>
             .

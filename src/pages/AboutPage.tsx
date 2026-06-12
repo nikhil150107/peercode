@@ -69,7 +69,7 @@ const storyParagraphs = [
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="min-h-screen bg-surface-primary text-content">
       <Navbar />
 
       <main className="relative overflow-hidden pb-20 pt-28">
@@ -86,7 +86,7 @@ export default function AboutPage() {
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-400">
               About PeerCode
             </p>
-            <h1 className="mt-5 text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
+            <h1 className="mt-5 text-4xl font-bold tracking-tight text-content sm:text-5xl lg:text-6xl">
               The Story Behind{" "}
               <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
                 PeerCode
@@ -99,12 +99,12 @@ export default function AboutPage() {
               className="pointer-events-none absolute -inset-px rounded-3xl bg-gradient-to-br from-emerald-500/30 via-transparent to-emerald-900/20"
               aria-hidden="true"
             />
-            <div className="relative overflow-hidden rounded-3xl border border-emerald-500/20 bg-zinc-900/60 p-8 backdrop-blur-sm sm:p-12">
+            <div className="relative overflow-hidden rounded-3xl border border-emerald-500/20 bg-surface-secondary/60 p-8 backdrop-blur-sm sm:p-12">
               <div className="relative space-y-6">
                 {storyParagraphs.map((paragraph, index) => (
                   <p
                     key={index}
-                    className={`leading-relaxed text-zinc-300 ${
+                    className={`leading-relaxed text-content ${
                       index === 0
                         ? "text-lg sm:text-xl"
                         : "text-base font-medium text-emerald-100/90 sm:text-lg"
@@ -118,10 +118,10 @@ export default function AboutPage() {
           </section>
 
           <section className="mt-16">
-            <p className="mb-8 text-center text-sm font-semibold uppercase tracking-[0.2em] text-zinc-500">
+            <p className="mb-8 text-center text-sm font-semibold uppercase tracking-[0.2em] text-content-muted">
               Meet the founder
             </p>
-            <div className="rounded-3xl border border-zinc-800 bg-zinc-900/50 p-8 shadow-xl shadow-black/20 sm:p-10">
+            <div className="rounded-3xl border border-stroke bg-surface-card/80 p-8 shadow-xl shadow-black/20 sm:p-10">
               <div className="flex flex-col items-center gap-8 sm:flex-row sm:items-start">
                 <div className="relative">
                   <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-emerald-500/40 to-teal-500/20 blur-sm" />
@@ -130,14 +130,14 @@ export default function AboutPage() {
                   </div>
                 </div>
                 <div className="text-center sm:text-left">
-                  <h2 className="text-2xl font-bold text-white sm:text-3xl">
+                  <h2 className="text-2xl font-bold text-content sm:text-3xl">
                     Nikhil Jatale
                   </h2>
                   <p className="mt-2 text-sm font-medium text-emerald-400">
                     MIT Academy of Engineering, Pune
                   </p>
-                  <p className="text-sm text-zinc-500">Data Science Branch</p>
-                  <p className="mt-5 max-w-lg text-sm leading-relaxed text-zinc-400 sm:text-base">
+                  <p className="text-sm text-content-muted">Data Science Branch</p>
+                  <p className="mt-5 max-w-lg text-sm leading-relaxed text-content-muted sm:text-base">
                     3rd year student who loves competitive programming and
                     building stuff that actually helps other students.
                   </p>
@@ -154,10 +154,10 @@ export default function AboutPage() {
                     aria-label={link.label}
                     className="group flex flex-col items-center gap-3"
                   >
-                    <div className="flex h-20 w-20 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 transition duration-200 group-hover:border-emerald-500/60 group-hover:shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-xl border border-stroke bg-surface-secondary transition duration-200 group-hover:border-emerald-500/60 group-hover:shadow-[0_0_20px_rgba(16,185,129,0.3)]">
                       {link.logo}
                     </div>
-                    <span className="text-sm font-medium text-zinc-400 transition-colors group-hover:text-emerald-400">
+                    <span className="text-sm font-medium text-content-muted transition-colors group-hover:text-emerald-400">
                       {link.label}
                     </span>
                   </a>
@@ -166,11 +166,11 @@ export default function AboutPage() {
             </div>
           </section>
 
-          <section className="mt-16 rounded-3xl border border-zinc-800/80 bg-gradient-to-b from-zinc-900/40 to-zinc-950 p-8 text-center sm:p-12">
+          <section className="mt-16 rounded-3xl border border-stroke/80 bg-gradient-to-b from-surface-secondary/40 to-surface-primary p-8 text-center sm:p-12">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-400">
               Our Mission
             </p>
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-zinc-300 sm:text-xl">
+            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-content sm:text-xl">
               I want every student to have access to real interview practice,
               whether or not they can pay for premium platforms. No paywalls, no
               subscriptions, just students helping students get better together.

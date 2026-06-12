@@ -59,10 +59,10 @@ function MatchFoundView({
 }) {
   return (
     <div className="flex max-w-md flex-col items-center text-center">
-      <h1 className="mt-8 text-2xl font-bold tracking-tight text-white sm:text-3xl">
+      <h1 className="mt-8 text-2xl font-bold tracking-tight text-content sm:text-3xl">
         🎉 Peer found! Your peer is {peerName}
       </h1>
-      <p className="mt-3 text-zinc-400">Click to join your session</p>
+      <p className="mt-3 text-content-muted">Click to join your session</p>
 
       <button
         type="button"
@@ -214,7 +214,7 @@ export default function WaitingRoomPage() {
     : "your peer"
 
   return (
-    <div className="flex min-h-screen flex-col bg-zinc-950 text-zinc-100">
+    <div className="flex min-h-screen flex-col bg-surface-primary text-content">
       <WaitingNavbar />
 
       <main className="relative flex flex-1 flex-col items-center justify-center px-6 py-12">
@@ -231,31 +231,31 @@ export default function WaitingRoomPage() {
           <div className="flex max-w-md flex-col items-center text-center">
             <WaitingAnimation />
 
-            <h1 className="mt-10 text-2xl font-bold tracking-tight text-white sm:text-3xl">
+            <h1 className="mt-10 text-2xl font-bold tracking-tight text-content sm:text-3xl">
               {statusMessage || `Waiting for your scheduled match at ${slot.time}`}
             </h1>
-            <p className="mt-3 text-zinc-400">
+            <p className="mt-3 text-content-muted">
               You&apos;ll be matched with a peer when the slot starts. Stay on
               this page or return before the session begins.
             </p>
 
-            <div className="mt-8 w-full rounded-xl border border-zinc-800 bg-zinc-900/50 px-5 py-4">
-              <p className="text-sm text-zinc-500">Your session</p>
-              <p className="mt-1 text-lg font-semibold text-white">
+            <div className="mt-8 w-full rounded-xl border border-stroke bg-surface-card/80 px-5 py-4">
+              <p className="text-sm text-content-muted">Your session</p>
+              <p className="mt-1 text-lg font-semibold text-content">
                 {slot.time} IST
               </p>
             </div>
 
             {sessionStart && (
               <div className="mt-6">
-                <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+                <p className="text-xs font-medium uppercase tracking-wider text-content-muted">
                   Session starts in
                 </p>
                 <p className="mt-1 font-mono text-4xl font-bold tabular-nums text-emerald-400">
                   {countdown}
                 </p>
                 {humanCountdown && (
-                  <p className="mt-2 text-sm text-zinc-500">
+                  <p className="mt-2 text-sm text-content-muted">
                     ({humanCountdown})
                   </p>
                 )}
@@ -267,7 +267,7 @@ export default function WaitingRoomPage() {
         <button
           type="button"
           onClick={handleCancel}
-          className="mt-12 text-sm text-zinc-500 transition hover:text-zinc-300"
+          className="mt-12 text-sm text-content-muted transition hover:text-content"
         >
           Back to Dashboard
         </button>

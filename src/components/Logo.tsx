@@ -41,7 +41,7 @@ export default function Logo({ compact = false }: LogoProps) {
           <polyline points="8 6 2 12 8 18" />
         </svg>
       </div>
-      <span className={`${textSize} font-semibold tracking-tight text-white`}>
+      <span className={`${textSize} font-semibold tracking-tight text-content`}>
         Peer<span className="text-emerald-400">Code</span>
       </span>
     </button>

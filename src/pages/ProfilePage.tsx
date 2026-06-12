@@ -115,10 +115,10 @@ export default function ProfilePage() {
             {initials}
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white sm:text-3xl">
+            <h1 className="text-2xl font-bold text-content sm:text-3xl">
               {displayName}
             </h1>
-            <p className="mt-1 text-zinc-400">{user?.email}</p>
+            <p className="mt-1 text-content-muted">{user?.email}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {PLATFORM_FIELDS.map(({ key, label }) => {
                 const value = links[key]?.trim()
@@ -130,7 +130,7 @@ export default function ProfilePage() {
                     target="_blank"
                     rel="noopener noreferrer"
                     title={`${label}: ${value}`}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-xs font-bold text-emerald-400 transition hover:border-emerald-500/40 hover:bg-emerald-500/10"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-stroke bg-surface-secondary text-xs font-bold text-emerald-400 transition hover:border-emerald-500/40 hover:bg-emerald-500/10"
                   >
                     {label.slice(0, 2).toUpperCase()}
                   </a>
@@ -140,17 +140,17 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <section className="mt-8 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
-          <h2 className="text-lg font-semibold text-white">
+        <section className="mt-8 rounded-2xl border border-stroke bg-surface-card/80 p-6">
+          <h2 className="text-lg font-semibold text-content">
             Competitive programming profiles
           </h2>
-          <p className="mt-1 text-sm text-zinc-400">
+          <p className="mt-1 text-sm text-content-muted">
             Add your handles to show clickable profile links.
           </p>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             {PLATFORM_FIELDS.map(({ key, label, placeholder }) => (
               <label key={key} className="block">
-                <span className="mb-1.5 block text-sm font-medium text-zinc-300">
+                <span className="mb-1.5 block text-sm font-medium text-content">
                   {label}
                 </span>
                 <input
@@ -160,7 +160,7 @@ export default function ProfilePage() {
                     setLinks((prev) => ({ ...prev, [key]: e.target.value }))
                   }
                   placeholder={placeholder}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white outline-none focus:border-emerald-500/50"
+                  className="w-full rounded-lg border border-stroke bg-surface-primary px-3 py-2 text-sm text-content outline-none focus:border-emerald-500/50"
                 />
               </label>
             ))}
@@ -183,14 +183,14 @@ export default function ProfilePage() {
               ))}
             </div>
             <div className="mt-10 space-y-4">
-              <div className="h-6 w-40 animate-pulse rounded-lg bg-zinc-800/80" />
-              <div className="h-4 w-64 animate-pulse rounded-lg bg-zinc-800/60" />
-              <div className="overflow-hidden rounded-xl border border-zinc-800">
+              <div className="h-6 w-40 animate-pulse rounded-lg bg-surface-hover/80" />
+              <div className="h-4 w-64 animate-pulse rounded-lg bg-surface-hover/60" />
+              <div className="overflow-hidden rounded-xl border border-stroke">
                 <div className="space-y-3 p-4">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <div
                       key={i}
-                      className="h-10 animate-pulse rounded-lg bg-zinc-800/60"
+                      className="h-10 animate-pulse rounded-lg bg-surface-hover/60"
                     />
                   ))}
                 </div>
@@ -200,15 +200,15 @@ export default function ProfilePage() {
         ) : (
           <>
             <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
-                <p className="text-sm text-zinc-500">Total sessions</p>
-                <p className="mt-1 text-3xl font-bold text-white">
+              <div className="rounded-xl border border-stroke bg-surface-card/80 p-5">
+                <p className="text-sm text-content-muted">Total sessions</p>
+                <p className="mt-1 text-3xl font-bold text-content">
                   {stats?.totalSessions ?? 0}
                 </p>
               </div>
-              <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
-                <p className="text-sm text-zinc-500">Average rating received</p>
-                <p className="mt-1 text-3xl font-bold text-white">
+              <div className="rounded-xl border border-stroke bg-surface-card/80 p-5">
+                <p className="text-sm text-content-muted">Average rating received</p>
+                <p className="mt-1 text-3xl font-bold text-content">
                   {stats?.averageRatingReceived != null
                     ? stats.averageRatingReceived
                     : "—"}
@@ -217,17 +217,17 @@ export default function ProfilePage() {
                   )}
                 </p>
               </div>
-              <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
-                <p className="text-sm text-zinc-500">Problems solved</p>
-                <p className="mt-1 text-3xl font-bold text-white">
+              <div className="rounded-xl border border-stroke bg-surface-card/80 p-5">
+                <p className="text-sm text-content-muted">Problems solved</p>
+                <p className="mt-1 text-3xl font-bold text-content">
                   {stats?.problemsSolved ?? 0}
                 </p>
-                <p className="mt-1 text-xs text-zinc-500">
+                <p className="mt-1 text-xs text-content-muted">
                   as interviewee with all tests passed
                 </p>
               </div>
-              <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
-                <p className="text-sm text-zinc-500">Favorite topic</p>
+              <div className="rounded-xl border border-stroke bg-surface-card/80 p-5">
+                <p className="text-sm text-content-muted">Favorite topic</p>
                 <p className="mt-1 text-xl font-bold text-emerald-400">
                   {stats?.favoriteTopic ?? "—"}
                 </p>
@@ -235,10 +235,10 @@ export default function ProfilePage() {
             </div>
 
             <section className="mt-10">
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-lg font-semibold text-content">
                 Session history
               </h2>
-              <p className="mt-1 text-sm text-zinc-400">
+              <p className="mt-1 text-sm text-content-muted">
                 Your completed mock interviews, most recent first.
               </p>
               <div className="mt-4 -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">

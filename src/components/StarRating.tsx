@@ -8,7 +8,7 @@ export default function StarRating({ value, onChange, label }: StarRatingProps) 
   return (
     <div>
       {label && (
-        <p className="mb-2 text-sm font-medium text-zinc-300">{label}</p>
+        <p className="mb-2 text-sm font-medium text-content">{label}</p>
       )}
       <div className="flex gap-1" role="radiogroup" aria-label={label}>
         {[1, 2, 3, 4, 5].map((star) => (
@@ -22,7 +22,7 @@ export default function StarRating({ value, onChange, label }: StarRatingProps) 
           >
             <svg
               className={`h-8 w-8 ${
-                star <= value ? "text-amber-400" : "text-zinc-700"
+                star <= value ? "text-amber-400" : "text-stroke"
               }`}
               viewBox="0 0 24 24"
               fill="currentColor"

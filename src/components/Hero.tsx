@@ -22,14 +22,14 @@ export default function Hero() {
             100% free — no credit card required
           </div>
 
-          <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
+          <h1 className="text-4xl font-bold tracking-tight text-content sm:text-5xl lg:text-6xl">
             Practice DSA Interviews with{" "}
             <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
               Real Peers
             </span>
           </h1>
 
-          <p className="mt-6 text-lg leading-relaxed text-zinc-400 sm:text-xl">
+          <p className="mt-6 text-lg leading-relaxed text-content-muted sm:text-xl">
             Book a slot, get matched, swap roles. The free alternative to
             expensive mock interview platforms.
           </p>
@@ -43,7 +43,7 @@ export default function Hero() {
             </Link>
             <a
               href="#how-it-works"
-              className="w-full rounded-xl border border-zinc-700 px-8 py-3.5 text-center text-base font-medium text-zinc-300 transition hover:border-zinc-500 hover:text-white sm:w-auto"
+              className="w-full rounded-xl border border-stroke px-8 py-3.5 text-center text-base font-medium text-content transition hover:border-stroke hover:text-content sm:w-auto"
             >
               How it works
             </a>

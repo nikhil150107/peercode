@@ -3,7 +3,7 @@ import { useToast } from "../context/ToastContext"
 const typeStyles = {
   success: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
   error: "border-red-500/30 bg-red-500/10 text-red-300",
-  info: "border-zinc-700 bg-zinc-900 text-zinc-200",
+  info: "border-stroke bg-surface-secondary text-content",
 }
 
 export default function ToastContainer() {
@@ -24,7 +24,7 @@ export default function ToastContainer() {
             <button
               type="button"
               onClick={() => dismissToast(toast.id)}
-              className="shrink-0 text-zinc-500 transition hover:text-zinc-300"
+              className="shrink-0 text-content-muted transition hover:text-content"
               aria-label="Dismiss"
             >
               ×
