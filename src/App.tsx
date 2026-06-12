@@ -10,6 +10,7 @@ import QuestionBankPage from "./pages/QuestionBankPage"
 import SessionsPage from "./pages/SessionsPage"
 import WaitingRoomPage from "./pages/WaitingRoomPage"
 import InterviewRoomPage from "./pages/InterviewRoomPage"
+import SessionEndedPage from "./pages/SessionEndedPage"
 import FeedbackPage from "./pages/FeedbackPage"
 import ResetPasswordPage from "./pages/ResetPasswordPage"
 import NotFoundPage from "./pages/NotFoundPage"
@@ -67,6 +68,14 @@ function App() {
         element={
           <ProtectedRoute>
             <InterviewRoomPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/session-ended"
+        element={
+          <ProtectedRoute>
+            <SessionEndedPage />
           </ProtectedRoute>
         }
       />

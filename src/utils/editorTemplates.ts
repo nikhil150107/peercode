@@ -5,6 +5,11 @@ export const EMPTY_CODE: Record<Language, string> = {
   javascript: "// Write your solution here\n",
   java: "// Write your solution here\n",
   cpp: "// Write your solution here\n",
+  c: "// Write your solution here\n",
+  go: "// Write your solution here\n",
+  rust: "// Write your solution here\n",
+  kotlin: "// Write your solution here\n",
+  csharp: "// Write your solution here\n",
 }
 
 const PLACEHOLDER_PATTERNS: Record<Language, RegExp[]> = {
@@ -22,6 +27,11 @@ const PLACEHOLDER_PATTERNS: Record<Language, RegExp[]> = {
   cpp: [
     /^\/\/\s*Write your solution here\s*$/i,
   ],
+  c: [/^\/\/\s*Write your solution here\s*$/i],
+  go: [/^\/\/\s*Write your solution here\s*$/i],
+  rust: [/^\/\/\s*Write your solution here\s*$/i],
+  kotlin: [/^\/\/\s*Write your solution here\s*$/i],
+  csharp: [/^\/\/\s*Write your solution here\s*$/i],
 }
 
 export function isPlaceholderCode(code: string, language: Language): boolean {

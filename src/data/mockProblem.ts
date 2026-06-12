@@ -18,13 +18,27 @@ export const mockProblem = {
   ],
 }
 
-export type Language = "python" | "java" | "cpp" | "javascript"
+export type Language =
+  | "python"
+  | "java"
+  | "cpp"
+  | "javascript"
+  | "c"
+  | "go"
+  | "rust"
+  | "kotlin"
+  | "csharp"
 
 export const languageOptions: { value: Language; label: string }[] = [
   { value: "python", label: "Python" },
   { value: "java", label: "Java" },
   { value: "cpp", label: "C++" },
   { value: "javascript", label: "JavaScript" },
+  { value: "c", label: "C" },
+  { value: "go", label: "Go" },
+  { value: "rust", label: "Rust" },
+  { value: "kotlin", label: "Kotlin" },
+  { value: "csharp", label: "C#" },
 ]
 
 export const starterCode: Record<Language, string> = {
@@ -83,4 +97,9 @@ export const monacoLanguage: Record<Language, string> = {
   java: "java",
   cpp: "cpp",
   javascript: "javascript",
+  c: "c",
+  go: "go",
+  rust: "rust",
+  kotlin: "kotlin",
+  csharp: "csharp",
 }

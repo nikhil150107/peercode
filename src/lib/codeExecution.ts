@@ -2,6 +2,10 @@ import type { Language } from "../data/mockProblem"
 import type { QuestionExample } from "../types/question"
 import { SERVER_URL } from "./serverUrl"
 import { getVoidExecutionMeta } from "../utils/questionExecution"
+import {
+  buildGenericAssignments,
+  buildHarnessContext,
+} from "./harness/buildContexts"
 
 function camelToSnake(name: string): string {
   return name.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "")
@@ -12,6 +16,11 @@ export const JUDGE0_LANGUAGE_IDS: Record<Language, number> = {
   javascript: 63,
   java: 62,
   cpp: 54,
+  c: 50,
+  go: 60,
+  rust: 73,
+  kotlin: 78,
+  csharp: 51,
 }
 
 type ExecuteResponse = {
@@ -296,6 +305,40 @@ function extractFunctionNames(code: string, language: Language): string[] {
     }
   }
 
+  if (language === "go") {
+    for (const match of code.matchAll(/func\s+(?:\([^)]+\)\s+)?(\w+)\s*\(/g)) {
+      if (match[1] !== "main") names.push(match[1])
+    }
+  }
+
+  if (language === "rust") {
+    for (const match of code.matchAll(/fn\s+(\w+)\s*\(/g)) {
+      if (match[1] !== "main") names.push(match[1])
+    }
+  }
+
+  if (language === "kotlin") {
+    for (const match of code.matchAll(/fun\s+(\w+)\s*\(/g)) {
+      if (match[1] !== "main") names.push(match[1])
+    }
+  }
+
+  if (language === "csharp") {
+    for (const match of code.matchAll(
+      /(?:public|private|protected|internal)?\s*(?:static\s+)?[\w\[\]<>,\s]+\s+(\w+)\s*\([^)]*\)\s*\{/g,
+    )) {
+      if (match[1] !== "Main") names.push(match[1])
+    }
+  }
+
+  if (language === "c") {
+    for (const match of code.matchAll(
+      /(?:^|\n)\s*(?:int|bool|char|void|double|float|long|struct\s+\w+\*?)\s*\*?\s*(\w+)\s*\([^;{]*\)\s*\{/g,
+    )) {
+      if (match[1] !== "main") names.push(match[1])
+    }
+  }
+
   const preferred = ["solution", "solve"]
   const ordered = [
     ...preferred.filter((name) => names.includes(name)),
@@ -527,8 +570,26 @@ function buildRunnableCode(
 ): string {
   const cleanedCode = prepareUserCode(userCode, language)
   const assignments = parseExampleInput(exampleInput)
-  const assignmentBlock = buildAssignments(assignments, language)
-  const argList = buildArgList(assignments, language)
+  const usesStructuredHarness = (
+    [
+      "python",
+      "javascript",
+      "java",
+      "cpp",
+      "c",
+      "go",
+      "rust",
+      "kotlin",
+      "csharp",
+    ] as Language[]
+  ).includes(language)
+  const harness = usesStructuredHarness
+    ? buildHarnessContext(language, assignments, cleanedCode)
+    : buildGenericAssignments(language, assignments)
+  const assignmentBlock = harness.assignmentBlock
+  const argList = harness.argList
+  const harnessPrelude = harness.prelude
+  const harnessMainHelpers = harness.mainHelpers
   const functionNames = resolveFunctionNames(
     cleanedCode,
     language,
@@ -542,6 +603,7 @@ function buildRunnableCode(
         functionNames.find((name) => getVoidExecutionMeta(name)) ??
         voidExecution.functionName
       return `${cleanedCode}
+${harnessPrelude}
 
 # --- PeerCode harness ---
 ${assignmentBlock}
@@ -567,6 +629,7 @@ print(json.dumps(__out__, separators=(',', ':')))
       .join("\n")
 
     return `${cleanedCode}
+${harnessPrelude}
 
 # --- PeerCode harness ---
 ${assignmentBlock}
@@ -591,6 +654,7 @@ else:
         functionNames.find((name) => getVoidExecutionMeta(name)) ??
         voidExecution.functionName
       return `${cleanedCode}
+${harnessPrelude}
 
 // --- PeerCode harness ---
 ${assignmentBlock}
@@ -612,6 +676,7 @@ throw new Error("Could not find a matching solution function");
       .join("\n")
 
     return `${cleanedCode}
+${harnessPrelude}
 
 // --- PeerCode harness ---
 ${assignmentBlock}
@@ -622,24 +687,16 @@ throw new Error("Could not find a matching solution function");
 
   if (language === "java") {
     const methodName = functionNames[0] ?? "solution"
-    const javaContext = buildJavaHarnessContext(assignments, cleanedCode)
-    const javaAssignments = javaContext.assignmentBlock.replace(/^/gm, "    ")
-    const javaArgs = javaContext.argList
-    const treeNodeClass = javaContext.injectTreeNodeClass
-      ? JAVA_TREE_NODE_CLASS
-      : ""
-    const treeMainHelpers = javaContext.usesTreeConversion
-      ? JAVA_TREE_MAIN_HELPERS
-      : ""
+    const javaAssignments = assignmentBlock.replace(/^/gm, "    ")
 
     if (voidExecution) {
       return `${cleanedCode}
-${treeNodeClass}
-public class Main {${treeMainHelpers}
+${harnessPrelude}
+public class Main {${harnessMainHelpers}
   public static void main(String[] args) {
 ${javaAssignments}
     Solution sol = new Solution();
-    sol.${methodName}(${javaArgs});
+    sol.${methodName}(${argList});
     int[] __out__ = java.util.Arrays.copyOfRange(${voidExecution.outputVar}, 0, ${voidExecution.lengthExpr});
     System.out.println(java.util.Arrays.toString(__out__));
   }
@@ -648,12 +705,12 @@ ${javaAssignments}
     }
 
     return `${cleanedCode}
-${treeNodeClass}
-public class Main {${treeMainHelpers}
+${harnessPrelude}
+public class Main {${harnessMainHelpers}
   public static void main(String[] args) {
 ${javaAssignments}
     Solution sol = new Solution();
-    Object __result__ = sol.${methodName}(${javaArgs});
+    Object __result__ = sol.${methodName}(${argList});
     if (__result__ instanceof Boolean) {
       System.out.println(__result__);
     } else if (__result__ instanceof Integer || __result__ instanceof Long || __result__ instanceof Double) {
@@ -662,8 +719,109 @@ ${javaAssignments}
       System.out.println(__result__);
     } else if (__result__ instanceof int[]) {
       System.out.println(java.util.Arrays.toString((int[]) __result__));
+    } else if (__result__ instanceof java.util.List) {
+      System.out.println(__result__);
     } else {
       System.out.println(__result__);
+    }
+  }
+}
+`
+  }
+
+  if (language === "c") {
+    const methodName = functionNames[0] ?? "solution"
+    const callArgs = assignments
+      .map(({ name, value }) => {
+        if (value.startsWith("[")) return `${name}, ${name}_size`
+        return name
+      })
+      .join(", ")
+
+    return `${cleanedCode}
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+int main() {
+  ${assignmentBlock.replace(/^/gm, "  ")}
+  /* PeerCode harness calls ${methodName} */
+  printf("PeerCode C harness: implement ${methodName}(%s)\\n", "${callArgs}");
+  return 0;
+}
+`
+  }
+
+  if (language === "go") {
+    const methodName = functionNames[0] ?? "solution"
+    return `${cleanedCode}
+
+package main
+
+import (
+  "encoding/json"
+  "fmt"
+)
+
+func main() {
+  ${assignmentBlock.replace(/^/gm, "  ")}
+  result := ${methodName}(${argList})
+  switch v := any(result).(type) {
+  case bool:
+    fmt.Println(v)
+  case []int:
+    b, _ := json.Marshal(v)
+    fmt.Println(string(b))
+  default:
+    fmt.Println(result)
+  }
+}
+`
+  }
+
+  if (language === "rust") {
+    const methodName = functionNames[0] ?? "solution"
+    return `${cleanedCode}
+
+fn main() {
+  ${assignmentBlock.replace(/^/gm, "  ")}
+  let result = ${methodName}(${argList});
+  println!("{:?}", result);
+}
+`
+  }
+
+  if (language === "kotlin") {
+    const methodName = functionNames[0] ?? "solution"
+    return `${cleanedCode}
+
+fun main() {
+  ${assignmentBlock.replace(/^/gm, "  ")}
+  val result = ${methodName}(${argList})
+  println(result)
+}
+`
+  }
+
+  if (language === "csharp") {
+    const methodName = functionNames[0] ?? "solution"
+    return `${cleanedCode}
+
+using System;
+using System.Text.Json;
+
+public class Program {
+  public static void Main() {
+    ${assignmentBlock.replace(/^/gm, "    ")}
+    var result = ${methodName}(${argList});
+    if (result is bool boolResult) {
+      Console.WriteLine(boolResult.ToString().ToLower());
+    } else if (result is int[] intArray) {
+      Console.WriteLine(JsonSerializer.Serialize(intArray));
+    } else {
+      Console.WriteLine(result);
     }
   }
 }
@@ -673,7 +831,8 @@ ${javaAssignments}
   const methodName = functionNames[0] ?? "solution"
 
   if (voidExecution) {
-    return `#include <bits/stdc++.h>
+    return `${harnessPrelude}
+#include <bits/stdc++.h>
 using namespace std;
 
 ${cleanedCode}
@@ -699,7 +858,8 @@ int main() {
 `
   }
 
-  return `#include <bits/stdc++.h>
+  return `${harnessPrelude}
+#include <bits/stdc++.h>
 using namespace std;
 
 ${cleanedCode}

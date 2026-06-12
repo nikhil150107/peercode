@@ -372,6 +372,12 @@ export function buildStarterCodeForLanguage(
       return buildJavaStarter(functionName, params, returnType)
     case "cpp":
       return buildCppStarter(functionName, params, returnType)
+    case "c":
+    case "go":
+    case "rust":
+    case "kotlin":
+    case "csharp":
+      return buildCppStarter(functionName, params, returnType)
     default:
       return `// Write your solution here\n`
   }
@@ -385,5 +391,10 @@ export function buildStarterCodeForQuestion(
     javascript: buildStarterCodeForLanguage(question, "javascript"),
     java: buildStarterCodeForLanguage(question, "java"),
     cpp: buildStarterCodeForLanguage(question, "cpp"),
+    c: buildStarterCodeForLanguage(question, "c"),
+    go: buildStarterCodeForLanguage(question, "go"),
+    rust: buildStarterCodeForLanguage(question, "rust"),
+    kotlin: buildStarterCodeForLanguage(question, "kotlin"),
+    csharp: buildStarterCodeForLanguage(question, "csharp"),
   }
 }

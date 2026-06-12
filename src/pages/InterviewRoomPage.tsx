@@ -3,8 +3,11 @@ import { useLocation, useNavigate } from "react-router-dom"
 import { io } from "socket.io-client"
 import type { Socket } from "socket.io-client"
 import CodeEditorPanel from "../components/interview/CodeEditorPanel"
-import InterviewSidebar from "../components/interview/InterviewSidebar"
+import InterviewSidebar, {
+  type SidebarChatMessage,
+} from "../components/interview/InterviewSidebar"
 import InterviewTopBar from "../components/interview/InterviewTopBar"
+import ResizeHandle from "../components/interview/ResizeHandle"
 import { useAuth } from "../context/AuthContext"
 import { useToast } from "../context/ToastContext"
 import type { Language } from "../data/mockProblem"
@@ -44,13 +47,31 @@ import {
   resolveFunctionName,
 } from "../utils/questionExecution"
 import { SERVER_URL } from "../lib/serverUrl"
+import {
+  checkRoomEnded,
+  endRoomSession,
+  fetchRoomState,
+  saveRoomState,
+  type ChatMessagePayload,
+  type RoomLiveState,
+} from "../lib/roomState"
 import { getDisplayNameFromEmail } from "../utils/userDisplay"
 
 const SESSION_SECONDS = 120 * 60
 const SWAP_ALERT_AT = 22 * 60 + 30
 const SWAP_AT = 22 * 60
 const TIMER_FALLBACK_MS = 5000
-const ALL_LANGUAGES: Language[] = ["python", "javascript", "java", "cpp"]
+const ALL_LANGUAGES: Language[] = [
+  "python",
+  "javascript",
+  "java",
+  "cpp",
+  "c",
+  "go",
+  "rust",
+  "kotlin",
+  "csharp",
+]
 
 const ICE_SERVERS: RTCConfiguration = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
@@ -95,6 +116,9 @@ export default function InterviewRoomPage() {
     topic: string
   } | null>(null)
   const [mobilePanel, setMobilePanel] = useState<"code" | "question">("code")
+  const [sidebarWidthPct, setSidebarWidthPct] = useState(40)
+  const [outputHeight, setOutputHeight] = useState(192)
+  const [chatMessages, setChatMessages] = useState<ChatMessagePayload[]>([])
   const [peerStatus, setPeerStatus] = useState<
     "connected" | "disconnected" | "left"
   >("connected")
@@ -102,6 +126,9 @@ export default function InterviewRoomPage() {
   const peerEmail =
     localStorage.getItem("peercode_peerEmail") ?? "peer@example.com"
   const peerLabel = getDisplayNameFromEmail(peerEmail)
+  const myDisplayName =
+    user?.user_metadata?.full_name?.trim() ||
+    getDisplayNameFromEmail(user?.email ?? "You")
 
   const localVideoRef = useRef<HTMLVideoElement>(null)
   const remoteVideoRef = useRef<HTMLVideoElement>(null)
@@ -124,6 +151,11 @@ export default function InterviewRoomPage() {
   const timerStartedRef = useRef(false)
   const timerFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const peerCountRef = useRef(0)
+  const timerStartedAtRef = useRef<number | null>(null)
+  const saveStateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const restoredFromServerRef = useRef(false)
+  const layoutContainerRef = useRef<HTMLDivElement>(null)
+  const endingSessionRef = useRef(false)
 
   useEffect(() => {
     roleRef.current = role
@@ -152,14 +184,100 @@ export default function InterviewRoomPage() {
     }
   }
 
-  function startSessionTimer(durationSeconds = SESSION_SECONDS) {
-    if (timerStartedRef.current) return
+  function startSessionTimer(
+    durationSeconds = SESSION_SECONDS,
+    startedAt?: number | null,
+  ) {
+    if (timerStartedRef.current && startedAt == null) return
 
     clearTimerFallback()
     timerStartedRef.current = true
+    timerStartedAtRef.current = startedAt ?? Date.now()
     setSecondsLeft(durationSeconds)
     setTimerStarted(true)
-    console.log("[interview] session timer started", { durationSeconds })
+    console.log("[interview] session timer started", {
+      durationSeconds,
+      startedAt: timerStartedAtRef.current,
+    })
+  }
+
+  function mapChatMessages(
+    messages: ChatMessagePayload[],
+    currentUserId: string,
+  ): SidebarChatMessage[] {
+    return messages.map((message) => ({
+      id: message.id,
+      text: message.text,
+      sender: message.from === currentUserId ? "You" : message.senderName,
+      isSelf: message.from === currentUserId,
+    }))
+  }
+
+  function applyRestoredRoomState(state: RoomLiveState) {
+    restoredFromServerRef.current = true
+
+    if (state.chatMessages?.length) {
+      setChatMessages(state.chatMessages)
+    }
+
+    if (state.language) {
+      setLanguage(state.language)
+      languageRef.current = state.language
+    }
+
+    if (state.question) {
+      const q = normalizeQuestion(state.question)
+      questionLockedRef.current = true
+      questionIdRef.current = q.id
+      setQuestion(q)
+      setQuestionLoading(false)
+      setQuestionError(null)
+
+      setCodes((prev) => {
+        const next = { ...prev }
+        for (const lang of ALL_LANGUAGES) {
+          const saved = state.codes?.[lang]
+          next[lang] =
+            saved && !isPlaceholderCode(saved, lang)
+              ? saved
+              : buildStarterCodeForLanguage(q, lang)
+        }
+        return next
+      })
+    } else if (state.codes && Object.keys(state.codes).length > 0) {
+      setCodes((prev) => ({ ...prev, ...state.codes }))
+    }
+
+    if (state.timerStarted) {
+      let remaining = state.secondsLeft ?? SESSION_SECONDS
+      if (state.timerStartedAt) {
+        const elapsed = Math.floor((Date.now() - state.timerStartedAt) / 1000)
+        remaining = Math.max(0, SESSION_SECONDS - elapsed)
+      }
+      startSessionTimer(remaining, state.timerStartedAt)
+    }
+  }
+
+  function scheduleRoomStateSave() {
+    if (!roomId || !user?.id || endingSessionRef.current) return
+
+    if (saveStateTimeoutRef.current) {
+      clearTimeout(saveStateTimeoutRef.current)
+    }
+
+    saveStateTimeoutRef.current = setTimeout(() => {
+      void saveRoomState(roomId, user.id, {
+        question,
+        codes,
+        language,
+        secondsLeft: secondsLeftRef.current,
+        timerStarted: timerStartedRef.current,
+        timerStartedAt: timerStartedAtRef.current,
+        chatMessages,
+      }).catch((err) => {
+        console.error("[room_state] save failed:", err)
+      })
+    }, 1500)
   }
 
   function scheduleTimerFallback(peerCount: number) {
@@ -199,6 +317,60 @@ export default function InterviewRoomPage() {
     const starter = code ?? buildStarterCodeForLanguage(q, lang)
     emitCodeChange(starter, lang)
   }
+
+  function handleSendChat(text: string) {
+    if (!socketRef.current?.connected || !roomId || !user?.id || !text.trim()) {
+      return
+    }
+
+    const message: ChatMessagePayload = {
+      id: crypto.randomUUID(),
+      text: text.trim(),
+      senderName: myDisplayName,
+      from: user.id,
+      at: Date.now(),
+    }
+
+    setChatMessages((prev) => [...prev, message])
+    socketRef.current.emit("chat_message", {
+      roomId,
+      userId: user.id,
+      text: message.text,
+      senderName: message.senderName,
+    })
+  }
+
+  useEffect(() => {
+    scheduleRoomStateSave()
+  }, [question, codes, language, secondsLeft, timerStarted, chatMessages, roomId, user?.id])
+
+  useEffect(() => {
+    if (!roomId || !user?.id) return
+
+    let cancelled = false
+
+    async function guardAndRestore() {
+      try {
+        if (await checkRoomEnded(roomId)) {
+          navigate("/session-ended")
+          return
+        }
+
+        const state = await fetchRoomState(roomId)
+        if (!cancelled && state) {
+          applyRestoredRoomState(state)
+        }
+      } catch (err) {
+        console.error("[room_state] restore failed:", err)
+      }
+    }
+
+    void guardAndRestore()
+
+    return () => {
+      cancelled = true
+    }
+  }, [roomId, user?.id, navigate])
 
   useEffect(() => {
     if (!roomId) return
@@ -306,6 +478,17 @@ export default function InterviewRoomPage() {
   }
 
   async function handleEndSession() {
+    if (!roomId || !user?.id) {
+      await finishSession()
+      return
+    }
+
+    endingSessionRef.current = true
+    try {
+      await endRoomSession(roomId, user.id)
+    } catch (err) {
+      console.error("[room_state] end session failed:", err)
+    }
     await finishSession()
   }
   const [testOutput, setTestOutput] = useState(
@@ -562,6 +745,32 @@ export default function InterviewRoomPage() {
         socket.emit("join_room", { roomId, userId })
       })
 
+      socket.on("session_ended", () => {
+        console.log("[interview] session ended by peer")
+        endingSessionRef.current = true
+        navigate("/session-ended")
+      })
+
+      socket.on(
+        "room_state_sync",
+        ({ state }: { state: RoomLiveState }) => {
+          if (!restoredFromServerRef.current) {
+            applyRestoredRoomState(state)
+          }
+        },
+      )
+
+      socket.on(
+        "chat_message",
+        ({ message }: { message: ChatMessagePayload }) => {
+          if (!message || message.from === userId) return
+          setChatMessages((prev) => {
+            if (prev.some((entry) => entry.id === message.id)) return prev
+            return [...prev, message]
+          })
+        },
+      )
+
       socket.on(
         "room_joined",
         ({
@@ -574,6 +783,11 @@ export default function InterviewRoomPage() {
           assignRoleFromFirstPeer(isFirstPeer)
           console.log("[interview] room_joined", { peerCount, isFirstPeer })
           scheduleTimerFallback(peerCount)
+
+          if (restoredFromServerRef.current && questionIdRef.current) {
+            return
+          }
+
           const difficultyPreference = getDifficultyPreference()
           const topicPreference = getTopicPreference()
           console.log("[question] requesting question for room", {
@@ -677,9 +891,18 @@ export default function InterviewRoomPage() {
 
       socket.on(
         "start_timer",
-        ({ durationSeconds }: { durationSeconds?: number }) => {
-          console.log("[interview] start_timer received", { durationSeconds })
-          startSessionTimer(durationSeconds ?? SESSION_SECONDS)
+        ({
+          durationSeconds,
+          timerStartedAt,
+        }: {
+          durationSeconds?: number
+          timerStartedAt?: number
+        }) => {
+          console.log("[interview] start_timer received", {
+            durationSeconds,
+            timerStartedAt,
+          })
+          startSessionTimer(durationSeconds ?? SESSION_SECONDS, timerStartedAt)
         },
       )
 
@@ -713,6 +936,9 @@ export default function InterviewRoomPage() {
     return () => {
       cancelled = true
       clearTimerFallback()
+      if (saveStateTimeoutRef.current) {
+        clearTimeout(saveStateTimeoutRef.current)
+      }
       questionLockedRef.current = false
       questionIdRef.current = null
       isFetchingQuestionRef.current = false
@@ -988,7 +1214,10 @@ export default function InterviewRoomPage() {
         </button>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+      <div
+        ref={layoutContainerRef}
+        className="flex min-h-0 flex-1 flex-col lg:flex-row"
+      >
         <CodeEditorPanel
           codes={codes}
           language={language}
@@ -1000,10 +1229,26 @@ export default function InterviewRoomPage() {
           testOutput={testOutput}
           running={runningTests}
           className={mobilePanel === "code" ? "flex" : "hidden lg:flex"}
+          style={{ width: `${100 - sidebarWidthPct}%` }}
+          outputHeight={outputHeight}
+          onOutputHeightChange={setOutputHeight}
           onRunCode={() => void handleRunCode()}
           onSubmitCode={() => void handleSubmitCode()}
           onCodeChange={handleCodeChange}
           onLanguageChange={handleLanguageChange}
+        />
+        <ResizeHandle
+          direction="horizontal"
+          className="hidden lg:block"
+          onResize={(delta) => {
+            const width =
+              layoutContainerRef.current?.clientWidth ?? window.innerWidth
+            if (width <= 0) return
+            setSidebarWidthPct((prev) => {
+              const next = prev - (delta / width) * 100
+              return Math.min(55, Math.max(25, next))
+            })
+          }}
         />
         <InterviewSidebar
           localVideoRef={localVideoRef}
@@ -1015,8 +1260,13 @@ export default function InterviewRoomPage() {
           questionError={questionError}
           videoLoading={videoLoading}
           videoError={videoError}
-          showChat={false}
+          showChat
+          chatMessages={
+            user?.id ? mapChatMessages(chatMessages, user.id) : []
+          }
+          onSendChat={handleSendChat}
           className={mobilePanel === "question" ? "flex" : "hidden lg:flex"}
+          style={{ width: `${sidebarWidthPct}%` }}
         />
       </div>
     </div>

@@ -1,6 +1,8 @@
 import Editor from "@monaco-editor/react"
+import type { CSSProperties } from "react"
 import type { Language } from "../../data/mockProblem"
 import { languageOptions, monacoLanguage } from "../../data/mockProblem"
+import ResizeHandle from "./ResizeHandle"
 
 type CodeEditorPanelProps = {
   codes: Record<Language, string>
@@ -9,6 +11,9 @@ type CodeEditorPanelProps = {
   testOutput?: string
   running?: boolean
   className?: string
+  style?: CSSProperties
+  outputHeight?: number
+  onOutputHeightChange?: (height: number) => void
   onRunCode?: () => void
   onSubmitCode?: () => void
   onCodeChange: (lang: Language, code: string) => void
@@ -22,19 +27,27 @@ export default function CodeEditorPanel({
   testOutput = "Run your code against example test cases.",
   running = false,
   className = "",
+  style,
+  outputHeight = 192,
+  onOutputHeightChange,
   onRunCode,
   onSubmitCode,
   onCodeChange,
   onLanguageChange,
 }: CodeEditorPanelProps) {
-
   function handleLanguageChange(lang: Language) {
     onLanguageChange(lang)
   }
 
+  function handleOutputResize(delta: number) {
+    if (!onOutputHeightChange) return
+    onOutputHeightChange(Math.min(480, Math.max(96, outputHeight - delta)))
+  }
+
   return (
     <div
-      className={`flex h-full w-full shrink-0 flex-col border-r border-zinc-800 bg-zinc-950 lg:w-[60%] ${className}`}
+      className={`flex h-full min-w-0 shrink-0 flex-col bg-zinc-950 ${className}`}
+      style={style}
     >
       <div className="flex items-center gap-3 border-b border-zinc-800 px-4 py-2">
         <select
@@ -100,11 +113,18 @@ export default function CodeEditorPanel({
         />
       </div>
 
-      <div className="shrink-0 border-t border-zinc-800 bg-zinc-900/80">
+      {onOutputHeightChange && (
+        <ResizeHandle direction="vertical" onResize={handleOutputResize} />
+      )}
+
+      <div
+        className="shrink-0 border-t border-zinc-800 bg-zinc-900/80"
+        style={{ height: outputHeight }}
+      >
         <div className="border-b border-zinc-800 px-4 py-2 text-xs font-medium uppercase tracking-wider text-zinc-500">
           Output
         </div>
-        <pre className="max-h-48 overflow-auto p-4 font-mono text-sm text-emerald-400 whitespace-pre-wrap">
+        <pre className="h-[calc(100%-2.25rem)] overflow-auto p-4 font-mono text-sm text-emerald-400 whitespace-pre-wrap">
           {running ? "Running test cases..." : testOutput}
         </pre>
       </div>

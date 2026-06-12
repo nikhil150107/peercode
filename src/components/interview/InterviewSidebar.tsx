@@ -1,8 +1,7 @@
-import { useState } from "react"
-import type { FormEvent, RefObject } from "react"
+import type { CSSProperties, FormEvent, RefObject } from "react"
 import type { Difficulty, Question } from "../../types/question"
 
-type ChatMessage = {
+export type SidebarChatMessage = {
   id: string
   sender: string
   text: string
@@ -15,15 +14,6 @@ const difficultyStyles: Record<Difficulty, string> = {
   Hard: "bg-red-500/15 text-red-400 ring-red-500/30",
 }
 
-const initialMessages: ChatMessage[] = [
-  {
-    id: "2",
-    sender: "You",
-    text: "Let's do it!",
-    isSelf: true,
-  },
-]
-
 type InterviewSidebarProps = {
   localVideoRef: RefObject<HTMLVideoElement | null>
   remoteVideoRef: RefObject<HTMLVideoElement | null>
@@ -35,7 +25,10 @@ type InterviewSidebarProps = {
   videoLoading?: boolean
   videoError?: string | null
   className?: string
+  style?: CSSProperties
   showChat?: boolean
+  chatMessages?: SidebarChatMessage[]
+  onSendChat?: (text: string) => void
 }
 
 export default function InterviewSidebar({
@@ -49,30 +42,26 @@ export default function InterviewSidebar({
   videoLoading,
   videoError,
   className = "",
+  style,
   showChat = true,
+  chatMessages = [],
+  onSendChat,
 }: InterviewSidebarProps) {
-  const [messages, setMessages] = useState(initialMessages)
-  const [draft, setDraft] = useState("")
-
-  function handleSend(e: FormEvent) {
+  function handleSend(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!draft.trim()) return
+    const form = e.currentTarget
+    const input = form.elements.namedItem("chat") as HTMLInputElement
+    const text = input.value.trim()
+    if (!text || !onSendChat) return
 
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        sender: "You",
-        text: draft.trim(),
-        isSelf: true,
-      },
-    ])
-    setDraft("")
+    onSendChat(text)
+    input.value = ""
   }
 
   return (
     <div
-      className={`flex h-full w-full shrink-0 flex-col bg-zinc-950 lg:w-[40%] ${className}`}
+      className={`flex h-full min-w-0 shrink-0 flex-col bg-zinc-950 ${className}`}
+      style={style}
     >
       <div className="relative shrink-0 border-b border-zinc-800 p-2 sm:p-3">
         {videoError && (
@@ -174,49 +163,56 @@ export default function InterviewSidebar({
         </div>
       </div>
 
-      <div className={`shrink-0 border-t border-zinc-800 ${showChat ? "" : "hidden lg:block"}`}>
-        <div className="max-h-40 overflow-y-auto px-4 py-3 space-y-2">
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex ${msg.isSelf ? "justify-end" : "justify-start"}`}
-            >
+      {showChat && (
+        <div className="shrink-0 border-t border-zinc-800">
+          <div className="max-h-40 space-y-2 overflow-y-auto px-4 py-3">
+            {chatMessages.length === 0 && (
+              <p className="text-center text-xs text-zinc-600">
+                Send a message to your peer
+              </p>
+            )}
+            {chatMessages.map((msg) => (
               <div
-                className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
-                  msg.isSelf
-                    ? "bg-emerald-500/15 text-emerald-100"
-                    : "bg-zinc-800 text-zinc-300"
-                }`}
+                key={msg.id}
+                className={`flex ${msg.isSelf ? "justify-end" : "justify-start"}`}
               >
-                {!msg.isSelf && (
-                  <p className="mb-0.5 text-xs font-medium text-zinc-500">
-                    {msg.sender}
-                  </p>
-                )}
-                {msg.text}
+                <div
+                  className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
+                    msg.isSelf
+                      ? "bg-emerald-500/15 text-emerald-100"
+                      : "bg-zinc-800 text-zinc-300"
+                  }`}
+                >
+                  {!msg.isSelf && (
+                    <p className="mb-0.5 text-xs font-medium text-zinc-500">
+                      {msg.sender}
+                    </p>
+                  )}
+                  {msg.text}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-        <form
-          onSubmit={handleSend}
-          className="flex gap-2 border-t border-zinc-800 p-3"
-        >
-          <input
-            type="text"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder="Message your peer..."
-            className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-emerald-500/50"
-          />
-          <button
-            type="submit"
-            className="rounded-lg bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-300 transition hover:bg-zinc-700"
+            ))}
+          </div>
+          <form
+            onSubmit={handleSend}
+            className="flex gap-2 border-t border-zinc-800 p-3"
           >
-            Send
-          </button>
-        </form>
-      </div>
+            <input
+              name="chat"
+              type="text"
+              placeholder="Message your peer..."
+              className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-emerald-500/50"
+            />
+            <button
+              type="submit"
+              disabled={!onSendChat}
+              className="rounded-lg bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-300 transition hover:bg-zinc-700 disabled:opacity-50"
+            >
+              Send
+            </button>
+          </form>
+        </div>
+      )}
     </div>
   )
 }
