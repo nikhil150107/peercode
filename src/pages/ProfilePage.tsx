@@ -2,6 +2,13 @@ import { useEffect, useState } from "react"
 import SessionHistoryTable from "../components/SessionHistoryTable"
 import { StatCardSkeleton } from "../components/Skeleton"
 import { useAuth } from "../context/AuthContext"
+import { useToast } from "../context/ToastContext"
+import {
+  fetchUserProfile,
+  profileLinkUrl,
+  upsertProfileLinks,
+  type ProfileLinks,
+} from "../lib/profile"
 import {
   computeProfileStats,
   fetchUserSessions,
@@ -10,11 +17,46 @@ import {
 } from "../lib/sessions"
 import { getInitialsFromName, getUserDisplayName } from "../utils/userDisplay"
 
+const PLATFORM_FIELDS: {
+  key: keyof ProfileLinks
+  label: string
+  placeholder: string
+}[] = [
+  {
+    key: "leetcode_username",
+    label: "LeetCode",
+    placeholder: "username",
+  },
+  {
+    key: "codeforces_handle",
+    label: "Codeforces",
+    placeholder: "handle",
+  },
+  {
+    key: "codechef_username",
+    label: "CodeChef",
+    placeholder: "username",
+  },
+  {
+    key: "gfg_username",
+    label: "GeeksForGeeks",
+    placeholder: "username",
+  },
+]
+
 export default function ProfilePage() {
   const { user } = useAuth()
+  const { showToast } = useToast()
   const [sessions, setSessions] = useState<SessionRecord[]>([])
   const [stats, setStats] = useState<ProfileStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [savingLinks, setSavingLinks] = useState(false)
+  const [links, setLinks] = useState<ProfileLinks>({
+    leetcode_username: "",
+    codeforces_handle: "",
+    codechef_username: "",
+    gfg_username: "",
+  })
 
   const displayName = getUserDisplayName(user)
   const initials = getInitialsFromName(displayName)
@@ -25,9 +67,20 @@ export default function ProfilePage() {
     async function load() {
       setLoading(true)
       try {
-        const data = await fetchUserSessions(user.id)
+        const [data, profile] = await Promise.all([
+          fetchUserSessions(user.id),
+          fetchUserProfile(user.id),
+        ])
         setSessions(data)
         setStats(computeProfileStats(data))
+        if (profile) {
+          setLinks({
+            leetcode_username: profile.leetcode_username ?? "",
+            codeforces_handle: profile.codeforces_handle ?? "",
+            codechef_username: profile.codechef_username ?? "",
+            gfg_username: profile.gfg_username ?? "",
+          })
+        }
       } catch (err) {
         console.error("[profile] Failed to load sessions:", err)
       } finally {
@@ -37,6 +90,22 @@ export default function ProfilePage() {
 
     void load()
   }, [user?.id])
+
+  async function handleSaveLinks() {
+    if (!user?.id) return
+    setSavingLinks(true)
+    try {
+      await upsertProfileLinks(user.id, user.email, links)
+      showToast("Profile links saved", "success")
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : "Failed to save profile links",
+        "error",
+      )
+    } finally {
+      setSavingLinks(false)
+    }
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
@@ -50,8 +119,61 @@ export default function ProfilePage() {
               {displayName}
             </h1>
             <p className="mt-1 text-zinc-400">{user?.email}</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {PLATFORM_FIELDS.map(({ key, label }) => {
+                const value = links[key]?.trim()
+                if (!value) return null
+                return (
+                  <a
+                    key={key}
+                    href={profileLinkUrl(key, value)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={`${label}: ${value}`}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-xs font-bold text-emerald-400 transition hover:border-emerald-500/40 hover:bg-emerald-500/10"
+                  >
+                    {label.slice(0, 2).toUpperCase()}
+                  </a>
+                )
+              })}
+            </div>
           </div>
         </div>
+
+        <section className="mt-8 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
+          <h2 className="text-lg font-semibold text-white">
+            Competitive programming profiles
+          </h2>
+          <p className="mt-1 text-sm text-zinc-400">
+            Add your handles to show clickable profile links.
+          </p>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            {PLATFORM_FIELDS.map(({ key, label, placeholder }) => (
+              <label key={key} className="block">
+                <span className="mb-1.5 block text-sm font-medium text-zinc-300">
+                  {label}
+                </span>
+                <input
+                  type="text"
+                  value={links[key] ?? ""}
+                  onChange={(e) =>
+                    setLinks((prev) => ({ ...prev, [key]: e.target.value }))
+                  }
+                  placeholder={placeholder}
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white outline-none focus:border-emerald-500/50"
+                />
+              </label>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => void handleSaveLinks()}
+            disabled={savingLinks}
+            className="mt-5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-60"
+          >
+            {savingLinks ? "Saving..." : "Save profile links"}
+          </button>
+        </section>
 
         {loading ? (
           <>

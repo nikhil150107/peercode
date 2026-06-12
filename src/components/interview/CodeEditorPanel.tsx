@@ -1,42 +1,82 @@
 import Editor from "@monaco-editor/react"
-import type { CSSProperties } from "react"
+import { useState, type CSSProperties } from "react"
 import type { Language } from "../../data/mockProblem"
 import { languageOptions, monacoLanguage } from "../../data/mockProblem"
+import {
+  compilerVersionsByLanguage,
+  defaultCompilerVersion,
+} from "../../data/compilerVersions"
 import ResizeHandle from "./ResizeHandle"
+
+export type CustomTestCase = {
+  id: string
+  input: string
+  output?: string
+}
+
+type OutputTab = "tests" | "custom"
 
 type CodeEditorPanelProps = {
   codes: Record<Language, string>
   language: Language
+  compilerVersionId?: number
   hints?: string[]
   testOutput?: string
+  customOutput?: string
+  customTests?: CustomTestCase[]
   running?: boolean
+  runningCustom?: boolean
   className?: string
   style?: CSSProperties
   outputHeight?: number
   onOutputHeightChange?: (height: number) => void
   onRunCode?: () => void
   onSubmitCode?: () => void
+  onRunCustom?: (input: string) => void
+  onCustomTestsChange?: (tests: CustomTestCase[]) => void
   onCodeChange: (lang: Language, code: string) => void
   onLanguageChange: (lang: Language) => void
+  onCompilerVersionChange?: (versionId: number) => void
 }
 
 export default function CodeEditorPanel({
   codes,
   language,
+  compilerVersionId,
   hints,
   testOutput = "Run your code against example test cases.",
+  customOutput = "Run a custom test case to see output here.",
+  customTests = [],
   running = false,
+  runningCustom = false,
   className = "",
   style,
   outputHeight = 192,
   onOutputHeightChange,
   onRunCode,
   onSubmitCode,
+  onRunCustom,
+  onCustomTestsChange,
   onCodeChange,
   onLanguageChange,
+  onCompilerVersionChange,
 }: CodeEditorPanelProps) {
+  const [outputTab, setOutputTab] = useState<OutputTab>("tests")
+  const [activeCustomId, setActiveCustomId] = useState(
+    () => customTests[0]?.id ?? "",
+  )
+  const [draftCustomInput, setDraftCustomInput] = useState(
+    () => customTests[0]?.input ?? "nums = [2,7], target = 9",
+  )
+
+  const versions = compilerVersionsByLanguage[language]
+  const selectedVersionId =
+    compilerVersionId ?? defaultCompilerVersion(language).id
+
   function handleLanguageChange(lang: Language) {
     onLanguageChange(lang)
+    const nextDefault = defaultCompilerVersion(lang)
+    onCompilerVersionChange?.(nextDefault.id)
   }
 
   function handleOutputResize(delta: number) {
@@ -44,12 +84,47 @@ export default function CodeEditorPanel({
     onOutputHeightChange(Math.min(480, Math.max(96, outputHeight - delta)))
   }
 
+  function addCustomTest() {
+    const next: CustomTestCase = {
+      id: crypto.randomUUID(),
+      input: draftCustomInput.trim() || "nums = [], target = 0",
+    }
+    const updated = [...customTests, next]
+    onCustomTestsChange?.(updated)
+    setActiveCustomId(next.id)
+  }
+
+  function saveCustomTestInput() {
+    if (!onCustomTestsChange) return
+    if (customTests.length === 0) {
+      addCustomTest()
+      return
+    }
+    const updated = customTests.map((test) =>
+      test.id === activeCustomId
+        ? { ...test, input: draftCustomInput }
+        : test,
+    )
+    onCustomTestsChange(updated)
+  }
+
+  function selectCustomTest(test: CustomTestCase) {
+    setActiveCustomId(test.id)
+    setDraftCustomInput(test.input)
+  }
+
+  function handleRunCustomClick() {
+    saveCustomTestInput()
+    onRunCustom?.(draftCustomInput.trim())
+    setOutputTab("custom")
+  }
+
   return (
     <div
       className={`flex h-full min-w-0 shrink-0 flex-col bg-zinc-950 ${className}`}
       style={style}
     >
-      <div className="flex items-center gap-3 border-b border-zinc-800 px-4 py-2">
+      <div className="flex flex-wrap items-center gap-2 border-b border-zinc-800 px-4 py-2">
         <select
           value={language}
           onChange={(e) => handleLanguageChange(e.target.value as Language)}
@@ -61,6 +136,24 @@ export default function CodeEditorPanel({
             </option>
           ))}
         </select>
+
+        {versions.length > 0 && (
+          <select
+            value={selectedVersionId}
+            onChange={(e) =>
+              onCompilerVersionChange?.(Number(e.target.value))
+            }
+            className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-200 outline-none focus:border-emerald-500/50"
+            aria-label="Compiler version"
+          >
+            {versions.map((version) => (
+              <option key={version.id} value={version.id}>
+                {version.label}
+              </option>
+            ))}
+          </select>
+        )}
+
         <button
           type="button"
           onClick={onRunCode}
@@ -118,15 +211,87 @@ export default function CodeEditorPanel({
       )}
 
       <div
-        className="shrink-0 border-t border-zinc-800 bg-zinc-900/80"
+        className="flex shrink-0 flex-col border-t border-zinc-800 bg-zinc-900/80"
         style={{ height: outputHeight }}
       >
-        <div className="border-b border-zinc-800 px-4 py-2 text-xs font-medium uppercase tracking-wider text-zinc-500">
-          Output
+        <div className="flex items-center border-b border-zinc-800">
+          <button
+            type="button"
+            onClick={() => setOutputTab("tests")}
+            className={`px-4 py-2 text-xs font-medium uppercase tracking-wider transition ${
+              outputTab === "tests"
+                ? "border-b-2 border-emerald-500 text-emerald-400"
+                : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            Output
+          </button>
+          <button
+            type="button"
+            onClick={() => setOutputTab("custom")}
+            className={`px-4 py-2 text-xs font-medium uppercase tracking-wider transition ${
+              outputTab === "custom"
+                ? "border-b-2 border-emerald-500 text-emerald-400"
+                : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            Custom Test
+          </button>
         </div>
-        <pre className="h-[calc(100%-2.25rem)] overflow-auto p-4 font-mono text-sm text-emerald-400 whitespace-pre-wrap">
-          {running ? "Running test cases..." : testOutput}
-        </pre>
+
+        {outputTab === "tests" ? (
+          <pre className="min-h-0 flex-1 overflow-auto p-4 font-mono text-sm text-emerald-400 whitespace-pre-wrap">
+            {running ? "Running test cases..." : testOutput}
+          </pre>
+        ) : (
+          <div className="flex min-h-0 flex-1 flex-col gap-2 p-3">
+            <textarea
+              value={draftCustomInput}
+              onChange={(e) => setDraftCustomInput(e.target.value)}
+              onBlur={saveCustomTestInput}
+              placeholder='nums = [2,7], target = 9'
+              className="min-h-[72px] flex-1 resize-none rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 font-mono text-xs text-zinc-200 outline-none focus:border-emerald-500/50"
+            />
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleRunCustomClick}
+                disabled={runningCustom || !onRunCustom}
+                className="rounded-lg bg-emerald-500/90 px-3 py-1.5 text-xs font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-60"
+              >
+                {runningCustom ? "Running..." : "Run Custom"}
+              </button>
+              <button
+                type="button"
+                onClick={addCustomTest}
+                className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:border-zinc-500"
+              >
+                Add test
+              </button>
+            </div>
+            {customTests.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 overflow-x-auto">
+                {customTests.map((test, index) => (
+                  <button
+                    key={test.id}
+                    type="button"
+                    onClick={() => selectCustomTest(test)}
+                    className={`rounded-md px-2 py-1 text-[10px] font-medium ${
+                      test.id === activeCustomId
+                        ? "bg-emerald-500/20 text-emerald-300"
+                        : "bg-zinc-800 text-zinc-400"
+                    }`}
+                  >
+                    Test {index + 1}
+                  </button>
+                ))}
+              </div>
+            )}
+            <pre className="max-h-24 overflow-auto rounded-lg border border-zinc-800 bg-zinc-950 p-2 font-mono text-xs text-emerald-400 whitespace-pre-wrap">
+              {runningCustom ? "Running custom test..." : customOutput}
+            </pre>
+          </div>
+        )}
       </div>
     </div>
   )

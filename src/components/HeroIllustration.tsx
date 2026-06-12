@@ -1,100 +1,73 @@
+const demoLines = [
+  { text: "def twoSum(nums, target):", color: "text-emerald-400" },
+  { text: "    seen = {}", color: "text-zinc-400" },
+  { text: "    for i, n in enumerate(nums):", color: "text-zinc-400" },
+  { text: "        if target - n in seen:", color: "text-zinc-400" },
+  { text: "            return [seen[target-n], i]", color: "text-amber-300" },
+]
+
 export default function HeroIllustration() {
   return (
     <div className="relative mx-auto w-full max-w-lg" aria-hidden="true">
-      <div className="absolute -inset-4 rounded-3xl bg-emerald-500/10 blur-2xl" />
-      <svg
-        viewBox="0 0 520 360"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="relative w-full drop-shadow-2xl"
-      >
-        <rect
-          x="20"
-          y="30"
-          width="480"
-          height="300"
-          rx="20"
-          fill="#18181b"
-          stroke="#3f3f46"
-          strokeWidth="1.5"
-        />
-        <rect x="20" y="30" width="480" height="44" rx="20" fill="#27272a" />
-        <rect x="20" y="54" width="480" height="20" fill="#27272a" />
-        <circle cx="44" cy="52" r="6" fill="#ef4444" opacity="0.8" />
-        <circle cx="64" cy="52" r="6" fill="#eab308" opacity="0.8" />
-        <circle cx="84" cy="52" r="6" fill="#22c55e" opacity="0.8" />
-        <text x="260" y="57" textAnchor="middle" fill="#71717a" fontSize="11">
-          PeerCode Interview Room
-        </text>
+      <div className="absolute -inset-4 rounded-3xl bg-emerald-500/10 blur-2xl transition-opacity duration-500" />
 
-        <rect
-          x="36"
-          y="90"
-          width="200"
-          height="220"
-          rx="12"
-          fill="#09090b"
-          stroke="#3f3f46"
-        />
-        <rect x="48" y="102" width="80" height="10" rx="3" fill="#34d399" opacity="0.6" />
-        <rect x="48" y="122" width="176" height="8" rx="2" fill="#3f3f46" />
-        <rect x="48" y="136" width="140" height="8" rx="2" fill="#3f3f46" />
-        <rect x="48" y="158" width="176" height="120" rx="8" fill="#0c0c0e" stroke="#27272a" />
-        <text x="58" y="178" fill="#34d399" fontSize="10" fontFamily="monospace">
-          def twoSum(nums, target):
-        </text>
-        <text x="68" y="194" fill="#a1a1aa" fontSize="10" fontFamily="monospace">
-          seen = {}
-        </text>
-        <text x="68" y="210" fill="#a1a1aa" fontSize="10" fontFamily="monospace">
-          for i, n in enumerate(nums):
-        </text>
-        <text x="84" y="226" fill="#a1a1aa" fontSize="10" fontFamily="monospace">
-          if target - n in seen:
-        </text>
-        <text x="100" y="242" fill="#fbbf24" fontSize="10" fontFamily="monospace">
-          return [seen[target-n], i]
-        </text>
-        <rect x="48" y="262" width="60" height="20" rx="4" fill="#10b981" />
-        <text x="58" y="276" fill="#09090b" fontSize="9" fontWeight="bold">
-          Run Code
-        </text>
+      <div className="relative overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900/80 shadow-2xl shadow-black/40">
+        <div className="flex items-center gap-2 border-b border-zinc-800 bg-zinc-900 px-4 py-3">
+          <span className="h-3 w-3 rounded-full bg-red-500/80" />
+          <span className="h-3 w-3 rounded-full bg-yellow-500/80" />
+          <span className="h-3 w-3 rounded-full bg-emerald-500/80" />
+          <span className="ml-2 text-xs text-zinc-500">PeerCode Interview Room</span>
+          <span className="ml-auto rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 ring-1 ring-emerald-500/30">
+            LIVE
+          </span>
+        </div>
 
-        <rect
-          x="284"
-          y="90"
-          width="200"
-          height="220"
-          rx="12"
-          fill="#09090b"
-          stroke="#3f3f46"
-        />
-        <circle cx="384" cy="145" r="36" fill="#27272a" stroke="#34d399" strokeWidth="2" />
-        <text x="384" y="150" textAnchor="middle" fill="#34d399" fontSize="22">
-          A
-        </text>
-        <rect x="304" y="195" width="160" height="8" rx="2" fill="#3f3f46" />
-        <rect x="324" y="215" width="120" height="8" rx="2" fill="#3f3f46" />
-        <circle cx="384" cy="265" r="36" fill="#27272a" stroke="#818cf8" strokeWidth="2" />
-        <text x="384" y="270" textAnchor="middle" fill="#818cf8" fontSize="22">
-          B
-        </text>
+        <div className="grid gap-0 sm:grid-cols-2">
+          <div className="min-w-0 border-b border-zinc-800 sm:border-b-0 sm:border-r">
+            <div className="border-b border-zinc-800 px-3 py-2 text-[10px] uppercase tracking-wider text-zinc-500">
+              Code editor
+            </div>
+            <pre
+              className="max-h-52 max-w-full overflow-x-auto overflow-y-auto p-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap sm:text-xs"
+              style={{ wordBreak: "break-word" }}
+            >
+              {demoLines.map((line, index) => (
+                <code
+                  key={index}
+                  className={`block animate-[fadeIn_0.5s_ease-out_both] ${line.color}`}
+                  style={{ animationDelay: `${index * 120}ms` }}
+                >
+                  {line.text}
+                </code>
+              ))}
+            </pre>
+            <div className="border-t border-zinc-800 px-3 py-2">
+              <span className="inline-block rounded bg-emerald-500 px-2 py-1 text-[10px] font-bold text-zinc-950">
+                Run Code
+              </span>
+            </div>
+          </div>
 
-        <rect x="230" y="175" width="60" height="28" rx="14" fill="#10b981" opacity="0.2" stroke="#34d399" />
-        <text x="260" y="193" textAnchor="middle" fill="#34d399" fontSize="9" fontWeight="bold">
-          LIVE
-        </text>
+          <div className="min-w-0 p-4">
+            <div className="flex flex-col items-center gap-3">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-emerald-500/40 bg-zinc-800 text-xl text-emerald-400">
+                A
+              </div>
+              <div className="h-1.5 w-24 rounded bg-zinc-800" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-indigo-500/40 bg-zinc-800 text-xl text-indigo-400">
+                B
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        <path
-          d="M120 320 Q260 340 400 320"
-          stroke="#34d399"
-          strokeWidth="1.5"
-          strokeDasharray="4 4"
-          opacity="0.4"
-        />
-        <circle cx="130" cy="318" r="4" fill="#34d399" />
-        <circle cx="390" cy="318" r="4" fill="#818cf8" />
-      </svg>
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   )
 }

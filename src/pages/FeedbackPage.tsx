@@ -10,6 +10,7 @@ import {
   submitSessionFeedback,
 } from "../lib/sessions"
 import { getPeerDisplayLabel, getStoredPeerEmail } from "../utils/userDisplay"
+import { downloadReviewCard } from "../utils/downloadReviewCard"
 
 const peerTraits = [
   "Clear communication",
@@ -26,6 +27,8 @@ const struggleTopics = [
   "Strings",
   "Heaps",
 ]
+
+const SESSION_SECONDS = 120 * 60
 
 export default function FeedbackPage() {
   const navigate = useNavigate()
@@ -50,6 +53,7 @@ export default function FeedbackPage() {
 
   const [selfRating, setSelfRating] = useState(0)
   const [struggleTopic, setStruggleTopic] = useState(struggleTopics[0])
+  const [downloadingCard, setDownloadingCard] = useState(false)
 
   useEffect(() => {
     if (!submitted) return
@@ -60,6 +64,43 @@ export default function FeedbackPage() {
 
   function toggleTrait(trait: string) {
     setPeerTraitsChecked((prev) => ({ ...prev, [trait]: !prev[trait] }))
+  }
+
+  async function handleDownloadReviewCard() {
+    setDownloadingCard(true)
+    try {
+      const feedbackTags = peerTraits.filter((trait) => peerTraitsChecked[trait])
+      const questionDifficulty =
+        localStorage.getItem("peercode_my_question_difficulty") ?? "—"
+      const durationSeconds = Number(
+        localStorage.getItem("peercode_session_duration") ?? SESSION_SECONDS,
+      )
+      const durationMinutes = Math.floor(durationSeconds / 60)
+      const durationLabel = `${Math.floor(durationMinutes / 60)}:${String(durationMinutes % 60).padStart(2, "0")}:00`
+
+      await downloadReviewCard({
+        sessionDate: new Date().toLocaleDateString(undefined, {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }),
+        duration: durationLabel,
+        questionTitle: lastQuestion,
+        questionDifficulty,
+        userRole,
+        ratingReceived:
+          peerRating > 0 ? `${peerRating} / 5 stars to peer` : "Not rated",
+        feedbackTags,
+        writtenFeedback: peerFeedback,
+        selfRating: selfRating > 0 ? `${selfRating} / 5` : "Not rated",
+      })
+    } catch (err) {
+      console.error("[feedback] review card download failed:", err)
+      showToast("Failed to download review card", "error")
+    } finally {
+      setDownloadingCard(false)
+    }
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -284,6 +325,14 @@ export default function FeedbackPage() {
               className="rounded-xl bg-emerald-500 px-8 py-3 text-sm font-semibold text-zinc-950 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {submitting ? "Submitting..." : "Submit Feedback"}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleDownloadReviewCard()}
+              disabled={downloadingCard}
+              className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-8 py-3 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/20 disabled:opacity-60"
+            >
+              {downloadingCard ? "Generating..." : "Download Review Card"}
             </button>
             <Link
               to="/dashboard"

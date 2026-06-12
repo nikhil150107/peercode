@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import Logo from "./Logo"
+import ThemeToggle from "./ThemeToggle"
 import { useAuth } from "../context/AuthContext"
 import { supabase } from "../lib/supabase"
 import { getInitialsFromName, getUserDisplayName } from "../utils/userDisplay"
@@ -57,7 +58,7 @@ export default function DashboardNavbar({
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md">
+    <header className="theme-nav sticky top-0 z-50 border-b border-[var(--pc-border)] bg-[var(--pc-nav-bg)] backdrop-blur-md">
       <nav className="flex h-16 items-center justify-between gap-3 px-4 sm:px-6">
         <div className="flex items-center gap-3">
           <button
@@ -76,6 +77,8 @@ export default function DashboardNavbar({
           <Logo />
         </div>
 
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
         <div ref={menuRef} className="relative">
           <button
             type="button"
@@ -147,6 +150,7 @@ export default function DashboardNavbar({
               </button>
             </div>
           )}
+        </div>
         </div>
       </nav>
     </header>

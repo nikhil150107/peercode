@@ -377,6 +377,10 @@ export function buildStarterCodeForLanguage(
     case "rust":
     case "kotlin":
     case "csharp":
+    case "typescript":
+    case "php":
+    case "ruby":
+    case "swift":
       return buildCppStarter(functionName, params, returnType)
     default:
       return `// Write your solution here\n`
@@ -396,5 +400,9 @@ export function buildStarterCodeForQuestion(
     rust: buildStarterCodeForLanguage(question, "rust"),
     kotlin: buildStarterCodeForLanguage(question, "kotlin"),
     csharp: buildStarterCodeForLanguage(question, "csharp"),
+    typescript: buildStarterCodeForLanguage(question, "typescript"),
+    php: buildStarterCodeForLanguage(question, "php"),
+    ruby: buildStarterCodeForLanguage(question, "ruby"),
+    swift: buildStarterCodeForLanguage(question, "swift"),
   }
 }

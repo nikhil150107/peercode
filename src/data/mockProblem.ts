@@ -23,22 +23,30 @@ export type Language =
   | "java"
   | "cpp"
   | "javascript"
+  | "typescript"
   | "c"
   | "go"
   | "rust"
   | "kotlin"
   | "csharp"
+  | "php"
+  | "ruby"
+  | "swift"
 
 export const languageOptions: { value: Language; label: string }[] = [
   { value: "python", label: "Python" },
+  { value: "javascript", label: "JavaScript" },
+  { value: "typescript", label: "TypeScript" },
   { value: "java", label: "Java" },
   { value: "cpp", label: "C++" },
-  { value: "javascript", label: "JavaScript" },
   { value: "c", label: "C" },
   { value: "go", label: "Go" },
   { value: "rust", label: "Rust" },
   { value: "kotlin", label: "Kotlin" },
   { value: "csharp", label: "C#" },
+  { value: "php", label: "PHP" },
+  { value: "ruby", label: "Ruby" },
+  { value: "swift", label: "Swift" },
 ]
 
 export const starterCode: Record<Language, string> = {
@@ -90,6 +98,25 @@ class Solution {
   }
   return [];
 }`,
+  typescript: `function twoSum(nums: number[], target: number): number[] {
+  const seen = new Map<number, number>();
+  for (let i = 0; i < nums.length; i++) {
+    const complement = target - nums[i];
+    if (seen.has(complement)) {
+      return [seen.get(complement)!, i];
+    }
+    seen.set(nums[i], i);
+  }
+  return [];
+}`,
+  c: `// Write your solution here`,
+  go: `// Write your solution here`,
+  rust: `// Write your solution here`,
+  kotlin: `// Write your solution here`,
+  csharp: `// Write your solution here`,
+  php: `// Write your solution here`,
+  ruby: `# Write your solution here`,
+  swift: `// Write your solution here`,
 }
 
 export const monacoLanguage: Record<Language, string> = {
@@ -97,9 +124,13 @@ export const monacoLanguage: Record<Language, string> = {
   java: "java",
   cpp: "cpp",
   javascript: "javascript",
+  typescript: "typescript",
   c: "c",
   go: "go",
   rust: "rust",
   kotlin: "kotlin",
   csharp: "csharp",
+  php: "php",
+  ruby: "ruby",
+  swift: "swift",
 }

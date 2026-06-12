@@ -2,7 +2,12 @@ import { useEffect, useRef, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { io } from "socket.io-client"
 import type { Socket } from "socket.io-client"
-import CodeEditorPanel from "../components/interview/CodeEditorPanel"
+import CodeEditorPanel, {
+  type CustomTestCase,
+} from "../components/interview/CodeEditorPanel"
+import CodeHistoryPanel, {
+  type CodeHistoryEntry,
+} from "../components/interview/CodeHistoryPanel"
 import InterviewSidebar, {
   type SidebarChatMessage,
 } from "../components/interview/InterviewSidebar"
@@ -17,8 +22,13 @@ import {
   formatSubmitResults,
   formatTestResults,
   runAgainstExamples,
+  runCustomInput,
   runSubmitTests,
 } from "../lib/codeExecution"
+import {
+  defaultCompilerVersion,
+  harnessLanguageForEditor,
+} from "../data/compilerVersions"
 import {
   applyQuestionSeen,
   fetchRandomUnseenQuestion,
@@ -56,14 +66,17 @@ import {
   type RoomLiveState,
 } from "../lib/roomState"
 import { getDisplayNameFromEmail } from "../utils/userDisplay"
+import { summarizeCodeDiff } from "../utils/codeDiff"
 
 const SESSION_SECONDS = 120 * 60
 const SWAP_ALERT_AT = 22 * 60 + 30
 const SWAP_AT = 22 * 60
 const TIMER_FALLBACK_MS = 5000
+const VIDEO_CONNECT_TIMEOUT_MS = 10_000
 const ALL_LANGUAGES: Language[] = [
   "python",
   "javascript",
+  "typescript",
   "java",
   "cpp",
   "c",
@@ -71,11 +84,23 @@ const ALL_LANGUAGES: Language[] = [
   "rust",
   "kotlin",
   "csharp",
+  "php",
+  "ruby",
+  "swift",
 ]
 
 const ICE_SERVERS: RTCConfiguration = {
-  iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+  ],
 }
+
+type VideoConnectionStatus =
+  | "connecting"
+  | "connected"
+  | "reconnecting"
+  | "failed"
 
 type Role = "interviewer" | "interviewee"
 
@@ -98,6 +123,20 @@ export default function InterviewRoomPage() {
   const [showSwapAlert, setShowSwapAlert] = useState(false)
   const [codes, setCodes] = useState<Record<Language, string>>(EMPTY_CODE)
   const [language, setLanguage] = useState<Language>("python")
+  const [compilerVersionId, setCompilerVersionId] = useState(
+    defaultCompilerVersion("python").id,
+  )
+  const [customTests, setCustomTests] = useState<CustomTestCase[]>([
+    { id: crypto.randomUUID(), input: "nums = [2,7], target = 9" },
+  ])
+  const [customOutput, setCustomOutput] = useState(
+    "Run a custom test case to see output here.",
+  )
+  const [runningCustom, setRunningCustom] = useState(false)
+  const [codeHistory, setCodeHistory] = useState<CodeHistoryEntry[]>([])
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [videoConnectionStatus, setVideoConnectionStatus] =
+    useState<VideoConnectionStatus>("connecting")
   const [question, setQuestion] = useState<Question | null>(null)
   const [questionLoading, setQuestionLoading] = useState(true)
   const [questionLoadingMessage, setQuestionLoadingMessage] = useState(
@@ -156,10 +195,96 @@ export default function InterviewRoomPage() {
   const restoredFromServerRef = useRef(false)
   const layoutContainerRef = useRef<HTMLDivElement>(null)
   const endingSessionRef = useRef(false)
+  const codesRef = useRef(codes)
+  const videoConnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  )
+  const socketForWebRTCRef = useRef<Socket | null>(null)
+  const reconnectWebRTCRef = useRef<(() => Promise<void>) | null>(null)
+  const codeHistoryDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  )
+  const codeEditBurstRef = useRef<{ lang: Language; startCode: string } | null>(
+    null,
+  )
+
+  useEffect(() => {
+    codesRef.current = codes
+  }, [codes])
 
   useEffect(() => {
     roleRef.current = role
   }, [role])
+
+  function buildExecutionOptions() {
+    return {
+      functionName: question ? resolveFunctionName(question) : undefined,
+      languageId: compilerVersionId,
+      harnessLanguage: harnessLanguageForEditor[language],
+    }
+  }
+
+  function pushCodeHistory(
+    author: "You" | "Peer",
+    lang: Language,
+    previousCode: string,
+    nextCode: string,
+  ) {
+    if (previousCode === nextCode) return
+    const diff = summarizeCodeDiff(previousCode, nextCode)
+    if (diff.added === 0 && diff.removed === 0) return
+
+    setCodeHistory((prev) =>
+      [
+        {
+          id: crypto.randomUUID(),
+          author,
+          timestamp: Date.now(),
+          language: lang,
+          diff,
+        },
+        ...prev,
+      ].slice(0, 20),
+    )
+  }
+
+  function clearVideoConnectTimeout() {
+    if (videoConnectTimeoutRef.current) {
+      clearTimeout(videoConnectTimeoutRef.current)
+      videoConnectTimeoutRef.current = null
+    }
+  }
+
+  function scheduleVideoConnectTimeout() {
+    clearVideoConnectTimeout()
+    videoConnectTimeoutRef.current = setTimeout(() => {
+      setVideoConnectionStatus((status) =>
+        status === "connected" ? status : "failed",
+      )
+    }, VIDEO_CONNECT_TIMEOUT_MS)
+  }
+
+  async function retryVideoConnection() {
+    if (reconnectWebRTCRef.current) {
+      await reconnectWebRTCRef.current()
+      return
+    }
+    const socket = socketForWebRTCRef.current
+    const pc = pcRef.current
+    if (!socket || !pc || !roomId || !user?.id) return
+
+    setVideoConnectionStatus("reconnecting")
+    scheduleVideoConnectTimeout()
+    setVideoLoading(true)
+    try {
+      const offer = await pc.createOffer({ iceRestart: true })
+      await pc.setLocalDescription(offer)
+      socket.emit("webrtc_offer", { roomId, offer, userId: user.id })
+    } catch (err) {
+      console.error("[webrtc] retry failed:", err)
+      setVideoConnectionStatus("failed")
+    }
+  }
 
   useEffect(() => {
     secondsLeftRef.current = secondsLeft
@@ -448,6 +573,10 @@ export default function InterviewRoomPage() {
       localStorage.setItem("peercode_room_id", roomId)
       localStorage.setItem("peercode_roomId", roomId)
       localStorage.setItem("peercode_user_role", sessionRole)
+      localStorage.setItem(
+        "peercode_session_duration",
+        String(SESSION_SECONDS - secondsLeftRef.current),
+      )
       if (peerId) localStorage.setItem("peercode_peer_id", peerId)
       return true
     } catch (err) {
@@ -644,7 +773,72 @@ export default function InterviewRoomPage() {
       })
     }
 
+    async function reconnectPeerConnection() {
+      const socket = socketForWebRTCRef.current
+      if (!socket) return
+
+      setVideoConnectionStatus("reconnecting")
+      scheduleVideoConnectTimeout()
+      setVideoLoading(true)
+      pcRef.current?.close()
+      pendingCandidatesRef.current = []
+
+      let stream = localStreamRef.current
+      if (!stream) {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        })
+        localStreamRef.current = stream
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream
+        }
+      }
+
+      const pc = new RTCPeerConnection(ICE_SERVERS)
+      pcRef.current = pc
+      stream.getTracks().forEach((track) => pc.addTrack(track, stream))
+
+      pc.ontrack = (event) => {
+        if (remoteVideoRef.current && event.streams[0]) {
+          remoteVideoRef.current.srcObject = event.streams[0]
+          setVideoLoading(false)
+          setVideoConnectionStatus("connected")
+          clearVideoConnectTimeout()
+        }
+      }
+
+      pc.onconnectionstatechange = () => {
+        const state = pc.connectionState
+        if (state === "connected") {
+          setVideoConnectionStatus("connected")
+          clearVideoConnectTimeout()
+        } else if (state === "failed") {
+          setVideoConnectionStatus("failed")
+          clearVideoConnectTimeout()
+        }
+      }
+
+      pc.onicecandidate = (event) => {
+        if (event.candidate && socketRef.current) {
+          socketRef.current.emit("webrtc_ice_candidate", {
+            roomId,
+            candidate: event.candidate,
+            userId,
+          })
+        }
+      }
+
+      const offer = await pc.createOffer()
+      await pc.setLocalDescription(offer)
+      socket.emit("webrtc_offer", { roomId, offer, userId })
+    }
+
     async function setupWebRTC(socket: Socket) {
+      socketForWebRTCRef.current = socket
+      setVideoConnectionStatus("connecting")
+      scheduleVideoConnectTimeout()
+
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
@@ -669,6 +863,28 @@ export default function InterviewRoomPage() {
           if (remoteVideoRef.current && event.streams[0]) {
             remoteVideoRef.current.srcObject = event.streams[0]
             setVideoLoading(false)
+            setVideoConnectionStatus("connected")
+            clearVideoConnectTimeout()
+          }
+        }
+
+        pc.onconnectionstatechange = () => {
+          const state = pc.connectionState
+          if (state === "connected") {
+            setVideoConnectionStatus("connected")
+            clearVideoConnectTimeout()
+          } else if (state === "connecting") {
+            setVideoConnectionStatus("connecting")
+          } else if (state === "disconnected") {
+            setVideoConnectionStatus("reconnecting")
+            window.setTimeout(() => {
+              if (pc.connectionState === "disconnected") {
+                void retryVideoConnection()
+              }
+            }, 2000)
+          } else if (state === "failed") {
+            setVideoConnectionStatus("failed")
+            clearVideoConnectTimeout()
           }
         }
 
@@ -716,14 +932,26 @@ export default function InterviewRoomPage() {
 
         socket.on("webrtc_ice_candidate", async ({ candidate }) => {
           if (!candidate) return
-          if (pc.remoteDescription) {
-            await pc.addIceCandidate(new RTCIceCandidate(candidate))
-          } else {
+          try {
+            if (pc.remoteDescription) {
+              await pc.addIceCandidate(new RTCIceCandidate(candidate))
+            } else {
+              pendingCandidatesRef.current.push(candidate)
+            }
+          } catch (err) {
+            console.warn("[webrtc] ICE candidate failed, queueing retry", err)
             pendingCandidatesRef.current.push(candidate)
+            window.setTimeout(() => {
+              void flushPendingCandidates(pc)
+            }, 500)
           }
         })
+
+        reconnectWebRTCRef.current = reconnectPeerConnection
       } catch (err) {
         console.error("[interview] WebRTC setup failed:", err)
+        setVideoConnectionStatus("failed")
+        clearVideoConnectTimeout()
         const message =
           err instanceof DOMException &&
           (err.name === "NotReadableError" || err.name === "NotAllowedError")
@@ -872,7 +1100,11 @@ export default function InterviewRoomPage() {
 
           isRemoteCodeUpdateRef.current = true
           setLanguage(remoteLanguage)
-          setCodes((prev) => ({ ...prev, [remoteLanguage]: code }))
+          setCodes((prev) => {
+            const previous = prev[remoteLanguage] ?? ""
+            pushCodeHistory("Peer", remoteLanguage, previous, code)
+            return { ...prev, [remoteLanguage]: code }
+          })
           queueMicrotask(() => {
             isRemoteCodeUpdateRef.current = false
           })
@@ -882,11 +1114,17 @@ export default function InterviewRoomPage() {
       socket.on("peer_disconnected", () => {
         console.log("[interview] Peer disconnected")
         setPeerStatus("disconnected")
+        setVideoConnectionStatus("reconnecting")
+        window.setTimeout(() => {
+          void retryVideoConnection()
+        }, 2000)
       })
 
       socket.on("peer_reconnected", () => {
         console.log("[interview] Peer reconnected")
         setPeerStatus("connected")
+        setVideoConnectionStatus("connecting")
+        scheduleVideoConnectTimeout()
       })
 
       socket.on(
@@ -939,6 +1177,10 @@ export default function InterviewRoomPage() {
       if (saveStateTimeoutRef.current) {
         clearTimeout(saveStateTimeoutRef.current)
       }
+      if (codeHistoryDebounceRef.current) {
+        clearTimeout(codeHistoryDebounceRef.current)
+      }
+      clearVideoConnectTimeout()
       questionLockedRef.current = false
       questionIdRef.current = null
       isFetchingQuestionRef.current = false
@@ -1000,8 +1242,27 @@ export default function InterviewRoomPage() {
   }
 
   function handleCodeChange(lang: Language, code: string) {
+    if (!codeEditBurstRef.current || codeEditBurstRef.current.lang !== lang) {
+      codeEditBurstRef.current = {
+        lang,
+        startCode: codesRef.current[lang] ?? "",
+      }
+    }
+
     setCodes((prev) => ({ ...prev, [lang]: code }))
     emitCodeChange(code, lang)
+
+    if (codeHistoryDebounceRef.current) {
+      clearTimeout(codeHistoryDebounceRef.current)
+    }
+
+    codeHistoryDebounceRef.current = setTimeout(() => {
+      const burst = codeEditBurstRef.current
+      if (burst && burst.lang === lang) {
+        pushCodeHistory("You", lang, burst.startCode, code)
+        codeEditBurstRef.current = null
+      }
+    }, 900)
   }
 
   function handleSwapRoles() {
@@ -1026,6 +1287,7 @@ export default function InterviewRoomPage() {
 
   function handleLanguageChange(lang: Language) {
     setLanguage(lang)
+    setCompilerVersionId(defaultCompilerVersion(lang).id)
 
     if (!question) {
       setCodes((prev) => {
@@ -1079,9 +1341,7 @@ export default function InterviewRoomPage() {
     broadcastCodeOutput("Running test cases...", true)
 
     try {
-      const executionOptions = {
-        functionName: question ? resolveFunctionName(question) : undefined,
-      }
+      const executionOptions = buildExecutionOptions()
       const results = await runAgainstExamples(
         codes[language],
         language,
@@ -1099,6 +1359,31 @@ export default function InterviewRoomPage() {
     }
   }
 
+  async function handleRunCustom(input: string) {
+    if (role === "interviewer" || runningCustom || !input.trim()) return
+
+    setRunningCustom(true)
+    setCustomOutput("Running custom test...")
+
+    try {
+      const output = await runCustomInput(
+        codes[language],
+        language,
+        input,
+        buildExecutionOptions(),
+      )
+      setCustomOutput(output)
+    } catch (err) {
+      setCustomOutput(
+        `Failed to run custom test: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }`,
+      )
+    } finally {
+      setRunningCustom(false)
+    }
+  }
+
   async function handleSubmitCode() {
     if (role === "interviewer" || runningTests) return
 
@@ -1112,9 +1397,7 @@ export default function InterviewRoomPage() {
     broadcastCodeOutput("Submitting...", true)
 
     try {
-      const executionOptions = {
-        functionName: question ? resolveFunctionName(question) : undefined,
-      }
+      const executionOptions = buildExecutionOptions()
       const results = await runSubmitTests(
         codes[language],
         language,
@@ -1218,25 +1501,41 @@ export default function InterviewRoomPage() {
         ref={layoutContainerRef}
         className="flex min-h-0 flex-1 flex-col lg:flex-row"
       >
-        <CodeEditorPanel
-          codes={codes}
-          language={language}
-          hints={
-            role === "interviewer" && question
-              ? getQuestionHints(question)
-              : undefined
-          }
-          testOutput={testOutput}
-          running={runningTests}
-          className={mobilePanel === "code" ? "flex" : "hidden lg:flex"}
+        <div
+          className={`flex min-h-0 flex-col ${mobilePanel === "code" ? "flex" : "hidden lg:flex"}`}
           style={{ width: `${100 - sidebarWidthPct}%` }}
-          outputHeight={outputHeight}
-          onOutputHeightChange={setOutputHeight}
-          onRunCode={() => void handleRunCode()}
-          onSubmitCode={() => void handleSubmitCode()}
-          onCodeChange={handleCodeChange}
-          onLanguageChange={handleLanguageChange}
-        />
+        >
+          <CodeEditorPanel
+            codes={codes}
+            language={language}
+            compilerVersionId={compilerVersionId}
+            hints={
+              role === "interviewer" && question
+                ? getQuestionHints(question)
+                : undefined
+            }
+            testOutput={testOutput}
+            customOutput={customOutput}
+            customTests={customTests}
+            running={runningTests}
+            runningCustom={runningCustom}
+            className="min-h-0 flex-1"
+            outputHeight={outputHeight}
+            onOutputHeightChange={setOutputHeight}
+            onRunCode={() => void handleRunCode()}
+            onSubmitCode={() => void handleSubmitCode()}
+            onRunCustom={(input) => void handleRunCustom(input)}
+            onCustomTestsChange={setCustomTests}
+            onCodeChange={handleCodeChange}
+            onLanguageChange={handleLanguageChange}
+            onCompilerVersionChange={setCompilerVersionId}
+          />
+          <CodeHistoryPanel
+            entries={codeHistory}
+            open={historyOpen}
+            onToggle={() => setHistoryOpen((open) => !open)}
+          />
+        </div>
         <ResizeHandle
           direction="horizontal"
           className="hidden lg:block"
@@ -1260,6 +1559,8 @@ export default function InterviewRoomPage() {
           questionError={questionError}
           videoLoading={videoLoading}
           videoError={videoError}
+          videoConnectionStatus={videoConnectionStatus}
+          onRetryVideo={() => void retryVideoConnection()}
           showChat
           chatMessages={
             user?.id ? mapChatMessages(chatMessages, user.id) : []

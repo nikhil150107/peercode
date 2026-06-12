@@ -1,5 +1,6 @@
 import type { Language } from "../data/mockProblem"
 import type { QuestionExample } from "../types/question"
+import { harnessLanguageForEditor } from "../data/compilerVersions"
 import { SERVER_URL } from "./serverUrl"
 import { getVoidExecutionMeta } from "../utils/questionExecution"
 import {
@@ -11,9 +12,10 @@ function camelToSnake(name: string): string {
   return name.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "")
 }
 
-export const JUDGE0_LANGUAGE_IDS: Record<Language, number> = {
+export const JUDGE0_LANGUAGE_IDS: Partial<Record<Language, number>> = {
   python: 71,
   javascript: 63,
+  typescript: 74,
   java: 62,
   cpp: 54,
   c: 50,
@@ -21,6 +23,9 @@ export const JUDGE0_LANGUAGE_IDS: Record<Language, number> = {
   rust: 73,
   kotlin: 78,
   csharp: 51,
+  php: 68,
+  ruby: 72,
+  swift: 83,
 }
 
 type ExecuteResponse = {
@@ -44,6 +49,8 @@ type Judge0Submission = {
 
 export type ExecutionOptions = {
   functionName?: string
+  languageId?: number
+  harnessLanguage?: Language
 }
 
 export type TestCaseResult = {
@@ -70,16 +77,18 @@ export async function submitToJudge0(
   languageId: number,
   stdin = "",
 ): Promise<Judge0Submission> {
-  const language = languageFromId(languageId)
-
   console.log("=== CODE SENT TO EXECUTE ===", sourceCode)
   console.log("=== STDIN ===", stdin)
-  console.log("=== LANGUAGE ===", language)
+  console.log("=== LANGUAGE ID ===", languageId)
 
   const response = await fetch(`${SERVER_URL}/api/execute`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ code: sourceCode, language, stdin }),
+    body: JSON.stringify({
+      code: sourceCode,
+      language_id: languageId,
+      stdin,
+    }),
   })
 
   const responseText = await response.text()
@@ -567,8 +576,11 @@ function buildRunnableCode(
   language: Language,
   exampleInput: string,
   preferredFunctionName?: string,
+  harnessLanguageOverride?: Language,
 ): string {
-  const cleanedCode = prepareUserCode(userCode, language)
+  const harnessLanguage =
+    harnessLanguageOverride ?? harnessLanguageForEditor[language] ?? language
+  const cleanedCode = prepareUserCode(userCode, harnessLanguage)
   const assignments = parseExampleInput(exampleInput)
   const usesStructuredHarness = (
     [
@@ -582,22 +594,22 @@ function buildRunnableCode(
       "kotlin",
       "csharp",
     ] as Language[]
-  ).includes(language)
+  ).includes(harnessLanguage)
   const harness = usesStructuredHarness
-    ? buildHarnessContext(language, assignments, cleanedCode)
-    : buildGenericAssignments(language, assignments)
+    ? buildHarnessContext(harnessLanguage, assignments, cleanedCode)
+    : buildGenericAssignments(harnessLanguage, assignments)
   const assignmentBlock = harness.assignmentBlock
   const argList = harness.argList
   const harnessPrelude = harness.prelude
   const harnessMainHelpers = harness.mainHelpers
   const functionNames = resolveFunctionNames(
     cleanedCode,
-    language,
+    harnessLanguage,
     preferredFunctionName,
   )
   const voidExecution = resolveVoidExecution(functionNames)
 
-  if (language === "python") {
+  if (harnessLanguage === "python") {
     if (voidExecution) {
       const pyName =
         functionNames.find((name) => getVoidExecutionMeta(name)) ??
@@ -648,7 +660,7 @@ else:
 `
   }
 
-  if (language === "javascript") {
+  if (harnessLanguage === "javascript") {
     if (voidExecution) {
       const jsName =
         functionNames.find((name) => getVoidExecutionMeta(name)) ??
@@ -685,7 +697,7 @@ throw new Error("Could not find a matching solution function");
 `
   }
 
-  if (language === "java") {
+  if (harnessLanguage === "java") {
     const methodName = functionNames[0] ?? "solution"
     const javaAssignments = assignmentBlock.replace(/^/gm, "    ")
 
@@ -729,7 +741,7 @@ ${javaAssignments}
 `
   }
 
-  if (language === "c") {
+  if (harnessLanguage === "c") {
     const methodName = functionNames[0] ?? "solution"
     const callArgs = assignments
       .map(({ name, value }) => {
@@ -754,7 +766,7 @@ int main() {
 `
   }
 
-  if (language === "go") {
+  if (harnessLanguage === "go") {
     const methodName = functionNames[0] ?? "solution"
     return `${cleanedCode}
 
@@ -781,7 +793,7 @@ func main() {
 `
   }
 
-  if (language === "rust") {
+  if (harnessLanguage === "rust") {
     const methodName = functionNames[0] ?? "solution"
     return `${cleanedCode}
 
@@ -793,7 +805,7 @@ fn main() {
 `
   }
 
-  if (language === "kotlin") {
+  if (harnessLanguage === "kotlin") {
     const methodName = functionNames[0] ?? "solution"
     return `${cleanedCode}
 
@@ -805,7 +817,7 @@ fun main() {
 `
   }
 
-  if (language === "csharp") {
+  if (harnessLanguage === "csharp") {
     const methodName = functionNames[0] ?? "solution"
     return `${cleanedCode}
 
@@ -937,12 +949,19 @@ export async function runTestCase(
   index: number,
   options: ExecutionOptions = {},
 ): Promise<TestCaseResult> {
-  const languageId = JUDGE0_LANGUAGE_IDS[language]
+  const harnessLanguage =
+    options.harnessLanguage ?? harnessLanguageForEditor[language] ?? language
+  const languageId =
+    options.languageId ??
+    JUDGE0_LANGUAGE_IDS[harnessLanguage] ??
+    JUDGE0_LANGUAGE_IDS[language] ??
+    71
   const runnableCode = buildRunnableCode(
     userCode,
     language,
     example.input,
     options.functionName,
+    harnessLanguage,
   )
 
   try {
@@ -993,6 +1012,35 @@ export function resolveSubmitTestCases(
     return hiddenTests
   }
   return examples
+}
+
+export async function runCustomInput(
+  userCode: string,
+  language: Language,
+  input: string,
+  options: ExecutionOptions = {},
+): Promise<string> {
+  const harnessLanguage =
+    options.harnessLanguage ?? harnessLanguageForEditor[language] ?? language
+  const languageId =
+    options.languageId ??
+    JUDGE0_LANGUAGE_IDS[harnessLanguage] ??
+    JUDGE0_LANGUAGE_IDS[language] ??
+    71
+  const runnableCode = buildRunnableCode(
+    userCode,
+    language,
+    input,
+    options.functionName,
+    harnessLanguage,
+  )
+
+  const submission = await submitToJudge0(runnableCode, languageId)
+  const actual = formatActualOutput(submission)
+  if (submission.compile_output?.trim() || (submission.stderr?.trim() && !submission.stdout?.trim())) {
+    return actual || submission.status?.description || "Execution failed"
+  }
+  return actual || "(no output)"
 }
 
 export async function runAgainstExamples(

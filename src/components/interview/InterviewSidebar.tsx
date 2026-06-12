@@ -24,6 +24,12 @@ type InterviewSidebarProps = {
   questionError?: string | null
   videoLoading?: boolean
   videoError?: string | null
+  videoConnectionStatus?:
+    | "connecting"
+    | "connected"
+    | "reconnecting"
+    | "failed"
+  onRetryVideo?: () => void
   className?: string
   style?: CSSProperties
   showChat?: boolean
@@ -41,12 +47,23 @@ export default function InterviewSidebar({
   questionError,
   videoLoading,
   videoError,
+  videoConnectionStatus = "connecting",
+  onRetryVideo,
   className = "",
   style,
   showChat = true,
   chatMessages = [],
   onSendChat,
 }: InterviewSidebarProps) {
+  const statusLabel =
+    videoConnectionStatus === "connected"
+      ? "Connected"
+      : videoConnectionStatus === "connecting"
+        ? "Connecting..."
+        : videoConnectionStatus === "reconnecting"
+          ? "Reconnecting..."
+          : "Failed - Click to retry"
+
   function handleSend(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const form = e.currentTarget
@@ -74,6 +91,37 @@ export default function InterviewSidebar({
             Connecting video...
           </p>
         )}
+        <div className="mb-2 flex items-center justify-center gap-2">
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
+              videoConnectionStatus === "connected"
+                ? "bg-emerald-500/15 text-emerald-400"
+                : videoConnectionStatus === "failed"
+                  ? "bg-red-500/15 text-red-400"
+                  : "bg-amber-500/15 text-amber-400"
+            }`}
+          >
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                videoConnectionStatus === "connected"
+                  ? "bg-emerald-400"
+                  : videoConnectionStatus === "failed"
+                    ? "bg-red-400"
+                    : "animate-pulse bg-amber-400"
+              }`}
+            />
+            {statusLabel}
+          </span>
+          {videoConnectionStatus === "failed" && onRetryVideo && (
+            <button
+              type="button"
+              onClick={onRetryVideo}
+              className="rounded-md border border-red-500/30 px-2 py-1 text-[10px] font-medium text-red-300 hover:bg-red-500/10"
+            >
+              Retry
+            </button>
+          )}
+        </div>
         <div className="flex gap-2">
           <div className="flex flex-1 flex-col overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/60 sm:rounded-xl">
             <video

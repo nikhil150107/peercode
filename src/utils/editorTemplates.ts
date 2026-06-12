@@ -3,6 +3,7 @@ import type { Language } from "../data/mockProblem"
 export const EMPTY_CODE: Record<Language, string> = {
   python: "# Write your solution here\n",
   javascript: "// Write your solution here\n",
+  typescript: "// Write your solution here\n",
   java: "// Write your solution here\n",
   cpp: "// Write your solution here\n",
   c: "// Write your solution here\n",
@@ -10,6 +11,9 @@ export const EMPTY_CODE: Record<Language, string> = {
   rust: "// Write your solution here\n",
   kotlin: "// Write your solution here\n",
   csharp: "// Write your solution here\n",
+  php: "// Write your solution here\n",
+  ruby: "# Write your solution here\n",
+  swift: "// Write your solution here\n",
 }
 
 const PLACEHOLDER_PATTERNS: Record<Language, RegExp[]> = {
@@ -32,6 +36,10 @@ const PLACEHOLDER_PATTERNS: Record<Language, RegExp[]> = {
   rust: [/^\/\/\s*Write your solution here\s*$/i],
   kotlin: [/^\/\/\s*Write your solution here\s*$/i],
   csharp: [/^\/\/\s*Write your solution here\s*$/i],
+  typescript: [/^\/\/\s*Write your solution here\s*$/i],
+  php: [/^\/\/\s*Write your solution here\s*$/i],
+  ruby: [/^#\s*Write your solution here\s*$/i],
+  swift: [/^\/\/\s*Write your solution here\s*$/i],
 }
 
 export function isPlaceholderCode(code: string, language: Language): boolean {

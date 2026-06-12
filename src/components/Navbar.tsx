@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import Logo from "./Logo"
+import ThemeToggle from "./ThemeToggle"
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -20,11 +21,12 @@ export default function Navbar() {
   }, [menuOpen])
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md">
+    <header className="theme-nav fixed inset-x-0 top-0 z-50 border-b border-[var(--pc-border)] bg-[var(--pc-nav-bg)] backdrop-blur-md">
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Logo />
 
         <div className="hidden items-center gap-3 sm:flex">
+          <ThemeToggle />
           <Link
             to="/about"
             className="rounded-lg px-4 py-2 text-sm font-medium text-zinc-400 transition hover:text-white"
@@ -45,7 +47,8 @@ export default function Navbar() {
           </Link>
         </div>
 
-        <div ref={menuRef} className="relative sm:hidden">
+        <div ref={menuRef} className="relative flex items-center gap-2 sm:hidden">
+          <ThemeToggle />
           <button
             type="button"
             onClick={() => setMenuOpen((open) => !open)}
