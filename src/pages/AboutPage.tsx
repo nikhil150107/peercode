@@ -83,12 +83,12 @@ export default function AboutPage() {
 
         <div className="mx-auto max-w-4xl px-6">
           <section className="text-center">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-400">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand">
               About PeerCode
             </p>
             <h1 className="mt-5 text-4xl font-bold tracking-tight text-content sm:text-5xl lg:text-6xl">
               The Story Behind{" "}
-              <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
+              <span className="text-gradient-brand">
                 PeerCode
               </span>
             </h1>
@@ -107,7 +107,7 @@ export default function AboutPage() {
                     className={`leading-relaxed text-content ${
                       index === 0
                         ? "text-lg sm:text-xl"
-                        : "text-base font-medium text-emerald-100/90 sm:text-lg"
+                        : "text-base font-medium text-brand-soft sm:text-lg"
                     }`}
                   >
                     {paragraph}
@@ -125,7 +125,7 @@ export default function AboutPage() {
               <div className="flex flex-col items-center gap-8 sm:flex-row sm:items-start">
                 <div className="relative">
                   <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-emerald-500/40 to-teal-500/20 blur-sm" />
-                  <div className="relative flex h-32 w-32 items-center justify-center rounded-2xl bg-emerald-500/15 text-4xl font-bold text-emerald-400 ring-2 ring-emerald-500/30">
+                  <div className="relative flex h-32 w-32 items-center justify-center rounded-2xl bg-emerald-500/15 text-4xl font-bold text-brand ring-2 ring-emerald-500/30">
                     NJ
                   </div>
                 </div>
@@ -133,7 +133,7 @@ export default function AboutPage() {
                   <h2 className="text-2xl font-bold text-content sm:text-3xl">
                     Nikhil Jatale
                   </h2>
-                  <p className="mt-2 text-sm font-medium text-emerald-400">
+                  <p className="mt-2 text-sm font-medium text-brand">
                     MIT Academy of Engineering, Pune
                   </p>
                   <p className="text-sm text-content-muted">Data Science Branch</p>
@@ -157,7 +157,7 @@ export default function AboutPage() {
                     <div className="flex h-20 w-20 items-center justify-center rounded-xl border border-stroke bg-surface-secondary transition duration-200 group-hover:border-emerald-500/60 group-hover:shadow-[0_0_20px_rgba(16,185,129,0.3)]">
                       {link.logo}
                     </div>
-                    <span className="text-sm font-medium text-content-muted transition-colors group-hover:text-emerald-400">
+                    <span className="text-sm font-medium text-content-muted transition-colors group-hover:text-brand">
                       {link.label}
                     </span>
                   </a>
@@ -167,7 +167,7 @@ export default function AboutPage() {
           </section>
 
           <section className="mt-16 rounded-3xl border border-stroke/80 bg-gradient-to-b from-surface-secondary/40 to-surface-primary p-8 text-center sm:p-12">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-400">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand">
               Our Mission
             </p>
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-content sm:text-xl">

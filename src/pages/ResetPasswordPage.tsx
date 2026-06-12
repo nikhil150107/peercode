@@ -61,17 +61,17 @@ export default function ResetPasswordPage() {
           <div className="rounded-2xl border border-stroke bg-surface-card/80 p-8 shadow-xl shadow-black/20">
             {success ? (
               <div className="text-center">
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/20 text-2xl text-emerald-400 ring-2 ring-emerald-500/30">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/20 text-2xl text-brand ring-2 ring-emerald-500/30">
                   ✓
                 </div>
-                <p className="text-sm text-emerald-400">
+                <p className="text-sm text-brand">
                   Password updated successfully! Redirecting to login...
                 </p>
               </div>
             ) : (
               <>
                 {error && (
-                  <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                  <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-danger">
                     {error}
                   </div>
                 )}
@@ -134,7 +134,7 @@ export default function ResetPasswordPage() {
           <p className="mt-6 text-center text-sm text-content-muted">
             <Link
               to="/login"
-              className="font-medium text-emerald-400 transition hover:text-emerald-300"
+              className="font-medium text-brand transition hover:text-brand-hover"
             >
               Back to login
             </Link>

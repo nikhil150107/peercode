@@ -61,8 +61,8 @@ export default function CodeHistoryPanel({
                   <span
                     className={
                       entry.author === "You"
-                        ? "font-medium text-emerald-400"
-                        : "font-medium text-violet-400"
+                        ? "font-medium text-brand"
+                        : "font-medium text-info"
                     }
                   >
                     {entry.author}
@@ -71,8 +71,8 @@ export default function CodeHistoryPanel({
                 </div>
                 <p className="mt-1 text-content-muted">
                   {entry.language} ·{" "}
-                  <span className="text-emerald-400/80">+{entry.diff.added}</span>{" "}
-                  <span className="text-red-400/80">−{entry.diff.removed}</span> lines
+                  <span className="text-brand-soft">+{entry.diff.added}</span>{" "}
+                  <span className="text-danger/80">−{entry.diff.removed}</span> lines
                 </p>
               </div>
             ))

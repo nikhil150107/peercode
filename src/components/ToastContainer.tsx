@@ -1,8 +1,8 @@
 import { useToast } from "../context/ToastContext"
 
 const typeStyles = {
-  success: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
-  error: "border-red-500/30 bg-red-500/10 text-red-300",
+  success: "border-emerald-500/30 bg-emerald-500/10 text-brand-hover",
+  error: "border-red-500/30 bg-red-500/10 text-danger",
   info: "border-stroke bg-surface-secondary text-content",
 }
 

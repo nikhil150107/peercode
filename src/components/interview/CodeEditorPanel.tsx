@@ -174,7 +174,7 @@ export default function CodeEditorPanel({
 
       {hints && hints.length > 0 && (
         <div className="shrink-0 border-b border-stroke bg-violet-500/5 px-4 py-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-violet-400">
+          <p className="text-xs font-semibold uppercase tracking-wider text-info">
             Hints
           </p>
           <ul className="mt-2 space-y-1.5">
@@ -220,7 +220,7 @@ export default function CodeEditorPanel({
             onClick={() => setOutputTab("tests")}
             className={`px-4 py-2 text-xs font-medium uppercase tracking-wider transition ${
               outputTab === "tests"
-                ? "border-b-2 border-emerald-500 text-emerald-400"
+                ? "border-b-2 border-emerald-500 text-brand"
                 : "text-content-muted hover:text-content"
             }`}
           >
@@ -231,7 +231,7 @@ export default function CodeEditorPanel({
             onClick={() => setOutputTab("custom")}
             className={`px-4 py-2 text-xs font-medium uppercase tracking-wider transition ${
               outputTab === "custom"
-                ? "border-b-2 border-emerald-500 text-emerald-400"
+                ? "border-b-2 border-emerald-500 text-brand"
                 : "text-content-muted hover:text-content"
             }`}
           >
@@ -240,7 +240,7 @@ export default function CodeEditorPanel({
         </div>
 
         {outputTab === "tests" ? (
-          <pre className="min-h-0 flex-1 overflow-auto p-4 font-mono text-sm text-emerald-400 whitespace-pre-wrap">
+          <pre className="min-h-0 flex-1 overflow-auto p-4 font-mono text-sm text-brand whitespace-pre-wrap">
             {running ? "Running test cases..." : testOutput}
           </pre>
         ) : (
@@ -278,7 +278,7 @@ export default function CodeEditorPanel({
                     onClick={() => selectCustomTest(test)}
                     className={`rounded-md px-2 py-1 text-[10px] font-medium ${
                       test.id === activeCustomId
-                        ? "bg-emerald-500/20 text-emerald-300"
+                        ? "bg-emerald-500/20 text-brand-hover"
                         : "bg-surface-hover text-content-muted"
                     }`}
                   >
@@ -287,7 +287,7 @@ export default function CodeEditorPanel({
                 ))}
               </div>
             )}
-            <pre className="max-h-24 overflow-auto rounded-lg border border-stroke bg-surface-primary p-2 font-mono text-xs text-emerald-400 whitespace-pre-wrap">
+            <pre className="max-h-24 overflow-auto rounded-lg border border-stroke bg-surface-primary p-2 font-mono text-xs text-brand whitespace-pre-wrap">
               {runningCustom ? "Running custom test..." : customOutput}
             </pre>
           </div>

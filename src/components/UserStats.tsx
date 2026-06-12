@@ -64,7 +64,7 @@ export default function UserStats() {
                 {averageRating != null && (
                   <>
                     <span className="text-sm text-content-muted">/ 5</span>
-                    <span className="ml-1 text-amber-400">★</span>
+                    <span className="ml-1 text-warn">★</span>
                   </>
                 )}
               </div>
@@ -80,7 +80,7 @@ export default function UserStats() {
                 {topics.map((topic) => (
                   <span
                     key={topic}
-                    className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-sm font-medium text-emerald-400"
+                    className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-sm font-medium text-brand"
                   >
                     {topic}
                   </span>

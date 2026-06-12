@@ -45,7 +45,7 @@ export default function FeedbackButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-40 rounded-full border border-stroke bg-surface-secondary/90 px-4 py-2.5 text-sm font-medium text-content shadow-lg backdrop-blur transition hover:border-emerald-500/40 hover:text-emerald-400"
+        className="fixed bottom-5 right-5 z-40 rounded-full border border-stroke bg-surface-secondary/90 px-4 py-2.5 text-sm font-medium text-content shadow-lg backdrop-blur transition hover:border-emerald-500/40 hover:text-brand"
       >
         💬 Feedback
       </button>

@@ -22,7 +22,7 @@ export default function StarRating({ value, onChange, label }: StarRatingProps) 
           >
             <svg
               className={`h-8 w-8 ${
-                star <= value ? "text-amber-400" : "text-stroke"
+                star <= value ? "text-warn" : "text-stroke"
               }`}
               viewBox="0 0 24 24"
               fill="currentColor"

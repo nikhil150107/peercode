@@ -285,7 +285,7 @@ export default function DashboardPage() {
 
         {matchedBooking?.room_id && (
           <div className="mb-6 rounded-xl border border-violet-500/30 bg-violet-500/10 px-5 py-4">
-            <p className="text-sm font-semibold text-violet-300">
+            <p className="text-sm font-semibold text-info">
               Match found!
             </p>
             <p className="mt-1 text-sm text-content">
@@ -309,7 +309,7 @@ export default function DashboardPage() {
               {activeBooking.slot_time} · {formatISTDateLabel(activeBooking.slot_date)}
             </p>
             {countdown && (
-              <p className="mt-2 text-sm text-emerald-400">
+              <p className="mt-2 text-sm text-brand">
                 Starts in <span className="font-mono font-semibold">{countdown}</span>
               </p>
             )}
@@ -326,7 +326,7 @@ export default function DashboardPage() {
                     )
                   }
                 }}
-                className="text-sm font-medium text-emerald-400 transition hover:text-emerald-300"
+                className="text-sm font-medium text-brand transition hover:text-brand-hover"
               >
                 Go to waiting room →
               </button>
@@ -340,7 +340,7 @@ export default function DashboardPage() {
                     type="button"
                     disabled={cancellingId === activeBooking.id}
                     onClick={() => void handleCancelBooking(activeBooking)}
-                    className="rounded-lg bg-red-500/15 px-3 py-1.5 text-sm font-medium text-red-400 ring-1 ring-red-500/30 transition hover:bg-red-500/25 disabled:opacity-60"
+                    className="rounded-lg bg-red-500/15 px-3 py-1.5 text-sm font-medium text-danger ring-1 ring-red-500/30 transition hover:bg-red-500/25 disabled:opacity-60"
                   >
                     {cancellingId === activeBooking.id
                       ? "Cancelling..."
@@ -358,7 +358,7 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   onClick={() => setCancelConfirmId(activeBooking.id)}
-                  className="text-sm font-medium text-red-400 transition hover:text-red-300"
+                  className="text-sm font-medium text-danger transition hover:text-danger"
                 >
                   Cancel Booking
                 </button>

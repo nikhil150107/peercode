@@ -9,9 +9,9 @@ export type SidebarChatMessage = {
 }
 
 const difficultyStyles: Record<Difficulty, string> = {
-  Easy: "bg-emerald-500/15 text-emerald-400 ring-emerald-500/30",
-  Medium: "bg-amber-500/15 text-amber-400 ring-amber-500/30",
-  Hard: "bg-red-500/15 text-red-400 ring-red-500/30",
+  Easy: "bg-emerald-500/15 text-brand ring-emerald-500/30",
+  Medium: "bg-amber-500/15 text-warn ring-amber-500/30",
+  Hard: "bg-red-500/15 text-danger ring-red-500/30",
 }
 
 type InterviewSidebarProps = {
@@ -82,7 +82,7 @@ export default function InterviewSidebar({
     >
       <div className="relative shrink-0 border-b border-stroke p-2 sm:p-3">
         {videoError && (
-          <div className="mb-2 rounded-lg bg-red-500/10 px-3 py-2 text-center text-xs text-red-400">
+          <div className="mb-2 rounded-lg bg-red-500/10 px-3 py-2 text-center text-xs text-danger">
             {videoError}
           </div>
         )}
@@ -95,10 +95,10 @@ export default function InterviewSidebar({
           <span
             className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
               videoConnectionStatus === "connected"
-                ? "bg-emerald-500/15 text-emerald-400"
+                ? "bg-emerald-500/15 text-brand"
                 : videoConnectionStatus === "failed"
-                  ? "bg-red-500/15 text-red-400"
-                  : "bg-amber-500/15 text-amber-400"
+                  ? "bg-red-500/15 text-danger"
+                  : "bg-amber-500/15 text-warn"
             }`}
           >
             <span
@@ -116,7 +116,7 @@ export default function InterviewSidebar({
             <button
               type="button"
               onClick={onRetryVideo}
-              className="rounded-md border border-red-500/30 px-2 py-1 text-[10px] font-medium text-red-300 hover:bg-red-500/10"
+              className="rounded-md border border-red-500/30 px-2 py-1 text-[10px] font-medium text-danger hover:bg-red-500/10"
             >
               Retry
             </button>
@@ -156,7 +156,7 @@ export default function InterviewSidebar({
           )}
 
           {questionError && (
-            <p className="text-sm text-red-400">{questionError}</p>
+            <p className="text-sm text-danger">{questionError}</p>
           )}
 
           {question && !questionLoading && (
@@ -171,7 +171,7 @@ export default function InterviewSidebar({
                   {question.difficulty}
                 </span>
               </div>
-              <p className="mt-1 text-xs font-medium text-emerald-400/80">
+              <p className="mt-1 text-xs font-medium text-brand-soft">
                 {question.topic}
               </p>
               <p className="mt-3 text-sm leading-relaxed text-content-muted">
@@ -195,7 +195,7 @@ export default function InterviewSidebar({
                     <p className="mt-1 font-mono text-xs text-content-muted">
                       Input: {ex.input}
                     </p>
-                    <p className="mt-1 font-mono text-xs text-emerald-400/80">
+                    <p className="mt-1 font-mono text-xs text-brand-soft">
                       Output: {ex.output}
                     </p>
                     {ex.explanation && (
@@ -227,7 +227,7 @@ export default function InterviewSidebar({
                 <div
                   className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
                     msg.isSelf
-                      ? "bg-emerald-500/15 text-emerald-100"
+                      ? "bg-emerald-500/15 text-brand-soft"
                       : "bg-surface-hover text-content"
                   }`}
                 >

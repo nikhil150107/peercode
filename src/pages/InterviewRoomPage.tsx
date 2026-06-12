@@ -1463,12 +1463,12 @@ export default function InterviewRoomPage() {
         onEndSession={() => void handleEndSession()}
       />
       {peerStatus === "disconnected" && (
-        <div className="shrink-0 bg-amber-500/15 px-4 py-2 text-center text-sm font-medium text-amber-400">
+        <div className="shrink-0 bg-amber-500/15 px-4 py-2 text-center text-sm font-medium text-warn">
           Your peer disconnected. Waiting for reconnection...
         </div>
       )}
       {peerStatus === "left" && (
-        <div className="shrink-0 bg-red-500/15 px-4 py-2 text-center text-sm font-medium text-red-400">
+        <div className="shrink-0 bg-red-500/15 px-4 py-2 text-center text-sm font-medium text-danger">
           Peer left the session. You can end the session now.
         </div>
       )}
@@ -1478,7 +1478,7 @@ export default function InterviewRoomPage() {
           onClick={() => setMobilePanel("code")}
           className={`flex-1 px-4 py-2.5 text-sm font-medium transition ${
             mobilePanel === "code"
-              ? "border-b-2 border-emerald-500 text-emerald-400"
+              ? "border-b-2 border-emerald-500 text-brand"
               : "text-content-muted"
           }`}
         >
@@ -1489,7 +1489,7 @@ export default function InterviewRoomPage() {
           onClick={() => setMobilePanel("question")}
           className={`flex-1 px-4 py-2.5 text-sm font-medium transition ${
             mobilePanel === "question"
-              ? "border-b-2 border-emerald-500 text-emerald-400"
+              ? "border-b-2 border-emerald-500 text-brand"
               : "text-content-muted"
           }`}
         >

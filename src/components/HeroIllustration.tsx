@@ -1,9 +1,9 @@
 const demoLines = [
-  { text: "def twoSum(nums, target):", color: "text-emerald-400" },
+  { text: "def twoSum(nums, target):", color: "text-brand" },
   { text: "    seen = {}", color: "text-content-muted" },
   { text: "    for i, n in enumerate(nums):", color: "text-content-muted" },
   { text: "        if target - n in seen:", color: "text-content-muted" },
-  { text: "            return [seen[target-n], i]", color: "text-amber-300" },
+  { text: "            return [seen[target-n], i]", color: "text-warn" },
 ]
 
 export default function HeroIllustration() {
@@ -17,7 +17,7 @@ export default function HeroIllustration() {
           <span className="h-3 w-3 rounded-full bg-yellow-500/80" />
           <span className="h-3 w-3 rounded-full bg-emerald-500/80" />
           <span className="ml-2 text-xs text-content-muted">PeerCode Interview Room</span>
-          <span className="ml-auto rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 ring-1 ring-emerald-500/30">
+          <span className="ml-auto rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-brand ring-1 ring-emerald-500/30">
             LIVE
           </span>
         </div>
@@ -50,11 +50,11 @@ export default function HeroIllustration() {
 
           <div className="min-w-0 p-4">
             <div className="flex flex-col items-center gap-3">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-emerald-500/40 bg-surface-hover text-xl text-emerald-400">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-emerald-500/40 bg-surface-hover text-xl text-brand">
                 A
               </div>
               <div className="h-1.5 w-24 rounded bg-surface-hover" />
-              <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-indigo-500/40 bg-surface-hover text-xl text-indigo-400">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-indigo-500/40 bg-surface-hover text-xl text-info">
                 B
               </div>
             </div>

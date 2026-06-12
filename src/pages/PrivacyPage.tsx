@@ -71,7 +71,7 @@ export default function PrivacyPage() {
 
         <p className="mt-10 text-sm text-content-muted">
           See also our{" "}
-          <Link to="/terms" className="text-emerald-400 hover:text-emerald-300">
+          <Link to="/terms" className="text-brand hover:text-brand-hover">
             Terms of Service
           </Link>
           .

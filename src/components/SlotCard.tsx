@@ -4,15 +4,15 @@ import { getSlotStatus } from "../data/slots"
 const statusConfig = {
   available: {
     label: "Available",
-    badge: " bg-emerald-500/10 text-emerald-400 ring-emerald-500/20",
+    badge: " bg-emerald-500/10 text-brand ring-emerald-500/20",
   },
   "filling-fast": {
     label: "Filling Fast",
-    badge: " bg-amber-500/10 text-amber-400 ring-amber-500/20",
+    badge: " bg-amber-500/10 text-warn ring-amber-500/20",
   },
   full: {
     label: "Full",
-    badge: " bg-red-500/10 text-red-400 ring-red-500/20",
+    badge: " bg-red-500/10 text-danger ring-red-500/20",
   },
 } as const
 
@@ -56,7 +56,7 @@ export default function SlotCard({
             isExpired
               ? " bg-surface-hover text-content-muted ring-stroke"
               : isClosingSoon
-                ? " bg-amber-500/10 text-amber-400 ring-amber-500/20"
+                ? " bg-amber-500/10 text-warn ring-amber-500/20"
                 : config.badge
           }`}
         >
@@ -111,7 +111,7 @@ export default function SlotCard({
           onClick={() => onBook(slot.id)}
           className={`w-full rounded-lg py-2.5 text-sm font-semibold transition ${
             isBooked
-              ? "cursor-default bg-surface-hover text-emerald-400"
+              ? "cursor-default bg-surface-hover text-brand"
               : isExpired || isClosingSoon
                 ? "cursor-not-allowed bg-surface-hover text-content-muted"
                 : isFull || isBooking

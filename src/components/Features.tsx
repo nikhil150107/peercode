@@ -75,7 +75,7 @@ export default function Features() {
     <section id="features" className="border-t border-stroke/60 bg-surface-secondary/30 py-24">
       <div className="mx-auto max-w-6xl px-6">
         <div className="text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-emerald-400">
+          <p className="text-sm font-semibold uppercase tracking-widest text-brand">
             Features
           </p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-content sm:text-4xl">
@@ -89,7 +89,7 @@ export default function Features() {
               key={feature.title}
               className="group rounded-2xl border border-stroke bg-surface-primary p-8 transition hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5"
             >
-              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20 transition group-hover:bg-emerald-500/20">
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-brand ring-1 ring-emerald-500/20 transition group-hover:bg-emerald-500/20">
                 {feature.icon}
               </div>
               <h3 className="text-lg font-semibold text-content">

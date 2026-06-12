@@ -14,7 +14,7 @@ export default function Hero() {
 
       <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 lg:grid-cols-2 lg:gap-16">
         <div className="text-center lg:text-left">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-1.5 text-sm text-emerald-400">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-1.5 text-sm text-brand">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
@@ -24,7 +24,7 @@ export default function Hero() {
 
           <h1 className="text-4xl font-bold tracking-tight text-content sm:text-5xl lg:text-6xl">
             Practice DSA Interviews with{" "}
-            <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
+            <span className="text-gradient-brand">
               Real Peers
             </span>
           </h1>

@@ -12,7 +12,7 @@ export default function TermsPage() {
           Last updated: {new Date().toLocaleDateString("en-IN")}
         </p>
 
-        <div className="prose prose-invert mt-8 max-w-none space-y-6 text-content">
+        <div className="mt-8 max-w-none space-y-6 text-content">
           <section>
             <h2 className="text-lg font-semibold text-content">1. About PeerCode</h2>
             <p className="mt-2 text-sm leading-relaxed text-content-muted">
@@ -70,7 +70,7 @@ export default function TermsPage() {
 
         <p className="mt-10 text-sm text-content-muted">
           Questions?{" "}
-          <Link to="/" className="text-emerald-400 hover:text-emerald-300">
+          <Link to="/" className="text-brand hover:text-brand-hover">
             Return to PeerCode
           </Link>
         </p>

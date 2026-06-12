@@ -226,8 +226,8 @@ export default function FeedbackPage() {
               <p
                 className={`mt-1 font-semibold capitalize ${
                   userRole === "interviewer"
-                    ? "text-violet-400"
-                    : "text-emerald-400"
+                    ? "text-info"
+                    : "text-brand"
                 }`}
               >
                 {userRole}
@@ -237,7 +237,7 @@ export default function FeedbackPage() {
         </div>
 
         {submitError && (
-          <div className="mt-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          <div className="mt-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-danger">
             {submitError}
           </div>
         )}
@@ -332,7 +332,7 @@ export default function FeedbackPage() {
               type="button"
               onClick={() => void handleDownloadReviewCard()}
               disabled={downloadingCard}
-              className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-8 py-3 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/20 disabled:opacity-60"
+              className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-8 py-3 text-sm font-semibold text-brand-hover transition hover:bg-emerald-500/20 disabled:opacity-60"
             >
               {downloadingCard ? "Generating..." : "Download Review Card"}
             </button>

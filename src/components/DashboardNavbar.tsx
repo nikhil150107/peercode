@@ -91,7 +91,7 @@ export default function DashboardNavbar({
               {email}
             </span>
             <div className="flex items-center gap-2 rounded-lg border border-stroke bg-surface-card/80 py-1.5 pl-1.5 pr-2 sm:gap-2.5 sm:pr-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20 text-xs font-semibold text-emerald-400 ring-1 ring-emerald-500/30">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20 text-xs font-semibold text-brand ring-1 ring-emerald-500/30">
                 {initials}
               </div>
               <span className="hidden max-w-[120px] truncate text-sm font-medium text-content sm:inline">
@@ -139,7 +139,7 @@ export default function DashboardNavbar({
                 role="menuitem"
                 onClick={() => void handleSignOut()}
                 disabled={signingOut}
-                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-red-400 transition hover:bg-red-500/10 hover:text-red-300 disabled:opacity-60"
+                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-danger transition hover:bg-red-500/10 hover:text-danger disabled:opacity-60"
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />

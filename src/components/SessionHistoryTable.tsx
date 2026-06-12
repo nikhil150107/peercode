@@ -17,11 +17,11 @@ function formatDate(iso: string): string {
 function difficultyClass(difficulty: string | null): string {
   switch (difficulty) {
     case "Easy":
-      return "text-emerald-400"
+      return "text-brand"
     case "Medium":
-      return "text-amber-400"
+      return "text-warn"
     case "Hard":
-      return "text-red-400"
+      return "text-danger"
     default:
       return "text-content-muted"
   }
@@ -87,7 +87,7 @@ export default function SessionHistoryTable({
               <td className="px-4 py-3 text-content">
                 {rating != null ? (
                   <span>
-                    <span className="text-amber-400">★</span> {rating}/5
+                    <span className="text-warn">★</span> {rating}/5
                   </span>
                 ) : (
                   "—"

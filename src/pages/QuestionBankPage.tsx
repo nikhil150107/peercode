@@ -5,9 +5,9 @@ import { fetchAllQuestions } from "../lib/questions"
 import type { Difficulty, Question } from "../types/question"
 
 const difficultyStyles: Record<Difficulty, string> = {
-  Easy: "bg-emerald-500/15 text-emerald-400 ring-emerald-500/30",
-  Medium: "bg-amber-500/15 text-amber-400 ring-amber-500/30",
-  Hard: "bg-red-500/15 text-red-400 ring-red-500/30",
+  Easy: "bg-emerald-500/15 text-brand ring-emerald-500/30",
+  Medium: "bg-amber-500/15 text-warn ring-amber-500/30",
+  Hard: "bg-red-500/15 text-danger ring-red-500/30",
 }
 
 const difficultyFilters: Array<Difficulty | "All"> = [
@@ -152,7 +152,7 @@ export default function QuestionBankPage() {
             </table>
           </div>
         ) : error ? (
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-danger">
             {error}
           </div>
         ) : (

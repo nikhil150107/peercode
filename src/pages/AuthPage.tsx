@@ -178,13 +178,13 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
             </div>
 
             {error && (
-              <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+              <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-danger">
                 {error}
               </div>
             )}
 
             {resetSuccess && (
-              <div className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
+              <div className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-brand">
                 Check your email for a password reset link
               </div>
             )}
@@ -302,7 +302,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
                       setResetSuccess(false)
                       setError(null)
                     }}
-                    className="text-sm text-emerald-400 transition hover:text-emerald-300"
+                    className="text-sm text-brand transition hover:text-brand-hover"
                   >
                     Forgot password?
                   </button>
@@ -330,7 +330,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
                 <button
                   type="button"
                   onClick={() => switchMode("signup")}
-                  className="font-medium text-emerald-400 transition hover:text-emerald-300"
+                  className="font-medium text-brand transition hover:text-brand-hover"
                 >
                   Sign up
                 </button>
@@ -341,7 +341,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
                 <button
                   type="button"
                   onClick={() => switchMode("login")}
-                  className="font-medium text-emerald-400 transition hover:text-emerald-300"
+                  className="font-medium text-brand transition hover:text-brand-hover"
                 >
                   Log in
                 </button>

@@ -75,7 +75,7 @@ export default function HowItWorks() {
     <section id="how-it-works" className="border-t border-stroke/60 py-24">
       <div className="mx-auto max-w-6xl px-6">
         <div className="text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-emerald-400">
+          <p className="text-sm font-semibold uppercase tracking-widest text-brand">
             How it works
           </p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-content sm:text-4xl">
@@ -98,7 +98,7 @@ export default function HowItWorks() {
               )}
               <div className="flex h-full flex-col rounded-2xl border border-stroke bg-surface-card/80 p-8 transition hover:border-stroke hover:bg-surface-secondary/80">
                 <div className="mb-6 flex items-center justify-between">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-brand ring-1 ring-emerald-500/20">
                     {step.icon}
                   </div>
                   <span className="font-mono text-sm text-content-muted">

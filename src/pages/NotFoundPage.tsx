@@ -6,7 +6,7 @@ export default function NotFoundPage() {
     <div className="min-h-screen bg-surface-primary text-content">
       <Navbar />
       <main className="flex min-h-screen flex-col items-center justify-center px-6 pt-16 pb-12 text-center">
-        <p className="text-sm font-semibold uppercase tracking-widest text-emerald-400">
+        <p className="text-sm font-semibold uppercase tracking-widest text-brand">
           404
         </p>
         <h1 className="mt-4 text-3xl font-bold text-content sm:text-4xl">

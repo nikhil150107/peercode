@@ -182,7 +182,7 @@ export default function ProfilePage() {
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-5xl">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/15 text-2xl font-bold text-emerald-400 ring-2 ring-emerald-500/30">
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/15 text-2xl font-bold text-brand ring-2 ring-emerald-500/30">
             {initials}
           </div>
           <div>
@@ -250,7 +250,7 @@ export default function ProfilePage() {
                         <div className="flex h-20 w-20 items-center justify-center rounded-xl border border-stroke bg-surface-secondary transition duration-200 group-hover:border-emerald-500/60 group-hover:shadow-[0_0_20px_rgba(16,185,129,0.3)]">
                           {logo}
                         </div>
-                        <span className="max-w-[5.5rem] truncate text-sm font-medium text-content-muted transition-colors group-hover:text-emerald-400">
+                        <span className="max-w-[5.5rem] truncate text-sm font-medium text-content-muted transition-colors group-hover:text-brand">
                           {label}
                         </span>
                       </a>
@@ -258,7 +258,7 @@ export default function ProfilePage() {
                         type="button"
                         onClick={() => setEditingProfiles(true)}
                         aria-label={`Edit ${label} profile`}
-                        className="absolute -right-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full border border-stroke bg-surface-card text-content-muted shadow-sm transition hover:border-emerald-500/40 hover:text-emerald-400 sm:opacity-0 sm:group-hover:opacity-100"
+                        className="absolute -right-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full border border-stroke bg-surface-card text-content-muted shadow-sm transition hover:border-emerald-500/40 hover:text-brand sm:opacity-0 sm:group-hover:opacity-100"
                       >
                         <PencilIcon />
                       </button>
@@ -269,7 +269,7 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setEditingProfiles(true)}
-                className="mt-4 text-sm text-content-muted transition hover:text-emerald-400"
+                className="mt-4 text-sm text-content-muted transition hover:text-brand"
               >
                 Edit profiles
               </button>
@@ -278,7 +278,7 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={() => setEditingProfiles(true)}
-              className="rounded-xl border border-dashed border-stroke px-5 py-3 text-sm font-medium text-content-muted transition hover:border-emerald-500/40 hover:text-emerald-400"
+              className="rounded-xl border border-dashed border-stroke px-5 py-3 text-sm font-medium text-content-muted transition hover:border-emerald-500/40 hover:text-brand"
             >
               + Add coding profiles
             </button>
@@ -323,7 +323,7 @@ export default function ProfilePage() {
                     ? stats.averageRatingReceived
                     : "—"}
                   {stats?.averageRatingReceived != null && (
-                    <span className="ml-1 text-lg text-amber-400">★</span>
+                    <span className="ml-1 text-lg text-warn">★</span>
                   )}
                 </p>
               </div>
@@ -338,7 +338,7 @@ export default function ProfilePage() {
               </div>
               <div className="rounded-xl border border-stroke bg-surface-card/80 p-5">
                 <p className="text-sm text-content-muted">Favorite topic</p>
-                <p className="mt-1 text-xl font-bold text-emerald-400">
+                <p className="mt-1 text-xl font-bold text-brand">
                   {stats?.favoriteTopic ?? "—"}
                 </p>
               </div>

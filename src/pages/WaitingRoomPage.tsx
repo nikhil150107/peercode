@@ -31,7 +31,7 @@ function WaitingAnimation() {
       <span className="absolute h-32 w-32 animate-spin rounded-full border-2 border-transparent border-t-emerald-400 border-r-emerald-400/30" />
       <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/20 ring-2 ring-emerald-500/40">
         <svg
-          className="h-7 w-7 text-emerald-400"
+          className="h-7 w-7 text-brand"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -251,7 +251,7 @@ export default function WaitingRoomPage() {
                 <p className="text-xs font-medium uppercase tracking-wider text-content-muted">
                   Session starts in
                 </p>
-                <p className="mt-1 font-mono text-4xl font-bold tabular-nums text-emerald-400">
+                <p className="mt-1 font-mono text-4xl font-bold tabular-nums text-brand">
                   {countdown}
                 </p>
                 {humanCountdown && (

@@ -54,7 +54,7 @@ const navItems = [
 function linkClass({ isActive }: { isActive: boolean }) {
   return `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
     isActive
-      ? "bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20"
+      ? "bg-emerald-500/10 text-brand ring-1 ring-emerald-500/20"
       : "text-content-muted hover:bg-surface-hover/50 hover:text-content"
   }`
 }

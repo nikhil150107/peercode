@@ -28,7 +28,7 @@ export default function Logo({ compact = false }: LogoProps) {
         className={`flex ${iconSize} items-center justify-center rounded-lg bg-emerald-500/10 ring-1 ring-emerald-500/30 transition group-hover:bg-emerald-500/20`}
       >
         <svg
-          className={`${svgSize} text-emerald-400`}
+          className={`${svgSize} text-brand`}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -42,7 +42,7 @@ export default function Logo({ compact = false }: LogoProps) {
         </svg>
       </div>
       <span className={`${textSize} font-semibold tracking-tight text-content`}>
-        Peer<span className="text-emerald-400">Code</span>
+        Peer<span className="text-brand">Code</span>
       </span>
     </button>
   )
