@@ -48,6 +48,10 @@ export async function submitToJudge0(
   languageId: number,
   stdin = "",
 ): Promise<Judge0Submission> {
+  console.log("=== CODE SENT TO EXECUTE ===", sourceCode)
+  console.log("=== STDIN ===", stdin)
+  console.log("=== LANGUAGE ID ===", languageId)
+
   const response = await fetch(`${SERVER_URL}/api/execute`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
