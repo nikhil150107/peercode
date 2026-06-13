@@ -66,7 +66,7 @@ export default function DashboardNavbar({
             onClick={onMobileNavToggle}
             aria-expanded={mobileNavOpen}
             aria-label="Open navigation menu"
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-stroke bg-surface-card/80 text-content transition hover:border-stroke hover:text-content lg:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-stroke bg-surface-card/80 text-content transition hover:border-stroke hover:text-content md:hidden"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <line x1="3" y1="12" x2="21" y2="12" />

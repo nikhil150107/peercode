@@ -453,7 +453,7 @@ export default function DashboardPage() {
             minutes before start time.
           </p>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {slotsLoading
               ? visibleSlots.map((slot) => (
                   <SlotCardSkeleton key={`skeleton-${activeTab}-${slot.id}`} />

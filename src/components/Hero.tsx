@@ -3,7 +3,7 @@ import HeroIllustration from "./HeroIllustration"
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden pt-28 pb-20 sm:pt-36 sm:pb-28">
+    <section className="relative overflow-hidden px-4 pt-24 pb-16 sm:px-6 sm:pt-28 sm:pb-20 md:pt-32 md:pb-28">
       <div
         className="pointer-events-none absolute inset-0 -z-10"
         aria-hidden="true"
@@ -12,8 +12,8 @@ export default function Hero() {
         <div className="absolute right-0 top-1/3 h-[300px] w-[400px] rounded-full bg-emerald-600/5 blur-3xl" />
       </div>
 
-      <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 lg:grid-cols-2 lg:gap-16">
-        <div className="text-center lg:text-left">
+      <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2 md:gap-12 lg:gap-16">
+        <div className="text-center md:text-left">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-1.5 text-sm text-brand">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
@@ -22,7 +22,7 @@ export default function Hero() {
             100% free — no credit card required
           </div>
 
-          <h1 className="text-4xl font-bold tracking-tight text-content sm:text-5xl lg:text-6xl">
+          <h1 className="text-3xl font-bold tracking-tight text-content sm:text-4xl md:text-5xl lg:text-6xl">
             Practice DSA Interviews with{" "}
             <span className="text-gradient-brand">
               Real Peers
@@ -34,7 +34,7 @@ export default function Hero() {
             expensive mock interview platforms.
           </p>
 
-          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row lg:justify-start">
+          <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:mt-10 sm:flex-row sm:items-center md:justify-start">
             <Link
               to="/signup"
               className="w-full rounded-xl bg-emerald-500 px-8 py-3.5 text-center text-base font-semibold text-zinc-950 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400 sm:w-auto"
@@ -50,7 +50,7 @@ export default function Hero() {
           </div>
         </div>
 
-        <div className="lg:pl-4">
+        <div className="md:pl-4">
           <HeroIllustration />
         </div>
       </div>

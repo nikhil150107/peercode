@@ -14,7 +14,7 @@ export default function DashboardLayout() {
         onMobileNavToggle={() => setMobileNavOpen((open) => !open)}
         onMobileNavClose={() => setMobileNavOpen(false)}
       />
-      <div className="flex min-h-[calc(100vh-4rem)] flex-col lg:flex-row">
+      <div className="flex min-h-[calc(100vh-4rem)] flex-col md:flex-row">
         <DashboardSidebar
           mobileOpen={mobileNavOpen}
           onMobileClose={() => setMobileNavOpen(false)}

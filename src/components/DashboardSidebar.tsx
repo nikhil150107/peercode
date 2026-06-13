@@ -70,7 +70,7 @@ export default function DashboardSidebar({
 }: DashboardSidebarProps) {
   return (
     <>
-      <aside className="hidden w-56 shrink-0 border-r border-stroke/80 bg-sidebar lg:block">
+      <aside className="hidden w-56 shrink-0 border-r border-stroke/80 bg-sidebar md:block">
         <nav className="flex flex-col gap-1 p-4">
           {navItems.map((item) => (
             <NavLink
@@ -88,14 +88,14 @@ export default function DashboardSidebar({
 
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-surface-overlay/60 lg:hidden"
+          className="fixed inset-0 z-40 bg-surface-overlay/60 md:hidden"
           onClick={onMobileClose}
           aria-hidden="true"
         />
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 border-r border-stroke/80 bg-sidebar pt-16 transition-transform duration-200 lg:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 border-r border-stroke/80 bg-sidebar pt-16 transition-transform duration-200 md:hidden ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >

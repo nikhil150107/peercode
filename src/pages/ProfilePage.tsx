@@ -287,7 +287,7 @@ export default function ProfilePage() {
 
         {loading ? (
           <>
-            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
               {Array.from({ length: 4 }).map((_, i) => (
                 <StatCardSkeleton key={i} />
               ))}
@@ -309,7 +309,7 @@ export default function ProfilePage() {
           </>
         ) : (
           <>
-            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="rounded-xl border border-stroke bg-surface-card/80 p-5">
                 <p className="text-sm text-content-muted">Total sessions</p>
                 <p className="mt-1 text-3xl font-bold text-content">

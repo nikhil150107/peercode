@@ -404,6 +404,10 @@ export default function InterviewRoomPage() {
   function applyRestoredRoomState(state: RoomLiveState) {
     restoredFromServerRef.current = true
 
+    if (state.myRole) {
+      setRole(state.myRole)
+    }
+
     if (state.chatMessages?.length) {
       setChatMessages(state.chatMessages)
     }
@@ -538,7 +542,7 @@ export default function InterviewRoomPage() {
           return
         }
 
-        const state = await fetchRoomState(roomId)
+        const state = await fetchRoomState(roomId, user.id)
         if (!cancelled && state) {
           applyRestoredRoomState(state)
         }
@@ -829,13 +833,13 @@ export default function InterviewRoomPage() {
       }
     }
 
+    function assignRoleFromServer(role: Role) {
+      setRole(role)
+      console.log("[interview] role assigned", { role })
+    }
+
     function assignRoleFromFirstPeer(isFirstPeer: boolean) {
-      const assignedRole: Role = isFirstPeer ? "interviewer" : "interviewee"
-      setRole(assignedRole)
-      console.log("[interview] role assigned", {
-        isFirstPeer,
-        role: assignedRole,
-      })
+      assignRoleFromServer(isFirstPeer ? "interviewer" : "interviewee")
     }
 
     async function reconnectPeerConnection() {
@@ -1098,6 +1102,10 @@ export default function InterviewRoomPage() {
       socket.on(
         "room_state_sync",
         ({ state }: { state: RoomLiveState }) => {
+          if (state.myRole) {
+            assignRoleFromServer(state.myRole)
+          }
+
           if (!restoredFromServerRef.current) {
             applyRestoredRoomState(state)
             return
@@ -1128,13 +1136,23 @@ export default function InterviewRoomPage() {
         "room_joined",
         ({
           peerCount,
+          role: assignedRole,
           isFirstPeer,
         }: {
           peerCount: number
+          role?: Role
           isFirstPeer: boolean
         }) => {
-          assignRoleFromFirstPeer(isFirstPeer)
-          console.log("[interview] room_joined", { peerCount, isFirstPeer })
+          if (assignedRole) {
+            assignRoleFromServer(assignedRole)
+          } else {
+            assignRoleFromFirstPeer(isFirstPeer)
+          }
+          console.log("[interview] room_joined", {
+            peerCount,
+            role: assignedRole,
+            isFirstPeer,
+          })
           scheduleTimerFallback(peerCount)
           void startWebRTC(socket)
 
@@ -1617,11 +1635,11 @@ export default function InterviewRoomPage() {
           Peer left the session. You can end the session now.
         </div>
       )}
-      <div className="flex shrink-0 border-b border-stroke lg:hidden">
+      <div className="flex shrink-0 border-b border-stroke md:hidden">
         <button
           type="button"
           onClick={() => setMobilePanel("code")}
-          className={`flex-1 px-4 py-2.5 text-sm font-medium transition ${
+          className={`flex-1 px-3 py-2 text-xs font-medium transition sm:px-4 sm:py-2.5 sm:text-sm ${
             mobilePanel === "code"
               ? "border-b-2 border-emerald-500 text-brand"
               : "text-content-muted"
@@ -1632,7 +1650,7 @@ export default function InterviewRoomPage() {
         <button
           type="button"
           onClick={() => setMobilePanel("question")}
-          className={`flex-1 px-4 py-2.5 text-sm font-medium transition ${
+          className={`flex-1 px-3 py-2 text-xs font-medium transition sm:px-4 sm:py-2.5 sm:text-sm ${
             mobilePanel === "question"
               ? "border-b-2 border-emerald-500 text-brand"
               : "text-content-muted"
@@ -1644,11 +1662,16 @@ export default function InterviewRoomPage() {
 
       <div
         ref={layoutContainerRef}
-        className="flex min-h-0 flex-1 flex-col lg:flex-row"
+        className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row"
+        style={{
+          ["--code-panel-width" as string]: `${100 - sidebarWidthPct}%`,
+          ["--sidebar-panel-width" as string]: `${sidebarWidthPct}%`,
+        }}
       >
         <div
-          className={`flex min-h-0 flex-col ${mobilePanel === "code" ? "flex" : "hidden lg:flex"}`}
-          style={{ width: `${100 - sidebarWidthPct}%` }}
+          className={`flex min-h-0 w-full flex-col md:w-[var(--code-panel-width)] ${
+            mobilePanel === "code" ? "flex min-h-[50vh] flex-1" : "hidden md:flex"
+          }`}
         >
           <CodeEditorPanel
             codes={codes}
@@ -1685,7 +1708,7 @@ export default function InterviewRoomPage() {
         </div>
         <ResizeHandle
           direction="horizontal"
-          className="hidden lg:block"
+          className="hidden md:block"
           onResize={(delta) => {
             const width =
               layoutContainerRef.current?.clientWidth ?? window.innerWidth
@@ -1713,8 +1736,10 @@ export default function InterviewRoomPage() {
             user?.id ? mapChatMessages(chatMessages, user.id) : []
           }
           onSendChat={handleSendChat}
-          className={mobilePanel === "question" ? "flex" : "hidden lg:flex"}
-          style={{ width: `${sidebarWidthPct}%` }}
+          className={`min-h-0 w-full md:w-[var(--sidebar-panel-width)] ${
+            mobilePanel === "question" ? "flex min-h-[40vh] flex-1 flex-col" : "hidden md:flex"
+          }`}
+          style={undefined}
         />
       </div>
     </div>

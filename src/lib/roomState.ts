@@ -20,10 +20,21 @@ export type RoomLiveState = {
   timerStartedAt: number | null
   chatMessages: ChatMessagePayload[]
   ended: boolean
+  interviewerUserId?: string | null
+  intervieweeUserId?: string | null
+  myRole?: "interviewer" | "interviewee" | null
 }
 
-export async function fetchRoomState(roomId: string): Promise<RoomLiveState | null> {
-  const res = await fetch(`${SERVER_URL}/api/room/${encodeURIComponent(roomId)}/state`)
+export async function fetchRoomState(
+  roomId: string,
+  userId?: string,
+): Promise<RoomLiveState | null> {
+  const query = userId
+    ? `?userId=${encodeURIComponent(userId)}`
+    : ""
+  const res = await fetch(
+    `${SERVER_URL}/api/room/${encodeURIComponent(roomId)}/state${query}`,
+  )
   if (res.status === 404) return null
   if (!res.ok) {
     throw new Error(`Failed to fetch room state (${res.status})`)

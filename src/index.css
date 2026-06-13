@@ -5,6 +5,13 @@
 
 /* Default before JS runs */
 html,
+body,
+#root {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+html,
 html.dark,
 :root.dark {
   color-scheme: dark;
