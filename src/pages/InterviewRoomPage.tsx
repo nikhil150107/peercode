@@ -19,7 +19,7 @@ import { useToast } from "../context/ToastContext"
 import type { Language } from "../data/mockProblem"
 import { acquireLocalMediaStream } from "../lib/acquireMediaStream"
 import {
-  attachStreamToVideoElement,
+  attachStream,
   scheduleVideoAttachment,
 } from "../lib/videoStreamAttach"
 import {
@@ -210,12 +210,12 @@ export default function InterviewRoomPage() {
       localVideoEnabledRef.current &&
       localVideoRef.current
     ) {
-      attachStreamToVideoElement(localVideoRef.current, localStream)
+      attachStream(localVideoRef.current, localStream)
     }
 
     const remoteStream = remoteStreamRef.current
     if (remoteStream && remoteVideoRef.current) {
-      attachStreamToVideoElement(remoteVideoRef.current, remoteStream)
+      attachStream(remoteVideoRef.current, remoteStream)
     }
   }
 
@@ -236,7 +236,7 @@ export default function InterviewRoomPage() {
     })
 
     if (showVideo && localVideoRef.current) {
-      attachStreamToVideoElement(localVideoRef.current, stream)
+      attachStream(localVideoRef.current, stream)
     } else if (localVideoRef.current) {
       localVideoRef.current.srcObject = null
     }
@@ -256,7 +256,7 @@ export default function InterviewRoomPage() {
     })
 
     if (remoteVideoRef.current) {
-      attachStreamToVideoElement(remoteVideoRef.current, stream)
+      attachStream(remoteVideoRef.current, stream)
     }
 
     scheduleVideoAttachment(retryAttachVideoElements)
