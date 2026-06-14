@@ -77,6 +77,7 @@ import { summarizeCodeDiff } from "../utils/codeDiff"
 import {
   ALL_LANGUAGES,
   ICE_SERVERS,
+  QUESTION_LOAD_FALLBACK_MS,
   SESSION_SECONDS,
   SWAP_ALERT_AT,
   SWAP_AT,
@@ -738,6 +739,7 @@ export default function InterviewRoomPage() {
       questionLockedRef.current = true
       questionIdRef.current = q.id
       isFetchingQuestionRef.current = false
+      clearQuestionLoadFallback()
       setQuestion(q)
 
       const lang = languageRef.current
@@ -896,6 +898,61 @@ export default function InterviewRoomPage() {
     let webrtcHandlersRegistered = false
     let pendingRoomReadyPeers: string[] | null = null
     let pendingRemoteOffer: RTCSessionDescriptionInit | null = null
+    let questionLoadFallbackTimer: ReturnType<typeof setTimeout> | null = null
+
+    function clearQuestionLoadFallback() {
+      if (questionLoadFallbackTimer) {
+        clearTimeout(questionLoadFallbackTimer)
+        questionLoadFallbackTimer = null
+      }
+    }
+
+    function requestQuestionForRoom(socket: Socket) {
+      if (cancelled || questionLockedRef.current || questionIdRef.current) {
+        return
+      }
+
+      const difficultyPreference = getDifficultyPreference()
+      const topicPreference = getTopicPreference()
+      console.log("[question] requesting question for room", {
+        roomId,
+        difficultyPreference,
+        topicPreference,
+      })
+      socket.emit("request_question", {
+        roomId,
+        userId,
+        difficultyPreference,
+        topicPreference,
+      })
+    }
+
+    function scheduleQuestionLoadFallback(socket: Socket) {
+      clearQuestionLoadFallback()
+      questionLoadFallbackTimer = setTimeout(() => {
+        if (
+          cancelled ||
+          questionLockedRef.current ||
+          questionIdRef.current ||
+          isFetchingQuestionRef.current
+        ) {
+          return
+        }
+
+        console.warn("[question] load fallback — proceeding without WebRTC")
+
+        if (roleRef.current === "interviewee") {
+          void fetchAndEmitQuestion(
+            socket,
+            getDifficultyPreference(),
+            getTopicPreference(),
+          )
+          return
+        }
+
+        requestQuestionForRoom(socket)
+      }, QUESTION_LOAD_FALLBACK_MS)
+    }
 
     async function handleRemoteOffer(
       socket: Socket,
@@ -984,41 +1041,55 @@ export default function InterviewRoomPage() {
       if (webrtcHandlersRegistered) return
       webrtcHandlersRegistered = true
 
-      socket.on("room_ready", async ({ peers }: { peers: string[] }) => {
-        await handleRoomReady(socket, peers)
+      socket.on("room_ready", ({ peers }: { peers: string[] }) => {
+        void handleRoomReady(socket, peers).catch((err) => {
+          console.error("[webrtc] room_ready handler failed:", err)
+        })
       })
 
-      socket.on("webrtc_offer", async ({ offer }) => {
-        await handleRemoteOffer(socket, offer)
+      socket.on("webrtc_offer", ({ offer }) => {
+        void handleRemoteOffer(socket, offer).catch((err) => {
+          console.error("[webrtc] offer handler failed:", err)
+        })
       })
 
-      socket.on("webrtc_answer", async ({ answer }) => {
-        const pc = pcRef.current
-        if (!pc) return
+      socket.on("webrtc_answer", ({ answer }) => {
+        void (async () => {
+          const pc = pcRef.current
+          if (!pc) return
 
-        console.log("[webrtc] Received answer")
-        await pc.setRemoteDescription(new RTCSessionDescription(answer))
-        await flushPendingCandidates(pc)
-        setVideoLoading(false)
-      })
-
-      socket.on("webrtc_ice_candidate", async ({ candidate }) => {
-        const pc = pcRef.current
-        if (!pc || !candidate) return
-
-        try {
-          if (pc.remoteDescription) {
-            await pc.addIceCandidate(new RTCIceCandidate(candidate))
-          } else {
-            pendingCandidatesRef.current.push(candidate)
+          try {
+            console.log("[webrtc] Received answer")
+            await pc.setRemoteDescription(new RTCSessionDescription(answer))
+            await flushPendingCandidates(pc)
+            setVideoLoading(false)
+          } catch (err) {
+            console.error("[webrtc] answer handler failed:", err)
           }
-        } catch (err) {
-          console.warn("[webrtc] ICE candidate failed, queueing retry", err)
-          pendingCandidatesRef.current.push(candidate)
-          window.setTimeout(() => {
-            void flushPendingCandidates(pc)
-          }, 500)
-        }
+        })()
+      })
+
+      socket.on("webrtc_ice_candidate", ({ candidate }) => {
+        void (async () => {
+          const pc = pcRef.current
+          if (!pc || !candidate) return
+
+          try {
+            if (pc.remoteDescription) {
+              await pc.addIceCandidate(new RTCIceCandidate(candidate))
+            } else {
+              pendingCandidatesRef.current.push(candidate)
+            }
+          } catch (err) {
+            console.warn("[webrtc] ICE candidate failed, queueing retry", err)
+            pendingCandidatesRef.current.push(candidate)
+            window.setTimeout(() => {
+              void flushPendingCandidates(pc).catch((flushErr) => {
+                console.warn("[webrtc] ICE flush retry failed:", flushErr)
+              })
+            }, 500)
+          }
+        })()
       })
     }
 
@@ -1065,13 +1136,21 @@ export default function InterviewRoomPage() {
         if (pendingRemoteOffer) {
           const offer = pendingRemoteOffer
           pendingRemoteOffer = null
-          await handleRemoteOffer(socket, offer)
+          try {
+            await handleRemoteOffer(socket, offer)
+          } catch (err) {
+            console.error("[webrtc] pending offer failed:", err)
+          }
         }
 
         if (pendingRoomReadyPeers) {
           const peers = pendingRoomReadyPeers
           pendingRoomReadyPeers = null
-          await handleRoomReady(socket, peers)
+          try {
+            await handleRoomReady(socket, peers)
+          } catch (err) {
+            console.error("[webrtc] pending room_ready failed:", err)
+          }
         }
       } catch (err) {
         console.error("[interview] WebRTC setup failed:", err)
@@ -1081,6 +1160,7 @@ export default function InterviewRoomPage() {
           err instanceof Error ? err.message : "Failed to start video call",
         )
         setVideoLoading(false)
+        requestQuestionForRoom(socket)
       }
     }
 
@@ -1154,27 +1234,23 @@ export default function InterviewRoomPage() {
             isFirstPeer,
           })
           scheduleTimerFallback(peerCount)
-          void startWebRTC(socket)
 
-          if (restoredFromServerRef.current && questionIdRef.current) {
-            return
+          if (!(restoredFromServerRef.current && questionIdRef.current)) {
+            requestQuestionForRoom(socket)
+            scheduleQuestionLoadFallback(socket)
           }
 
-          const difficultyPreference = getDifficultyPreference()
-          const topicPreference = getTopicPreference()
-          console.log("[question] requesting question for room", {
-            roomId,
-            difficultyPreference,
-            topicPreference,
-          })
-          socket.emit("request_question", {
-            roomId,
-            userId,
-            difficultyPreference,
-            topicPreference,
-          })
+          void startWebRTC(socket)
         },
       )
+
+      socket.on("room_ready", ({ peers }: { peers: string[] }) => {
+        console.log("[interview] room_ready (question path)", peers)
+        setPeerStatus("connected")
+        scheduleTimerFallback(peers.length)
+        requestQuestionForRoom(socket)
+        scheduleQuestionLoadFallback(socket)
+      })
 
       socket.on(
         "fetch_question",
@@ -1316,6 +1392,7 @@ export default function InterviewRoomPage() {
 
     return () => {
       cancelled = true
+      clearQuestionLoadFallback()
       clearTimerFallback()
       if (saveStateTimeoutRef.current) {
         clearTimeout(saveStateTimeoutRef.current)
