@@ -9,8 +9,10 @@ export type TimeSlot = {
 export const SCHEDULED_SLOT_TIMES = [
   "10:00 AM",
   "12:00 PM",
-  "3:00 PM",
+  "2:00 PM",
+  "4:00 PM",
   "6:00 PM",
+  "8:00 PM",
   "10:00 PM",
 ] as const
 
@@ -19,8 +21,10 @@ export type ScheduledSlotTime = (typeof SCHEDULED_SLOT_TIMES)[number]
 export const TIME_SLOTS: TimeSlot[] = [
   { id: "slot-10am", time: "10:00 AM", capacity: 8 },
   { id: "slot-12pm", time: "12:00 PM", capacity: 8 },
-  { id: "slot-3pm", time: "3:00 PM", capacity: 8 },
+  { id: "slot-2pm", time: "2:00 PM", capacity: 8 },
+  { id: "slot-4pm", time: "4:00 PM", capacity: 8 },
   { id: "slot-6pm", time: "6:00 PM", capacity: 8 },
+  { id: "slot-8pm", time: "8:00 PM", capacity: 8 },
   { id: "slot-10pm", time: "10:00 PM", capacity: 8 },
 ]
 
