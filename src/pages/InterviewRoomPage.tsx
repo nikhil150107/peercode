@@ -76,11 +76,12 @@ import { getDisplayNameFromEmail } from "../utils/userDisplay"
 import { summarizeCodeDiff } from "../utils/codeDiff"
 import {
   ALL_LANGUAGES,
-  ICE_SERVERS,
+  createPeerConnectionConfig,
   QUESTION_LOAD_FALLBACK_MS,
   SESSION_SECONDS,
   SWAP_ALERT_AT,
   SWAP_AT,
+  TIMER_FALLBACK_MS,
   VIDEO_CONNECT_TIMEOUT_MS,
 } from "../lib/interviewRoomConstants"
 
@@ -190,6 +191,10 @@ export default function InterviewRoomPage() {
   )
   const socketForWebRTCRef = useRef<Socket | null>(null)
   const reconnectWebRTCRef = useRef<(() => Promise<void>) | null>(null)
+  const startWebRTCRef = useRef<((socket: Socket) => Promise<void>) | null>(
+    null,
+  )
+  const webrtcStartedRef = useRef(false)
   const codeHistoryDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   )
@@ -322,24 +327,35 @@ export default function InterviewRoomPage() {
   }
 
   async function retryVideoConnection() {
+    console.log("[webrtc] Retry — recreating peer connection")
+    pcRef.current?.close()
+    pcRef.current = null
+    pendingCandidatesRef.current = []
+
     if (reconnectWebRTCRef.current) {
-      await reconnectWebRTCRef.current()
+      try {
+        await reconnectWebRTCRef.current()
+      } catch (err) {
+        console.error("[webrtc] retry recreate failed:", err)
+        setVideoConnectionStatus("failed")
+        setVideoError(
+          err instanceof Error ? err.message : "Failed to reconnect video",
+        )
+        setVideoLoading(false)
+      }
       return
     }
-    const socket = socketForWebRTCRef.current
-    const pc = pcRef.current
-    if (!socket || !pc || !roomId || !user?.id) return
 
-    setVideoConnectionStatus("reconnecting")
-    scheduleVideoConnectTimeout()
-    setVideoLoading(true)
-    try {
-      const offer = await pc.createOffer({ iceRestart: true })
-      await pc.setLocalDescription(offer)
-      socket.emit("webrtc_offer", { roomId, offer, userId: user.id })
-    } catch (err) {
-      console.error("[webrtc] retry failed:", err)
+    const socket = socketForWebRTCRef.current ?? socketRef.current
+    if (!socket || !roomId || !user?.id) {
+      console.warn("[webrtc] retry skipped — socket not ready")
       setVideoConnectionStatus("failed")
+      return
+    }
+
+    webrtcStartedRef.current = false
+    if (startWebRTCRef.current) {
+      void startWebRTCRef.current(socket)
     }
   }
 
@@ -384,9 +400,19 @@ export default function InterviewRoomPage() {
     timerStartedAtRef.current = anchorStartedAt ?? Date.now()
     setSecondsLeft(remaining)
     setTimerStarted(true)
-    console.log("[interview] session timer started", {
+    console.log("[timer] session timer started", {
       remaining,
       startedAt: timerStartedAtRef.current,
+      timerStarted: true,
+      secondsLeft: remaining,
+    })
+  }
+
+  function logTimerState(label: string) {
+    console.log(`[timer] ${label}`, {
+      timerStarted: timerStartedRef.current,
+      secondsLeft: secondsLeftRef.current,
+      timerStartedAt: timerStartedAtRef.current,
     })
   }
 
@@ -478,8 +504,45 @@ export default function InterviewRoomPage() {
 
   function scheduleTimerFallback(peerCount: number) {
     peerCountRef.current = peerCount
-    // Timer start is owned by the server (persisted via room_live_state).
-    // Do not start a local 120:00 countdown here — that resets on refresh.
+    if (peerCount < 2 || !roomId || !user?.id) return
+
+    clearTimerFallback()
+    timerFallbackRef.current = setTimeout(() => {
+      if (timerStartedRef.current || !roomId || !user?.id) {
+        logTimerState("fallback skipped — timer already running")
+        return
+      }
+
+      console.log("[timer] fallback — fetching persisted timer state")
+      logTimerState("before fallback fetch")
+
+      void fetchRoomState(roomId, user.id)
+        .then((state) => {
+          if (!state?.timerStarted || timerStartedRef.current) return
+
+          console.log("[timer] fallback applying server timer state", {
+            timerStarted: state.timerStarted,
+            timerStartedAt: state.timerStartedAt,
+            secondsLeft: state.secondsLeft,
+          })
+
+          let remaining = SESSION_SECONDS
+          if (state.timerStartedAt) {
+            const elapsed = Math.floor(
+              (Date.now() - state.timerStartedAt) / 1000,
+            )
+            remaining = Math.max(0, SESSION_SECONDS - elapsed)
+          } else if (state.secondsLeft != null) {
+            remaining = Math.max(0, state.secondsLeft)
+          }
+
+          startSessionTimer(remaining, state.timerStartedAt)
+          logTimerState("after fallback apply")
+        })
+        .catch((err) => {
+          console.error("[timer] fallback fetch failed:", err)
+        })
+    }, TIMER_FALLBACK_MS)
   }
 
   function mergeStarterCodes(
@@ -844,6 +907,16 @@ export default function InterviewRoomPage() {
       assignRoleFromServer(isFirstPeer ? "interviewer" : "interviewee")
     }
 
+    async function createWebRTCPeerConnection(): Promise<RTCPeerConnection> {
+      const configuration = createPeerConnectionConfig()
+      console.log("[webrtc] ICE servers:", configuration.iceServers)
+      console.log("[webrtc] peer connection config:", configuration)
+
+      const pc = new RTCPeerConnection(configuration)
+      createPeerConnectionHandlers(pc)
+      return pc
+    }
+
     async function reconnectPeerConnection() {
       const socket = socketForWebRTCRef.current
       if (!socket) return
@@ -884,17 +957,17 @@ export default function InterviewRoomPage() {
         attachLocalPreview(stream, videoEnabled)
       }
 
-      const pc = new RTCPeerConnection(ICE_SERVERS)
+      const pc = await createWebRTCPeerConnection()
       pcRef.current = pc
       stream.getTracks().forEach((track) => pc.addTrack(track, stream))
-      createPeerConnectionHandlers(pc)
 
       const offer = await pc.createOffer()
       await pc.setLocalDescription(offer)
       socket.emit("webrtc_offer", { roomId, offer, userId })
     }
 
-    let webrtcStarted = false
+    reconnectWebRTCRef.current = reconnectPeerConnection
+
     let webrtcHandlersRegistered = false
     let pendingRoomReadyPeers: string[] | null = null
     let pendingRemoteOffer: RTCSessionDescriptionInit | null = null
@@ -986,8 +1059,20 @@ export default function InterviewRoomPage() {
         clearVideoConnectTimeout()
       }
 
+      pc.oniceconnectionstatechange = () => {
+        console.log("[webrtc] ICE state:", pc.iceConnectionState)
+        if (pc.iceConnectionState === "connected") {
+          setVideoConnectionStatus("connected")
+          clearVideoConnectTimeout()
+        } else if (pc.iceConnectionState === "failed") {
+          setVideoConnectionStatus("failed")
+          clearVideoConnectTimeout()
+        }
+      }
+
       pc.onconnectionstatechange = () => {
         const state = pc.connectionState
+        console.log("[webrtc] connection state:", state)
         if (state === "connected") {
           setVideoConnectionStatus("connected")
           clearVideoConnectTimeout()
@@ -1094,8 +1179,8 @@ export default function InterviewRoomPage() {
     }
 
     async function startWebRTC(socket: Socket) {
-      if (webrtcStarted || cancelled) return
-      webrtcStarted = true
+      if (webrtcStartedRef.current || cancelled) return
+      webrtcStartedRef.current = true
 
       socketForWebRTCRef.current = socket
       setVideoConnectionStatus("connecting")
@@ -1109,6 +1194,7 @@ export default function InterviewRoomPage() {
 
         if (cancelled) {
           stream.getTracks().forEach((track) => track.stop())
+          webrtcStartedRef.current = false
           return
         }
 
@@ -1126,12 +1212,9 @@ export default function InterviewRoomPage() {
           clearVideoConnectTimeout()
         }
 
-        const pc = new RTCPeerConnection(ICE_SERVERS)
+        const pc = await createWebRTCPeerConnection()
         pcRef.current = pc
-        createPeerConnectionHandlers(pc)
         stream.getTracks().forEach((track) => pc.addTrack(track, stream))
-
-        reconnectWebRTCRef.current = reconnectPeerConnection
 
         if (pendingRemoteOffer) {
           const offer = pendingRemoteOffer
@@ -1154,6 +1237,7 @@ export default function InterviewRoomPage() {
         }
       } catch (err) {
         console.error("[interview] WebRTC setup failed:", err)
+        webrtcStartedRef.current = false
         setVideoConnectionStatus("failed")
         clearVideoConnectTimeout()
         setVideoError(
@@ -1163,6 +1247,8 @@ export default function InterviewRoomPage() {
         requestQuestionForRoom(socket)
       }
     }
+
+    startWebRTCRef.current = startWebRTC
 
     function setupSocket() {
       const socket = io(SERVER_URL)
@@ -1348,18 +1434,15 @@ export default function InterviewRoomPage() {
 
       socket.on(
         "start_timer",
-        ({
-          durationSeconds,
-          timerStartedAt,
-        }: {
+        (data: {
           durationSeconds?: number
           timerStartedAt?: number
         }) => {
-          console.log("[interview] start_timer received", {
-            durationSeconds,
-            timerStartedAt,
-          })
+          const { durationSeconds, timerStartedAt } = data
+          console.log("[timer] start_timer event:", data)
+          logTimerState("before start_timer apply")
           startSessionTimer(durationSeconds ?? SESSION_SECONDS, timerStartedAt)
+          logTimerState("after start_timer apply")
         },
       )
 
@@ -1394,6 +1477,9 @@ export default function InterviewRoomPage() {
       cancelled = true
       clearQuestionLoadFallback()
       clearTimerFallback()
+      webrtcStartedRef.current = false
+      startWebRTCRef.current = null
+      reconnectWebRTCRef.current = null
       if (saveStateTimeoutRef.current) {
         clearTimeout(saveStateTimeoutRef.current)
       }

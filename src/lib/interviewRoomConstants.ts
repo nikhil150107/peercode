@@ -43,4 +43,12 @@ export const ICE_SERVERS: RTCConfiguration = {
       credential: "openrelayproject",
     },
   ],
+  iceTransportPolicy: "all",
+}
+
+export function createPeerConnectionConfig(): RTCConfiguration {
+  return {
+    iceServers: ICE_SERVERS.iceServers,
+    iceTransportPolicy: "all",
+  }
 }
