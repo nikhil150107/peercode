@@ -209,6 +209,21 @@ export default function InterviewRoomPage() {
     user?.user_metadata?.full_name?.trim() ||
     getDisplayNameFromEmail(user?.email ?? "You")
 
+  function assignRoleFromServer(nextRole: Role) {
+    roleRef.current = nextRole
+    setRole(nextRole)
+    console.log("[role] client assigned:", nextRole)
+  }
+
+  function assignRoleFromFirstPeer(isFirstPeer: boolean) {
+    const nextRole: Role = isFirstPeer ? "interviewer" : "interviewee"
+    console.log("[role] client derived from isFirstPeer:", {
+      isFirstPeer,
+      nextRole,
+    })
+    assignRoleFromServer(nextRole)
+  }
+
   function retryAttachVideoElements() {
     const localStream = localStreamRef.current
     if (
@@ -432,7 +447,7 @@ export default function InterviewRoomPage() {
     restoredFromServerRef.current = true
 
     if (state.myRole) {
-      setRole(state.myRole)
+      assignRoleFromServer(state.myRole)
     }
 
     if (state.chatMessages?.length) {
@@ -898,15 +913,6 @@ export default function InterviewRoomPage() {
       }
     }
 
-    function assignRoleFromServer(role: Role) {
-      setRole(role)
-      console.log("[interview] role assigned", { role })
-    }
-
-    function assignRoleFromFirstPeer(isFirstPeer: boolean) {
-      assignRoleFromServer(isFirstPeer ? "interviewer" : "interviewee")
-    }
-
     async function createWebRTCPeerConnection(): Promise<RTCPeerConnection> {
       const configuration = createPeerConnectionConfig()
       console.log("[webrtc] ICE servers:", configuration.iceServers)
@@ -1288,6 +1294,27 @@ export default function InterviewRoomPage() {
       )
 
       socket.on(
+        "role_assigned",
+        ({
+          role: assignedRole,
+          isFirstPeer,
+        }: {
+          role: Role
+          isFirstPeer: boolean
+        }) => {
+          console.log("[role] role_assigned event:", {
+            role: assignedRole,
+            isFirstPeer,
+          })
+          if (assignedRole) {
+            assignRoleFromServer(assignedRole)
+          } else {
+            assignRoleFromFirstPeer(isFirstPeer)
+          }
+        },
+      )
+
+      socket.on(
         "chat_message",
         ({ message }: { message: ChatMessagePayload }) => {
           if (!message || message.from === userId) return
@@ -1309,16 +1336,16 @@ export default function InterviewRoomPage() {
           role?: Role
           isFirstPeer: boolean
         }) => {
+          console.log("[role] room_joined event:", {
+            peerCount,
+            role: assignedRole,
+            isFirstPeer,
+          })
           if (assignedRole) {
             assignRoleFromServer(assignedRole)
           } else {
             assignRoleFromFirstPeer(isFirstPeer)
           }
-          console.log("[interview] room_joined", {
-            peerCount,
-            role: assignedRole,
-            isFirstPeer,
-          })
           scheduleTimerFallback(peerCount)
 
           if (!(restoredFromServerRef.current && questionIdRef.current)) {
@@ -1382,9 +1409,9 @@ export default function InterviewRoomPage() {
           })
 
           if (userId === newInterviewerUserId) {
-            setRole("interviewer")
+            assignRoleFromServer("interviewer")
           } else if (userId === newIntervieweeUserId) {
-            setRole("interviewee")
+            assignRoleFromServer("interviewee")
           }
         },
       )
