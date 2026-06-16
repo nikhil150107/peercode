@@ -1361,8 +1361,10 @@ export default function InterviewRoomPage() {
         console.log("[interview] room_ready (question path)", peers)
         setPeerStatus("connected")
         scheduleTimerFallback(peers.length)
-        requestQuestionForRoom(socket)
-        scheduleQuestionLoadFallback(socket)
+        if (!questionLockedRef.current && !questionIdRef.current) {
+          requestQuestionForRoom(socket)
+          scheduleQuestionLoadFallback(socket)
+        }
       })
 
       socket.on(
@@ -1374,6 +1376,13 @@ export default function InterviewRoomPage() {
           difficultyPreference: DifficultyPreference
           topicPreference: TopicPreference
         }) => {
+          if (questionLockedRef.current || questionIdRef.current) {
+            console.log(
+              "[question] fetch_question ignored — session question locked",
+            )
+            return
+          }
+
           console.log("[question] fetch_question received", {
             difficultyPreference,
             topicPreference,
@@ -1403,9 +1412,11 @@ export default function InterviewRoomPage() {
           newInterviewerUserId: string
           newIntervieweeUserId: string
         }) => {
-          console.log("[interview] roles_swapped received", {
+          console.log("[interview] roles_swapped received — updating role only", {
             newInterviewerUserId,
             newIntervieweeUserId,
+            questionLocked: questionLockedRef.current,
+            questionId: questionIdRef.current,
           })
 
           if (userId === newInterviewerUserId) {
@@ -1604,18 +1615,12 @@ export default function InterviewRoomPage() {
       return
     }
 
-    const newIntervieweeDifficulty = getDifficultyPreference()
-    const newIntervieweeTopic = getTopicPreference()
     console.log("[interview] emitting swap_roles", {
       newIntervieweeUserId: user.id,
-      newIntervieweeDifficulty,
-      newIntervieweeTopic,
     })
     socketRef.current.emit("swap_roles", {
       roomId,
       newIntervieweeUserId: user.id,
-      newIntervieweeDifficulty,
-      newIntervieweeTopic,
     })
   }
 
