@@ -19,19 +19,19 @@ export default function Hero() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
             </span>
-            100% free — no credit card required
+            Free. No card needed.
           </div>
 
           <h1 className="text-3xl font-bold tracking-tight text-content sm:text-4xl md:text-5xl lg:text-6xl">
-            Practice DSA Interviews with{" "}
+            Mock DSA interviews with{" "}
             <span className="text-gradient-brand">
-              Real Peers
+              real people
             </span>
           </h1>
 
           <p className="mt-6 text-lg leading-relaxed text-content-muted sm:text-xl">
-            Book a slot, get matched, swap roles. The free alternative to
-            expensive mock interview platforms.
+            Book a slot, get paired with another student, and practice like it&apos;s
+            the real thing. No subscription, no nonsense.
           </p>
 
           <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:mt-10 sm:flex-row sm:items-center md:justify-start">
@@ -39,7 +39,7 @@ export default function Hero() {
               to="/signup"
               className="w-full rounded-xl bg-emerald-500 px-8 py-3.5 text-center text-base font-semibold text-zinc-950 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400 sm:w-auto"
             >
-              Get Started Free
+              Get started
             </Link>
             <a
               href="#how-it-works"

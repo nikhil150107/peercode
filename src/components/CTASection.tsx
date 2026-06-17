@@ -11,17 +11,16 @@ export default function CTASection() {
           />
           <div className="relative">
             <h2 className="text-3xl font-bold tracking-tight text-content sm:text-4xl">
-              Ready to ace your next interview?
+              Ready to practice?
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-content-muted">
-              Join PeerCode today and start practicing with real peers — completely
-              free, no credit card required.
+              Sign up, book a slot, get matched. Still free.
             </p>
             <Link
               to="/signup"
               className="mt-8 inline-block rounded-xl bg-emerald-500 px-10 py-3.5 text-base font-semibold text-zinc-950 shadow-lg shadow-emerald-500/25 transition hover:bg-emerald-400"
             >
-              Get Started Free
+              Get started
             </Link>
           </div>
         </div>

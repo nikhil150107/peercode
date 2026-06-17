@@ -63,8 +63,8 @@ const socialLinks = [
 ]
 
 const storyParagraphs = [
-  "I'm a 3rd year Data Science student at MIT Academy of Engineering in Pune. When placement season started, I kept looking for mock interview practice that didn't cost money. Almost everything I found needed a subscription.",
-  "That's why I built PeerCode. You book a slot, get matched with another student, solve DSA problems together, and swap interviewer and interviewee roles like a real interview. It's free, and I plan to keep it that way.",
+  "I'm Nikhil, 3rd year Data Science at MIT Academy of Engineering in Pune. When placement prep started, I wanted mock interviews that didn't cost money. Everything useful seemed to need a subscription.",
+  "So I built PeerCode. You book a slot, get matched with another student, solve problems together on video, and swap interviewer/interviewee roles like a real interview. It's free and I want to keep it that way.",
 ]
 
 export default function AboutPage() {
@@ -87,7 +87,7 @@ export default function AboutPage() {
               About PeerCode
             </p>
             <h1 className="mt-5 text-4xl font-bold tracking-tight text-content sm:text-5xl lg:text-6xl">
-              The Story Behind{" "}
+              Why I built{" "}
               <span className="text-gradient-brand">
                 PeerCode
               </span>
@@ -119,7 +119,7 @@ export default function AboutPage() {
 
           <section className="mt-16">
             <p className="mb-8 text-center text-sm font-semibold uppercase tracking-[0.2em] text-content-muted">
-              Meet the founder
+              Who built this
             </p>
             <div className="rounded-3xl border border-stroke bg-surface-card/80 p-8 shadow-xl shadow-black/20 sm:p-10">
               <div className="flex flex-col items-center gap-8 sm:flex-row sm:items-start">
@@ -138,8 +138,8 @@ export default function AboutPage() {
                   </p>
                   <p className="text-sm text-content-muted">Data Science Branch</p>
                   <p className="mt-5 max-w-lg text-sm leading-relaxed text-content-muted sm:text-base">
-                    3rd year student who loves competitive programming and
-                    building stuff that actually helps other students.
+                    Competitive programming nerd who builds things that help
+                    other students prep for placements.
                   </p>
                 </div>
               </div>
@@ -168,12 +168,11 @@ export default function AboutPage() {
 
           <section className="mt-16 rounded-3xl border border-stroke/80 bg-gradient-to-b from-surface-secondary/40 to-surface-primary p-8 text-center sm:p-12">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand">
-              Our Mission
+              Why it exists
             </p>
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-content sm:text-xl">
-              I want every student to have access to real interview practice,
-              whether or not they can pay for premium platforms. No paywalls, no
-              subscriptions, just students helping students get better together.
+              Interview prep shouldn&apos;t depend on how much you can spend.
+              PeerCode is students practicing with students, for free.
             </p>
           </section>
         </div>

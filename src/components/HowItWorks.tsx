@@ -1,9 +1,9 @@
 const steps = [
   {
     number: "01",
-    title: "Book a slot",
+    title: "Pick a slot",
     description:
-      "Pick a time that works for you — today or tomorrow. Sessions run 2 hours with scheduled IST slots.",
+      "Grab a time that works for you. Today or tomorrow, IST slots throughout the day.",
     icon: (
       <svg
         className="h-6 w-6"
@@ -24,9 +24,9 @@ const steps = [
   },
   {
     number: "02",
-    title: "Get matched with a peer",
+    title: "Get matched",
     description:
-      "At your scheduled time, we pair you with another engineer at a similar level. No awkward DMs — just show up.",
+      "When the slot opens, we pair you with someone else who booked the same time. Just show up.",
     icon: (
       <svg
         className="h-6 w-6"
@@ -47,9 +47,9 @@ const steps = [
   },
   {
     number: "03",
-    title: "Practice & swap roles",
+    title: "Interview & swap",
     description:
-      "One person interviews, the other codes. Mid-session, swap roles so you practice both sides of the table.",
+      "One of you asks questions, the other codes. Midway through, flip roles and do it again.",
     icon: (
       <svg
         className="h-6 w-6"
@@ -79,11 +79,11 @@ export default function HowItWorks() {
             How it works
           </p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-content sm:text-4xl">
-            Three steps to interview-ready
+            Three steps. That&apos;s it.
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-content-muted">
-            No coaches, no subscriptions. Just structured peer practice that
-            mirrors the real thing.
+            No coaches, no paid tiers. Just you and another student practicing
+            interviews together.
           </p>
         </div>
 

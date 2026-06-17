@@ -174,10 +174,10 @@ export default function FeedbackPage() {
             ✓
           </div>
           <h1 className="text-2xl font-bold text-content">
-            Thanks! See you next session 🚀
+            Thanks — see you next time
           </h1>
           <p className="mt-3 text-sm text-content-muted">
-            Redirecting to dashboard...
+            Taking you back to the dashboard...
           </p>
           <div className="mx-auto mt-6 h-1 w-48 overflow-hidden rounded-full bg-surface-hover">
             <div className="h-full animate-pulse rounded-full bg-emerald-500" />
@@ -199,10 +199,10 @@ export default function FeedbackPage() {
       <main className="mx-auto max-w-3xl px-6 py-10">
         <div className="text-center">
           <h1 className="text-3xl font-bold tracking-tight text-content sm:text-4xl">
-            Session Complete! 🎉
+            Session done
           </h1>
           <p className="mt-2 text-content-muted">
-            Great work — take a moment to reflect on your session.
+            Quick rating before you go. Takes a minute.
           </p>
         </div>
 
@@ -213,7 +213,7 @@ export default function FeedbackPage() {
           <div className="mt-4 grid gap-4 sm:grid-cols-3">
             <div className="rounded-xl border border-stroke bg-surface-primary p-4">
               <p className="text-xs text-content-muted">
-                Problem you were interviewed on
+                Problem you got
               </p>
               <p className="mt-1 font-semibold text-content">{lastQuestion}</p>
             </div>
@@ -248,7 +248,7 @@ export default function FeedbackPage() {
               Rate your peer
             </h2>
             <p className="mt-1 text-sm text-content-muted">
-              How was {peerName} as your peer?
+              How was {peerName}?
             </p>
 
             <div className="mt-5">
@@ -277,14 +277,14 @@ export default function FeedbackPage() {
                 htmlFor="peer-feedback"
                 className="mb-1.5 block text-sm font-medium text-content"
               >
-                Any additional feedback?
+                Any notes for them?
               </label>
               <textarea
                 id="peer-feedback"
                 value={peerFeedback}
                 onChange={(e) => setPeerFeedback(e.target.value)}
                 rows={3}
-                placeholder="Share anything that would help them improve..."
+                placeholder="Optional — say what went well or what could be better"
                 className="w-full resize-none rounded-lg border border-stroke bg-surface-primary px-4 py-3 text-sm text-content placeholder:text-content-muted outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
               />
             </div>
@@ -292,7 +292,7 @@ export default function FeedbackPage() {
 
           <section className="rounded-2xl border border-stroke bg-surface-card/80 p-6">
             <h2 className="text-lg font-semibold text-content">Rate yourself</h2>
-            <p className="mt-1 text-sm text-content-muted">How did you perform?</p>
+            <p className="mt-1 text-sm text-content-muted">Honest self rating</p>
 
             <div className="mt-5">
               <StarRating value={selfRating} onChange={setSelfRating} />
@@ -303,7 +303,7 @@ export default function FeedbackPage() {
                 htmlFor="struggle-topic"
                 className="mb-1.5 block text-sm font-medium text-content"
               >
-                What topic did you struggle with?
+                What felt hardest?
               </label>
               <select
                 id="struggle-topic"

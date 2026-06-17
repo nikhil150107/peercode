@@ -278,15 +278,15 @@ export default function DashboardPage() {
             Hey {displayName}, ready to practice?
           </h1>
           <p className="mt-2 text-content-muted">
-            Book a slot for today or tomorrow. Matching starts 3 minutes before
-            each slot.
+            Pick a slot for today or tomorrow. Matching kicks in 3 minutes before
+            start time.
           </p>
         </div>
 
         {matchedBooking?.room_id && (
           <div className="mb-6 rounded-xl border border-violet-500/30 bg-violet-500/10 px-5 py-4">
             <p className="text-sm font-semibold text-info">
-              Match found!
+              You&apos;re matched
             </p>
             <p className="mt-1 text-sm text-content">
               {matchedBooking.slot_time} ·{" "}
@@ -304,7 +304,7 @@ export default function DashboardPage() {
 
         {activeBooking?.status === "pending" && (
           <div className="mb-6 rounded-xl border border-stroke bg-surface-card/80 px-5 py-4">
-            <p className="text-sm text-content-muted">Your upcoming session</p>
+            <p className="text-sm text-content-muted">Up next</p>
             <p className="mt-1 text-lg font-semibold text-content">
               {activeBooking.slot_time} · {formatISTDateLabel(activeBooking.slot_date)}
             </p>
@@ -372,7 +372,7 @@ export default function DashboardPage() {
             Preferred difficulty
           </h2>
           <p className="mt-1 text-sm text-content-muted">
-            Choose the question difficulty for your next interview session.
+            What difficulty do you want for your next session?
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             {difficultyOptions.map((opt) => (
@@ -396,7 +396,7 @@ export default function DashboardPage() {
               Preferred topic
             </h2>
             <p className="mt-1 text-sm text-content-muted">
-              Narrow questions to a specific topic, or choose Any for all topics.
+              Pick a topic or leave it on Any.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               {topicOptions.map((opt) => (
@@ -449,8 +449,8 @@ export default function DashboardPage() {
           </div>
 
           <p className="mb-4 text-xs leading-relaxed text-content-muted">
-            📌 Book at least 5 minutes before a slot. Peer matching happens 3
-            minutes before start time.
+            Book at least 5 minutes before the slot. We match people 3 minutes
+            before it starts.
           </p>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

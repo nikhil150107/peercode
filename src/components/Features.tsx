@@ -1,8 +1,8 @@
 const features = [
   {
-    title: "Free forever",
+    title: "Actually free",
     description:
-      "No paywalls, no premium tiers. PeerCode stays free for every engineer who wants to practice.",
+      "No paywalls. No \"upgrade to pro.\" Just show up and practice.",
     icon: (
       <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
@@ -10,9 +10,9 @@ const features = [
     ),
   },
   {
-    title: "Real peer interviews",
+    title: "Real humans",
     description:
-      "Live video sessions with another engineer — not AI bots or recorded walkthroughs.",
+      "You talk to another student on video. Not a bot, not a recording.",
     icon: (
       <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -23,9 +23,9 @@ const features = [
     ),
   },
   {
-    title: "Role swap system",
+    title: "Swap roles",
     description:
-      "Practice as both interviewer and interviewee in the same session — just like real loops.",
+      "Half the session you interview, half you code. Same as a real loop.",
     icon: (
       <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <polyline points="17 1 21 5 17 9" />
@@ -36,9 +36,9 @@ const features = [
     ),
   },
   {
-    title: "100+ DSA questions",
+    title: "100+ problems",
     description:
-      "Curated problems across arrays, strings, trees, graphs, DP, and linked lists.",
+      "Arrays, trees, graphs, DP, strings. The usual interview stuff.",
     icon: (
       <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
@@ -47,9 +47,9 @@ const features = [
     ),
   },
   {
-    title: "Code execution",
+    title: "Run your code",
     description:
-      "Run and submit code against test cases in a shared editor — powered by Judge0.",
+      "Shared editor, test cases, submit button. Judge0 handles the rest.",
     icon: (
       <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <polyline points="16 18 22 12 16 6" />
@@ -58,9 +58,9 @@ const features = [
     ),
   },
   {
-    title: "Session history",
+    title: "Your history",
     description:
-      "Track every interview, rating, and problem you've practiced in your profile.",
+      "Past sessions, ratings, and problems you've done live in your profile.",
     icon: (
       <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <circle cx="12" cy="12" r="10" />
@@ -79,7 +79,7 @@ export default function Features() {
             Features
           </p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-content sm:text-4xl">
-            Everything you need to prepare
+            What you get
           </h2>
         </div>
 

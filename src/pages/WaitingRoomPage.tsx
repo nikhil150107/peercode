@@ -60,9 +60,9 @@ function MatchFoundView({
   return (
     <div className="flex max-w-md flex-col items-center text-center">
       <h1 className="mt-8 text-2xl font-bold tracking-tight text-content sm:text-3xl">
-        🎉 Peer found! Your peer is {peerName}
+        Found someone — your peer is {peerName}
       </h1>
-      <p className="mt-3 text-content-muted">Click to join your session</p>
+      <p className="mt-3 text-content-muted">Jump in when you&apos;re ready</p>
 
       <button
         type="button"
@@ -136,9 +136,9 @@ export default function WaitingRoomPage() {
       }
 
       if (booking?.status === "pending") {
-        setStatusMessage(`Waiting for your scheduled match at ${slot.time}`)
+        setStatusMessage(`Hang tight — matching opens at ${slot.time}`)
       } else {
-        setStatusMessage(`Scheduled session at ${slot.time}`)
+        setStatusMessage(`Your session is at ${slot.time}`)
       }
     }
 
@@ -232,11 +232,11 @@ export default function WaitingRoomPage() {
             <WaitingAnimation />
 
             <h1 className="mt-10 text-2xl font-bold tracking-tight text-content sm:text-3xl">
-              {statusMessage || `Waiting for your scheduled match at ${slot.time}`}
+              {statusMessage || `Matching opens at ${slot.time}`}
             </h1>
             <p className="mt-3 text-content-muted">
-              You&apos;ll be matched with a peer when the slot starts. Stay on
-              this page or return before the session begins.
+              We&apos;ll pair you with someone when the slot starts. You can stay
+              here or come back a few minutes before.
             </p>
 
             <div className="mt-8 w-full rounded-xl border border-stroke bg-surface-card/80 px-5 py-4">
@@ -249,7 +249,7 @@ export default function WaitingRoomPage() {
             {sessionStart && (
               <div className="mt-6">
                 <p className="text-xs font-medium uppercase tracking-wider text-content-muted">
-                  Session starts in
+                  Starts in
                 </p>
                 <p className="mt-1 font-mono text-4xl font-bold tabular-nums text-brand">
                   {countdown}
