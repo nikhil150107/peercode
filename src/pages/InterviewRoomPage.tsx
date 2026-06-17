@@ -93,6 +93,17 @@ type VideoConnectionStatus =
 
 type Role = "interviewer" | "interviewee"
 
+type SessionEndedPayload = {
+  roomId?: string
+  from?: string | null
+  questionTitle?: string | null
+  questionDifficulty?: string | null
+  questionTopic?: string | null
+  durationSeconds?: number
+  interviewerUserId?: string | null
+  intervieweeUserId?: string | null
+}
+
 function formatTimer(seconds: number): string {
   const m = Math.floor(seconds / 60)
   const s = seconds % 60
@@ -185,6 +196,7 @@ export default function InterviewRoomPage() {
   const restoredFromServerRef = useRef(false)
   const layoutContainerRef = useRef<HTMLDivElement>(null)
   const endingSessionRef = useRef(false)
+  const finishingSessionRef = useRef(false)
   const codesRef = useRef(codes)
   const videoConnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
@@ -617,7 +629,23 @@ export default function InterviewRoomPage() {
     async function guardAndRestore() {
       try {
         if (await checkRoomEnded(roomId)) {
-          navigate("/session-ended")
+          endingSessionRef.current = true
+          const state = await fetchRoomState(roomId, user.id)
+          applySessionEndedPayload({
+            roomId,
+            questionTitle: state?.question?.title ?? null,
+            questionDifficulty: state?.question?.difficulty ?? null,
+            questionTopic: state?.question?.topic ?? null,
+            durationSeconds:
+              state?.timerStarted && state?.timerStartedAt
+                ? Math.floor((Date.now() - state.timerStartedAt) / 1000)
+                : state?.secondsLeft != null
+                  ? SESSION_SECONDS - state.secondsLeft
+                  : undefined,
+            interviewerUserId: state?.interviewerUserId ?? null,
+            intervieweeUserId: state?.intervieweeUserId ?? null,
+          })
+          void finishSession()
           return
         }
 
@@ -736,7 +764,52 @@ export default function InterviewRoomPage() {
     }
   }
 
+  function applySessionEndedPayload(data: SessionEndedPayload) {
+    const endedRoomId = data.roomId ?? roomId
+    if (endedRoomId) {
+      localStorage.setItem("peercode_room_id", endedRoomId)
+      localStorage.setItem("peercode_roomId", endedRoomId)
+    }
+
+    if (data.questionTitle) {
+      localStorage.setItem("peercode_last_question", data.questionTitle)
+      localStorage.setItem("peercode_my_question", data.questionTitle)
+    }
+    if (data.questionDifficulty) {
+      localStorage.setItem(
+        "peercode_my_question_difficulty",
+        data.questionDifficulty,
+      )
+    }
+    if (data.questionTopic) {
+      localStorage.setItem("peercode_my_question_topic", data.questionTopic)
+    }
+    if (data.durationSeconds != null) {
+      localStorage.setItem(
+        "peercode_session_duration",
+        String(data.durationSeconds),
+      )
+    }
+
+    if (user?.id) {
+      let sessionRole: Role | null = null
+      if (user.id === data.interviewerUserId) {
+        sessionRole = "interviewer"
+      } else if (user.id === data.intervieweeUserId) {
+        sessionRole = "interviewee"
+      }
+      if (sessionRole) {
+        roleRef.current = sessionRole
+        setRole(sessionRole)
+        localStorage.setItem("peercode_user_role", sessionRole)
+      }
+    }
+  }
+
   async function finishSession() {
+    if (finishingSessionRef.current) return
+    finishingSessionRef.current = true
+
     saveLastQuestionForFeedback()
     const saved = await persistSession()
     await markBookingCompleted()
@@ -744,6 +817,14 @@ export default function InterviewRoomPage() {
       showToast("Session saved", "success")
     }
     navigate("/feedback")
+  }
+
+  async function handlePeerSessionEnded(data: SessionEndedPayload) {
+    if (endingSessionRef.current || finishingSessionRef.current) return
+    endingSessionRef.current = true
+    console.log("[interview] session ended — redirecting to feedback", data)
+    applySessionEndedPayload(data)
+    await finishSession()
   }
 
   async function handleEndSession() {
@@ -1265,10 +1346,11 @@ export default function InterviewRoomPage() {
         socket.emit("join_room", { roomId, userId })
       })
 
-      socket.on("session_ended", () => {
-        console.log("[interview] session ended by peer")
-        endingSessionRef.current = true
-        navigate("/session-ended")
+      socket.on("session_ended", (data: SessionEndedPayload) => {
+        if (endingSessionRef.current || finishingSessionRef.current) {
+          return
+        }
+        void handlePeerSessionEnded(data)
       })
 
       socket.on(
